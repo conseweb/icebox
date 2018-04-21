@@ -1,0 +1,108 @@
+//File: wallet.proto
+// c , java, golang
+
+syntax = "proto2";
+// import "nanopb.proto";
+
+enum MessageType {
+  SHAKEHAND_REQ = 0;
+  SHAKEHAND_RESP = 1;
+  SIGNTX_REQ = 2;
+  SIGNTX_RESP = 3;
+  QUERYADDR_REQ = 4;
+  QUERYADDR_RESP = 5;
+  CREATEADDR_REQ = 6;
+  CREATEADDR_RESP = 7;
+  DELETEADDR_REQ = 8;
+  DELETEADDR_RESP = 9;
+}
+
+service Greeter {
+  // Sends a greeting
+  rpc SayHello (HelloRequest) returns (HelloReply) {}
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+  string name = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+  string message = 1;
+}
+
+message MsgHeader {
+    required uint32 ver = 1;
+    required MessageType mt = 2;
+}
+
+message Ping {
+    required MsgHeader header = 1;
+}
+
+message Pong {
+    required MsgHeader header = 1;
+    required uint32 status = 2;
+    optional string message = 3;
+}
+
+message CreateAddrReq {
+    required MsgHeader header = 1;
+    required uint32 type = 2;
+    optional string name = 3;
+}
+
+message CreateAddrResp {
+    required MsgHeader header = 1;
+    required uint32 status = 2;
+    optional string message = 3;
+    optional uint32 type = 4;
+    optional uint32 index = 5;
+    optional string name = 6;
+}
+
+message DeleteAddrReq {
+    required MsgHeader header = 1;
+    required uint32 type = 2;
+    required uint32 index = 3;
+}
+
+message DeleteAddrResp {
+    required MsgHeader header = 1;
+    required uint32 status = 2;
+    optional string message = 3;
+}
+
+message SignTxReq {
+    required MsgHeader header = 1;
+    required uint32 coinType = 2;
+    required uint32 addrIdx = 3;
+    required uint64 amount = 4;
+    required string dest = 5;
+    required string txid = 6;
+}
+
+message SignTxRes {
+    required MsgHeader header = 1;
+    required string signedTx = 2;
+}
+
+message QueryAddrListReq {
+    required MsgHeader header = 1;
+    required uint32 coinType = 2;
+    required uint32 addrIdx = 3;
+}
+
+message QueryAddrRes {
+    required MsgHeader header = 1;
+    required string addr = 2;
+}
+
+// device info
+message AddrTable {
+    required uint32 coin_type = 1;
+    required uint32 idx = 2;
+    required string name = 3;
+    required string path = 4;
+}
