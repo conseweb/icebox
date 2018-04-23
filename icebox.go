@@ -10,7 +10,7 @@ import (
 	// _ "github.com/mattn/go-sqlite3"
 
 	"github.com/jinzhu/gorm"
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
+	//_ "github.com/jinzhu/gorm/dialects/sqlite"
 
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
@@ -21,10 +21,11 @@ import (
 	"conseweb.com/go-bip44"
 	"github.com/tyler-smith/go-bip32"
 	"github.com/tyler-smith/go-bip39"
+	"conseweb.com/wallet/icebox/models"
 )
 
 const (
-	dbpath   = "db/foo.db"
+	dbpath   = "ss/foo.db"
 	secretFn = "ss/secret.dat"
 )
 
@@ -33,24 +34,22 @@ var (
 	db        *gorm.DB
 )
 
-type Addr struct {
-	// gorm.Model
-	ID         uint32 `gorm:"AUTO_INCREMENT, PRIMARY_KEY"` // set id to auto incrementable
-	Type       uint32 `gorm:"not null"`                    // set type to unique and not null
-	IsExternal uint32 `gorm:"default:0"`
-	Index      uint32 `gorm:"not null"`
-	Name       string
-}
+//type Formula struct {
+//	ID         uint32 `gorm:"AUTO_INCREMENT, PRIMARY_KEY"` // set id to auto incrementable
+//	Type       uint32 `gorm:"not null"`                    // set type to unique and not null
+//	IsExternal uint32 `gorm:"default:0"`
+//	Index      uint32 `gorm:"not null"`
+//	Name       string
+//}
 
 // 该表存储在设备侧，静态配置数据，还可以存储币种的加密配置信息
-type Product struct {
-	// gorm.Model
-	ID     uint32 `gorm:"AUTO_INCREMENT, PRIMARY_KEY"` // set id to auto incrementable
-	Type   uint32 `gorm:"unique;not null"`             // 对应bip32的coin_type
-	Symbol string `gorm:"unique;not null"`             // 对应币种的代号, 如比特币是: btc
-	Name   string `gorm:"unique;not null"`             // 对应币种的全称, 如比特币是: bitcoin
-	Path   string `gorm:"not null"`                    // 对应币种的account derivation path
-}
+//type Feature struct {
+//	ID     uint32 `gorm:"AUTO_INCREMENT, PRIMARY_KEY"` // set id to auto incrementable
+//	Type   uint32 `gorm:"unique;not null"`             // 对应bip32的coin_type
+//	Symbol string `gorm:"unique;not null"`             // 对应币种的代号, 如比特币是: btc
+//	Name   string `gorm:"unique;not null"`             // 对应币种的全称, 如比特币是: bitcoin
+//	Path   string `gorm:"not null"`                    // 对应币种的account derivation path
+//}
 
 func InitDB(filepath string) *gorm.DB {
 	db, err := gorm.Open("sqlite3", filepath)
@@ -59,18 +58,18 @@ func InitDB(filepath string) *gorm.DB {
 	}
 
 	// Migrate the schema
-	db.AutoMigrate(&Product{})
-	db.AutoMigrate(&Addr{})
+	db.AutoMigrate(&models.Feature{})
+	db.AutoMigrate(&models.Formula{})
 
 	// Create
-	db.Create(&Product{Type: 0, Symbol: "btc", Name: "bitcoin", Path: "m/44'/0'/0'/"})
-	db.Create(&Product{Type: 1, Symbol: "test", Name: "testnet", Path: "m/44'/1'/0'/"})
-	db.Create(&Product{Type: 2, Symbol: "ltc", Name: "litecoin", Path: "m/44'/2'/0'/"})
-	db.Create(&Product{Type: 3, Symbol: "doge", Name: "dogecoin", Path: "m/44'/3'/0'/"})
-	db.Create(&Product{Type: 5, Symbol: "dsh", Name: "dash", Path: "m/44'/5'/0'/"})
-	db.Create(&Product{Type: 9, Symbol: "xcp", Name: "counterparty", Path: "m/44'/9'/0'/"})
-	db.Create(&Product{Type: 60, Symbol: "eth", Name: "ethereum", Path: "m/44'/60'/0'/"})
-	db.Create(&Product{Type: 61, Symbol: "etc", Name: "ethereum classic", Path: "m/44'/61'/0'/"})
+	db.Create(&models.Feature{T2: 0, Symbol: "btc", Name: "bitcoin"})
+	db.Create(&models.Feature{T2: 1, Symbol: "test", Name: "testnet"})
+	db.Create(&models.Feature{T2: 2, Symbol: "ltc", Name: "litecoin"})
+	db.Create(&models.Feature{T2: 3, Symbol: "doge", Name: "dogecoin"})
+	db.Create(&models.Feature{T2: 5, Symbol: "dsh", Name: "dash"})
+	db.Create(&models.Feature{T2: 9, Symbol: "xcp", Name: "counterparty"})
+	db.Create(&models.Feature{T2: 60, Symbol: "eth", Name: "ethereum"})
+	db.Create(&models.Feature{T2: 61, Symbol: "etc", Name: "ethereum classic"})
 
 	return db
 }
@@ -213,8 +212,8 @@ func loadMasterPrivKey(fn string) (key *bip32.Key, err error) {
 }
 
 // 创建一个新的
-func CreateAddr(coin, chain, index uint32, name string) (*bip32.Key, error) {
-	db.Create(&Addr{Type: coin, Index: index, Name: name})
+func CreateFormula(coin, chain, index uint32, name string) (*bip32.Key, error) {
+	db.Create(&models.Formula{T2: coin, T4: chain, T5: index, Name: name})
 
 	mkey, err := loadMasterPrivKey(secretFn)
 	if mkey != nil {
@@ -245,22 +244,22 @@ func main() {
 	defer deleteDbFile(dbpath)
 
 	// Read
-	var product Product
-	db.First(&product, "type = ?", 0) // find product with code l121
+	var product models.Feature
+	db.First(&product, "t2 = ?", 0) // find feature with t2
 
 	// var key *bip32.Key
 	var idx uint32
 	idx = 32
-	key, err := CreateAddr(product.Type, 0, idx, "default")
+	key, err := CreateFormula(product.T2, 0, idx, "default")
 	if err != nil {
 		fmt.Errorf("%s", err)
 	}
 	pk := key.PublicKey()
-	CreateAddr(product.Type, 0, idx+1, "bussiness")
+	CreateFormula(product.T2, 0, idx+1, "bussiness")
 
-	var addr Addr
-	db.First(&addr, "type = ?", 0)
-	// db.Create(&Addr{Type: product.Type, Index: idx, Name: "default"})
+	var addr models.Formula
+	db.First(&addr, "t2 = ?", 0)
+	// db.Create(&Formula{T2: product.T2, T5: idx, Name: "default"})
 
 	fmt.Printf("%+v\n", addr)
 	fmt.Printf("%+v\n", product)

@@ -1,0 +1,177 @@
+//File: icebox.proto
+// c , java, golang
+
+syntax = "proto2";
+import "nanopb.proto";
+option go_package = "protos";
+//package wallet;
+
+// rpc只是用于演示相关接口，不用作实现
+service Icebox {
+    // getdevice info, 判断是否是特定设备，是否已经进行了初始化, 如果没有则需要进行初始化操作
+    // 如果已经进行了初始化，是否需要检测数据的合法性？
+    rpc CheckDevice (CheckRequest) returns (CheckReply) {}
+    // initailaize device: create a main private secret key
+    // 1. init
+    // 2. ask pin code
+    // 3. ask memoric words
+    // 4. generate seed
+    // 5. generate secret key and encrypt it with pin
+    rpc InitDevice (InitRequest) returns (InitReply) {}
+    // Sends a greeting
+    rpc HandShake (HelloRequest) returns (HelloReply) {}
+    //
+    rpc AddFeature (AddFeatureRequest) returns (AddFeatureReply) {}
+
+    rpc CreateFormula (CreateFormulaRequest) returns (CreateFormulaReply) {}
+
+    rpc ListFeature (ListFeatureRequest) returns (ListFeatureReply) {}
+
+    rpc ListFormula (ListFormulaRequest) returns (ListFormulaReply) {}
+
+    rpc SignTx (SignTxRequest) returns (SignTxReply) {}
+
+    rpc RemoveFeature (RemoveFeatureRequest) returns (RemoveFeatureReply) {}
+
+    rpc DeleteFormula (DeleteFormulaRequest) returns (DeleteFormulaReply) {}
+    // remove all datas
+    rpc ResetDevice (ResetRequest) returns (ResetReply) {}
+
+}
+
+message Status {
+    required int32 code = 1;
+    required string message = 2[(nanopb).max_size = 128];
+}
+
+message Header {
+    required uint32 ver = 1;    // 消息版本号
+    required uint32 sn = 2;     // 消息序列号，返回消息的序列号必须等于请求消息的序列号
+    optional Status status = 3;
+}
+
+message CheckRequest {
+    required Header header = 1;
+    required string app_id = 2;
+}
+
+message CheckReply {
+    required Header header = 1;
+    required int32 state = 2;  // 0: uninited, 1: inited
+    // if paired then return dev_id=hash(id+app_id)
+    optional string dev_id = 3;
+//    optional string sn = 4; // device serial number
+}
+
+message InitRequest {
+    required Header header = 1;
+    required string password = 2[(nanopb).max_size = 128];
+}
+message InitReply {
+    required Header header = 1;
+    required string dev_id = 2[(nanopb).max_size = 32];
+}
+
+// The request message containing the user's name.
+message HelloRequest {
+    required Header header = 1;
+}
+
+// The response message containing the greetings
+message HelloReply {
+    required Header header = 1;
+}
+
+// if coin_type have exists in cointable, then failed
+message AddFeatureRequest {
+    required Header header = 1;
+    required uint32 type = 2; // bip44: coin_type
+    required uint32 idx = 3;  // bip44: address_index
+}
+
+message AddFeatureReply {
+    required Header header = 1;
+}
+
+message CreateFormulaRequest {
+    required Header header = 1;
+    required uint32 iscoin = 2; // default = 1
+    required uint32 type = 3;
+    required uint32 idx = 4;
+    // TODO: 该最大值未经验证
+    optional string name = 5[(nanopb).max_size = 32];
+}
+
+message CreateFormulaReply {
+    required Header header = 1;
+}
+
+message SignTxRequest {
+    required Header header = 1;
+    required uint32 type = 2;
+    required uint32 idx = 3;
+    required uint64 amount = 4;
+    // TODO: 该最大值未经验证
+    required string dest = 5[(nanopb).max_size = 64];
+    // TODO: 该最大值未经验证
+    required string txid = 6[(nanopb).max_size = 64];
+}
+
+message SignTxReply {
+    required Header header = 1;
+    // TODO: 该最大值未经验证
+    required string signedTx = 2[(nanopb).max_size = 256];
+}
+
+// list all of wallets
+message ListFeatureRequest {
+    required Header header = 1;
+}
+message ListFeatureReply {
+    required Header header = 1;
+    repeated uint32 type = 2;
+}
+
+message ListFormulaRequest {
+    required Header header = 1;
+    required uint32 type = 2;
+    required uint32 idx = 3;
+}
+
+message Formula {
+    required uint32 type = 1;
+    required uint32 index = 2;
+    // TODO: 该最大值未经验证
+    required string s_addr = 3[(nanopb).max_size = 64];
+}
+
+message ListFormulaReply {
+    required Header header = 1;
+    repeated Formula addr = 2[(nanopb).max_count = 8];
+}
+
+message RemoveFeatureRequest {
+    required Header header = 1;
+    required uint32 type = 2;
+}
+
+message RemoveFeatureReply {
+    required Header header = 1;
+}
+
+message DeleteFormulaRequest {
+    required Header header = 1;
+    required uint32 type = 2;
+    required uint32 idx = 3;
+}
+
+message DeleteFormulaReply {
+    required Header header = 1;
+}
+
+message ResetRequest {
+    required Header header = 1;
+}
+message ResetReply {
+    required Header header = 1;
+}

@@ -1,0 +1,32 @@
+//File: wallet.proto
+//
+
+syntax = "proto2";
+import "nanopb.proto";
+
+enum CoinType {
+    BTC = 0;
+    ETH = 60;
+    ETC = 61;
+    BCC = 3;
+    LTC = 4;
+}
+
+// coin or product table，静态配置表
+// for password: t1 = 1, t2 = 0, t3 = 0
+message FeatureTable {
+    required uint32 t1 = 1;         // for bip44: purpose = 44'
+    required uint32 t2 = 2;         // for bip44: coin_type
+    required uint32 t3 = 3;         // for bip44: account
+    // required string formula = 4;    // like: "m/44'/0'/0'/" 到account
+    // 对实际设备而言，以下两个字段都不是必须的
+    optional string symbol = 4;  // like "btc"
+    optional string name = 5;    // like "bitcoin"
+}
+
+message FormulaTable {
+    required int32  t2 = 1;                 // for bip44: coin_type
+    required uint32 t4 = 2[default = 0];  // 该字段一般取值为0/1, 默认为0, 暂未使用
+    required uint32 t5 = 3;                 // for bip44: address_index
+    optional string name = 4;   // 地址的名字, 只需要记录在app侧
+}
