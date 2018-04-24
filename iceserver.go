@@ -7,13 +7,16 @@ import (
 	"net"
 
 	"golang.org/x/net/context"
+	"golang.org/x/net/trace"  // 引入trace包
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
 
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/testdata"
 	_ "conseweb.com/wallet/icebox/bip44"
-	"github.com/tyler-smith/go-bip32"
-	"github.com/tyler-smith/go-bip39"
+	"conseweb.com/wallet/icebox/bip32"
+	"conseweb.com/wallet/icebox/bip38"
+	"conseweb.com/wallet/icebox/bip39"
 
 	"conseweb.com/wallet/icebox/models"
 
@@ -25,23 +28,26 @@ import (
 	"io/ioutil"
 	"conseweb.com/wallet/icebox/guid"
 	"encoding/hex"
-	"conseweb.com/wallet/icebox/bip38"
 	"conseweb.com/wallet/icebox/address"
+	"net/http"
 )
 
 const (
 	icebox_path = "ss"
 	secret_path = "ss/secret.dat"
 	devid_path = "ss/devid.dat"
+
 )
 
 var (
 	tls        = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
-	certFile   = flag.String("cert_file", "", "The TLS cert file")
-	keyFile    = flag.String("key_file", "", "The TLS key file")
+	certFile   = flag.String("cert_file", "root/server.pem", "The TLS cert file")
+	keyFile    = flag.String("key_file", "root/server.key", "The TLS key file")
 	//jsonDBFile = flag.String("json_db_file", "testdata/route_guide_db.json", "A json file containing a list of features")
-	port       = flag.Int("port", 10000, "The server port")
+	port       = flag.Int("port", 50052, "The server port")
 
+	// Address gRPC服务地址
+	Address = fmt.Sprintf("localhost:%d", *port)
 )
 
 type FeatureID struct {
@@ -84,55 +90,24 @@ func (s *iceberg) GenerateEquality() (res string) {
 //	return nil, err
 //}
 
-func makeCheckReply(req *pb.CheckRequest, state *int32, devid *string) *pb.CheckReply {
-	h := req.Header
-
-	zero := int32(0)
-
-	reply := new(pb.CheckReply)
-	reply.Header.Sn = h.Sn
-	reply.Header.Ver = h.Ver
-	reply.State = state
-	status := new(pb.Status)
-	status.Code = &zero
-	reply.Header.Status = status
-	if devid != nil {
-		reply.DevId = devid
-	}
-	return reply
-}
-
 
 func (s *iceberg) CheckDevice(ctx context.Context, req *pb.CheckRequest) (*pb.CheckReply, error) {
 	// check device is initialized
 
 	if !s.isInitialized() {
 		// return uninit
-		zero := int32(0)
-		reply := makeCheckReply(req, &zero,nil)
+		//zero := int32(0)
+		reply := pb.MakeCheckReply(req, 0,nil)
 		return reply, nil
 	}
 
 	// 初步判断依据初始化了，需要获取深度数据以进行检测
 	devid, _ := s.loadDeviceID(devid_path)
-	one := int32(1)
-	reply := makeCheckReply(req, &one, &devid)
+	//one := int32(1)
+	reply := pb.MakeCheckReply(req, 1, &devid)
 	return reply, nil
 }
 
-func makeInitReply(req *pb.InitRequest, devid string) *pb.InitReply {
-	h := req.Header
-
-	reply := new(pb.InitReply)
-	reply.Header.Sn = h.Sn
-	reply.Header.Ver = h.Ver
-	reply.DevId = &devid
-	status := new(pb.Status)
-	zero := int32(0)
-	status.Code = &zero
-	reply.Header.Status = status
-	return reply
-}
 
 func (s *iceberg) InitDevice(ctx context.Context, req *pb.InitRequest) (*pb.InitReply, error) {
 	// remove all files
@@ -149,7 +124,7 @@ func (s *iceberg) InitDevice(ctx context.Context, req *pb.InitRequest) (*pb.Init
 		return nil, err
 	}
 
-	reply := makeInitReply(req, devid)
+	reply := pb.MakeInitReply(req, devid)
 	fmt.Println("==> done init device")
 
 	return reply, nil
@@ -274,12 +249,12 @@ func (s *iceberg) isInitialized() bool {
 	var _, err = os.Stat(devid_path)
 
 	// create file if not exists
-	if !os.IsNotExist(err) {
+	if os.IsNotExist(err) {
 		return false
 	}
 
 	_, err = os.Stat(secret_path)
-	if !os.IsNotExist(err) {
+	if os.IsNotExist(err) {
 		return false
 	}
 
@@ -294,9 +269,17 @@ func newIceberg() *iceberg {
 	return s
 }
 
+func startTrace() {
+	trace.AuthRequest = func(req *http.Request) (any, sensitive bool) {
+		return true, true
+	}
+	go http.ListenAndServe(":50051", nil)
+	grpclog.Println("Trace listen on 50051")
+}
+
 func main() {
 	flag.Parse()
-	lis, err := net.Listen("tcp", fmt.Sprintf("localhost:%d", *port))
+	lis, err := net.Listen("tcp", Address)
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -317,5 +300,10 @@ func main() {
 	grpcServer := grpc.NewServer(opts...)
 	serv := newIceberg()
 	pb.RegisterIceboxServer(grpcServer, serv)
+
+	// 开启trace
+	go startTrace()
+
+	grpclog.Println("Listen on " + Address)
 	grpcServer.Serve(lis)
 }

@@ -2,9 +2,10 @@
 // c , java, golang
 
 syntax = "proto2";
-import "nanopb.proto";
+//package protos;
 option go_package = "protos";
-//package wallet;
+
+import "nanopb.proto";
 
 // rpc只是用于演示相关接口，不用作实现
 service Icebox {
@@ -12,11 +13,9 @@ service Icebox {
     // 如果已经进行了初始化，是否需要检测数据的合法性？
     rpc CheckDevice (CheckRequest) returns (CheckReply) {}
     // initailaize device: create a main private secret key
-    // 1. init
-    // 2. ask pin code
-    // 3. ask memoric words
-    // 4. generate seed
-    // 5. generate secret key and encrypt it with pin
+    // 1. init(pin)   pin as parameter
+    // 2. pin ==> memoric words ==> seed
+    // 3. generate secret key and encrypt it with pin
     rpc InitDevice (InitRequest) returns (InitReply) {}
     // Sends a greeting
     rpc HandShake (HelloRequest) returns (HelloReply) {}
@@ -26,6 +25,8 @@ service Icebox {
     rpc CreateFormula (CreateFormulaRequest) returns (CreateFormulaReply) {}
 
     rpc ListFeature (ListFeatureRequest) returns (ListFeatureReply) {}
+
+//    rpc QueryFormula(QueryFormulaRequst) returns (QueryFormulaReply) {}
 
     rpc ListFormula (ListFormulaRequest) returns (ListFormulaReply) {}
 
@@ -39,24 +40,30 @@ service Icebox {
 
 }
 
-message Status {
-    required int32 code = 1;
-    required string message = 2[(nanopb).max_size = 128];
-}
+//message Status {
+//    required int32 code = 1;
+//    optional string message = 2[(nanopb).max_size = 128];
+//}
 
 message Header {
-    required uint32 ver = 1;    // 消息版本号
+    required uint32 ver = 1 [default = 1];    // 消息版本号
     required uint32 sn = 2;     // 消息序列号，返回消息的序列号必须等于请求消息的序列号
-    optional Status status = 3;
+}
+
+message ReplyHeader {
+    required uint32 ver = 1 [default = 1];    // 消息版本号
+    required uint32 sn = 2;     // 消息序列号，返回消息的序列号必须等于请求消息的序列号
+    required uint32 code = 3;
+    optional string message = 4[(nanopb).max_size = 128];
 }
 
 message CheckRequest {
     required Header header = 1;
-    required string app_id = 2;
+//    required string app_id = 2;
 }
 
 message CheckReply {
-    required Header header = 1;
+    required ReplyHeader header = 1;
     required int32 state = 2;  // 0: uninited, 1: inited
     // if paired then return dev_id=hash(id+app_id)
     optional string dev_id = 3;
@@ -66,9 +73,10 @@ message CheckReply {
 message InitRequest {
     required Header header = 1;
     required string password = 2[(nanopb).max_size = 128];
+    // TODO: 需要强制要求最低密码强度，如果密码强度太弱，设备侧返回错误
 }
 message InitReply {
-    required Header header = 1;
+    required ReplyHeader header = 1;
     required string dev_id = 2[(nanopb).max_size = 32];
 }
 
@@ -79,7 +87,7 @@ message HelloRequest {
 
 // The response message containing the greetings
 message HelloReply {
-    required Header header = 1;
+    required ReplyHeader header = 1;
 }
 
 // if coin_type have exists in cointable, then failed
@@ -90,12 +98,12 @@ message AddFeatureRequest {
 }
 
 message AddFeatureReply {
-    required Header header = 1;
+    required ReplyHeader header = 1;
 }
 
 message CreateFormulaRequest {
     required Header header = 1;
-    required uint32 iscoin = 2; // default = 1
+    required uint32 iscoin = 2[default = 1]; // default = 1
     required uint32 type = 3;
     required uint32 idx = 4;
     // TODO: 该最大值未经验证
@@ -103,7 +111,9 @@ message CreateFormulaRequest {
 }
 
 message CreateFormulaReply {
-    required Header header = 1;
+    required ReplyHeader header = 1;
+    // TODO: 该最大值未经验证
+    required string result = 2[(nanopb).max_size = 64]; // address or password
 }
 
 message SignTxRequest {
@@ -118,7 +128,7 @@ message SignTxRequest {
 }
 
 message SignTxReply {
-    required Header header = 1;
+    required ReplyHeader header = 1;
     // TODO: 该最大值未经验证
     required string signedTx = 2[(nanopb).max_size = 256];
 }
@@ -128,26 +138,37 @@ message ListFeatureRequest {
     required Header header = 1;
 }
 message ListFeatureReply {
-    required Header header = 1;
-    repeated uint32 type = 2;
+    required ReplyHeader header = 1;
+    required uint32 max = 2;
+    repeated uint32 type = 3[(nanopb).max_count = 8];
 }
+
+//message QueryFormulaRequst {
+//    required Header header = 1;
+//}
+//
+//message QueryFormulaReply {
+//    required Header header = 1;
+//}
 
 message ListFormulaRequest {
     required Header header = 1;
-    required uint32 type = 2;
-    required uint32 idx = 3;
+    required uint32 iscoin = 2[default = 1];
+    required uint32 type = 3;
+    optional uint32 idx = 4;
 }
 
 message Formula {
     required uint32 type = 1;
-    required uint32 index = 2;
+    required uint32 idx = 2;
     // TODO: 该最大值未经验证
     required string s_addr = 3[(nanopb).max_size = 64];
 }
 
 message ListFormulaReply {
-    required Header header = 1;
-    repeated Formula addr = 2[(nanopb).max_count = 8];
+    required ReplyHeader header = 1;
+    required uint32 max = 2;
+    repeated Formula addr = 3[(nanopb).max_count = 8];
 }
 
 message RemoveFeatureRequest {
@@ -156,7 +177,7 @@ message RemoveFeatureRequest {
 }
 
 message RemoveFeatureReply {
-    required Header header = 1;
+    required ReplyHeader header = 1;
 }
 
 message DeleteFormulaRequest {
@@ -166,12 +187,12 @@ message DeleteFormulaRequest {
 }
 
 message DeleteFormulaReply {
-    required Header header = 1;
+    required ReplyHeader header = 1;
 }
 
 message ResetRequest {
     required Header header = 1;
 }
 message ResetReply {
-    required Header header = 1;
+    required ReplyHeader header = 1;
 }
