@@ -13,15 +13,14 @@ import (
 
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/testdata"
-	_ "conseweb.com/wallet/icebox/bip44"
+
+	"conseweb.com/wallet/icebox/bip44"
 	"conseweb.com/wallet/icebox/bip32"
 	"conseweb.com/wallet/icebox/bip38"
 	"conseweb.com/wallet/icebox/bip39"
-
 	"conseweb.com/wallet/icebox/models"
-
-	//"github.com/golang/protobuf/proto"
 	pb "conseweb.com/wallet/icebox/protos"
+
 	"errors"
 	"github.com/jinzhu/gorm"
 	"os"
@@ -34,8 +33,9 @@ import (
 
 const (
 	icebox_path = "ss"
-	secret_path = "ss/secret.dat"
-	devid_path = "ss/devid.dat"
+	secret_path = "root/ss/secret.dat"
+	devid_path = "root/ss/devid.dat"
+	db_path = "root/ss/db.dat"
 
 )
 
@@ -59,6 +59,14 @@ type FormulaID struct {
 	T1	   uint32 			// for bip44: purpose = 44; for password: 16
 	T2     uint32           // for bip44: coin_type; for password: 8
 	T5     uint32			// for bip44: address_index; for password: index
+}
+
+func exists(fn string) bool {
+	var _, err = os.Stat(fn)
+	if os.IsNotExist(err) {
+		return false
+	}
+	return true
 }
 
 type iceberg struct {
@@ -123,6 +131,10 @@ func (s *iceberg) InitDevice(ctx context.Context, req *pb.InitRequest) (*pb.Init
 	if err != nil {
 		return nil, err
 	}
+	_, err = s.initDB(db_path)
+	if err != nil {
+		return nil, err
+	}
 
 	reply := pb.MakeInitReply(req, devid)
 	fmt.Println("==> done init device")
@@ -130,16 +142,41 @@ func (s *iceberg) InitDevice(ctx context.Context, req *pb.InitRequest) (*pb.Init
 	return reply, nil
 }
 
-func (s *iceberg) HandShake(context.Context, *pb.HelloRequest) (*pb.HelloReply, error)  {
-	return nil, errors.New("Not implemented!")
+func (s *iceberg) HandShake(ctx context.Context, req *pb.HelloRequest) (*pb.HelloReply, error)  {
+	reply := pb.MakeHelloReply(req)
+	return reply, nil
 }
 
-func (s *iceberg) AddFeature(context.Context, *pb.AddFeatureRequest) (*pb.AddFeatureReply, error)  {
-	return nil, errors.New("Not implemented!")
+func (s *iceberg) AddCoin(ctx context.Context, req *pb.AddCoinRequest) (*pb.AddCoinReply, error)  {
+	tp := req.GetType()
+	idx := req.GetIdx()
+	symbol := req.GetSymbol()
+	name := req.GetName()
+	s.db.Create(&models.Feature{T2: tp, T3: idx, Symbol: symbol, Name: name})
+	reply := pb.MakeAddCoinReply(req)
+	return reply, nil
 }
 
-func (s *iceberg) CreateFormula(context.Context, *pb.CreateFormulaRequest) (*pb.CreateFormulaReply, error)  {
-	return nil, errors.New("Not implemented!")
+func (s *iceberg) CreateAddress(ctx context.Context, req *pb.CreateAddressRequest) (*pb.CreateAddressReply, error)  {
+
+	tp := req.GetType()
+	idx := req.GetIdx()
+	name := req.GetName()
+	pwd := req.GetPassword()
+	// 需要首先判断是否支持该币种
+	var cnt int
+	db.Where("t2 = ?", tp).Count(&cnt)
+	if cnt <= 0 {
+		return nil, errors.New("Unsupported coin type: " + string(tp))
+	}
+
+	s.db.Create(&models.Formula{T2: tp, T5: idx, Name: name})
+	p := models.GetPath(&s.db, tp, idx)
+	// TODO: should generate key and address by bip44
+	masterKey, _ := s.loadSecretKey(secret_path, pwd)
+	bip44.NewKeyFromMasterKey(masterKey, tp, 0, 0, idx)
+	reply := pb.MakeCreateAddressReply(req, p)
+	return reply, nil
 }
 
 func (s *iceberg) ListFeature(context.Context, *pb.ListFeatureRequest) (*pb.ListFeatureReply, error)  {
@@ -162,26 +199,42 @@ func (s *iceberg) DeleteFormula(context.Context, *pb.DeleteFormulaRequest) (*pb.
 	return nil, errors.New("Not implemented!")
 }
 
-func (s *iceberg) ResetDevice(context.Context, *pb.ResetRequest) (*pb.ResetReply, error)  {
-	return nil, errors.New("Not implemented!")
+func (s *iceberg) ResetDevice(ctx context.Context, req *pb.ResetRequest) (*pb.ResetReply, error)  {
+	// reset device: remove all files
+	err := s.resetDevice()
+	if err != nil {
+		return nil, err
+	}
+
+	reply := pb.MakeResetReply(req)
+	return reply, nil
 }
 
 //////////////////////////////////////////////////////////////////////////////
 
-func (s *iceberg) resetDevice() error {
+func (s *iceberg) resetDevice() (err error) {
 	// remove all files in device
-	var err = os.Remove(devid_path)
-	if err != nil {
-		return err
+	if exists(devid_path) {
+		err = os.Remove(devid_path)
+		if err != nil {
+			return err
+		}
 	}
-	err = os.Remove(secret_path)
-	if err != nil {
-		return err
+	if exists(secret_path) {
+		err = os.Remove(secret_path)
+		if err != nil {
+			return err
+		}
+	}
+	if exists(db_path) {
+		err = os.Remove(db_path)
+		if err != nil {
+			return err
+		}
 	}
 
 	fmt.Println("==> done reset device")
 	return nil
-
 }
 
 func (s *iceberg) newDeviceID(dfn string) (string, error) {
@@ -245,16 +298,37 @@ func (s *iceberg) loadSecretKey(fn, password string) (key *address.PrivateKey, e
 	return bip38.Decrypt(string(data), password)
 }
 
-func (s *iceberg) isInitialized() bool {
-	var _, err = os.Stat(devid_path)
-
-	// create file if not exists
-	if os.IsNotExist(err) {
-		return false
+func (s *iceberg) initDB(fn string) (db *gorm.DB, err error) {
+	db, err = gorm.Open("sqlite3", fn)
+	if err != nil {
+		errors.New("Failed to connect database")
 	}
 
-	_, err = os.Stat(secret_path)
-	if os.IsNotExist(err) {
+	// Migrate the schema
+	db.AutoMigrate(&models.Feature{})
+	db.AutoMigrate(&models.Formula{})
+
+	// Create
+	db.Create(&models.Feature{T2: 0, Symbol: "btc", Name: "bitcoin"})
+	db.Create(&models.Feature{T2: 1, Symbol: "test", Name: "testnet"})
+	db.Create(&models.Feature{T2: 2, Symbol: "ltc", Name: "litecoin"})
+	db.Create(&models.Feature{T2: 3, Symbol: "doge", Name: "dogecoin"})
+	db.Create(&models.Feature{T2: 5, Symbol: "dsh", Name: "dash"})
+	db.Create(&models.Feature{T2: 9, Symbol: "xcp", Name: "counterparty"})
+	db.Create(&models.Feature{T2: 60, Symbol: "eth", Name: "ethereum"})
+	db.Create(&models.Feature{T2: 61, Symbol: "etc", Name: "ethereum classic"})
+
+	return db, err
+}
+
+func (s *iceberg) isInitialized() bool {
+	if !exists(devid_path) {
+		return false
+	}
+	if !exists(secret_path) {
+		return false
+	}
+	if !exists(db_path) {
 		return false
 	}
 
@@ -283,13 +357,15 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+	defer lis.Close()
+
 	var opts []grpc.ServerOption
 	if *tls {
 		if *certFile == "" {
-			*certFile = testdata.Path("root/server.pem")
+			*certFile = testdata.Path("root/keys/server.pem")
 		}
 		if *keyFile == "" {
-			*keyFile = testdata.Path("root/server.key")
+			*keyFile = testdata.Path("root/keys/server.key")
 		}
 		creds, err := credentials.NewServerTLSFromFile(*certFile, *keyFile)
 		if err != nil {
@@ -304,6 +380,6 @@ func main() {
 	// 开启trace
 	go startTrace()
 
-	grpclog.Println("Listen on " + Address)
+	grpclog.Infoln("Listen on " + Address)
 	grpcServer.Serve(lis)
 }

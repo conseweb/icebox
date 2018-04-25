@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"google.golang.org/grpc/grpclog"
 	"time"
+	"os/signal"
+	"os"
 )
 
 var (
@@ -29,6 +31,46 @@ func newUInt32(v uint32) *uint32 {
 
 func makeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
+}
+
+func checkDevice(client pb.IceboxClient) *pb.CheckReply {
+	var err error
+	req := pb.NewCheckRequest()
+	res, err := client.CheckDevice(context.Background(), req)
+	if err != nil {
+		grpclog.Fatalln(err)
+	}
+	fmt.Println("CheckReply: ", res)
+	if res.GetHeader().GetCode() == 0 && res.GetState() == 0 {
+		// send initrequest
+		ireq := pb.NewInitRequest("Secret")
+		irep, xe := client.InitDevice(context.Background(), ireq)
+		if xe != nil {
+			grpclog.Fatalln(xe)
+		}
+		fmt.Println("InitReply: ", irep)
+	}
+	return res
+}
+
+func handshakeDevice(client pb.IceboxClient) {
+	req := pb.NewHelloRequest()
+	res, err := client.HandShake(context.Background(), req)
+	if err != nil {
+		grpclog.Fatalln(err)
+	}
+	fmt.Println("HelloReply: ", res)
+}
+
+func resetDevice(client pb.IceboxClient) {
+	var err error
+	resetReq := pb.NewResetRequest()
+	var res1 *pb.ResetReply
+	res1, err = client.ResetDevice(context.Background(), resetReq)
+	if err != nil {
+		grpclog.Fatalln(err)
+	}
+	fmt.Println("ResetReply: ", res1)
 }
 
 func main() {
@@ -53,24 +95,28 @@ func main() {
 	defer conn.Close()
 	client := pb.NewIceboxClient(conn)
 
-	// 调用方法
-	req := pb.NewCheckRequest(1, uint32(makeTimestamp()))
-	res, err := client.CheckDevice(context.Background(), req)
-	if err != nil {
-		grpclog.Fatalln(err)
-	}
-	fmt.Println("CheckReply: ", res)
+	ticker := time.NewTicker(500 * time.Millisecond)
+	go func() {
+		for t := range ticker.C {
+			fmt.Println("Tick at ", t.UnixNano() / int64(time.Millisecond))
+			handshakeDevice(client)
+		}
+	}()
 
-	if res.GetHeader().GetCode()==0 && res.GetState()==0 {
-		 // send initrequest
-		 ireq := pb.NewInitRequest(1, 101, "Secret")
-		 irep, xe := client.InitDevice(context.Background(), ireq)
-		 if xe != nil {
-			 grpclog.Fatalln(xe)
-		 }
-		 fmt.Println("InitReply: ", irep)
-	}
+	// 调用方法
+	res := checkDevice(client)
+
+	// send reset request
+	//resetDevice(client)
+
+	//time.Sleep(1600 * time.Millisecond)
+	//ticker.Stop()
 
 	grpclog.Infoln(res.State)
 
+	// Wait for SIGINT (CTRL-c), then close servers and exit.
+	shutdown := make(chan os.Signal, 1)
+	signal.Notify(shutdown, os.Interrupt)
+	<-shutdown
 }
+

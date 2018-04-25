@@ -20,9 +20,13 @@ service Icebox {
     // Sends a greeting
     rpc HandShake (HelloRequest) returns (HelloReply) {}
     //
-    rpc AddFeature (AddFeatureRequest) returns (AddFeatureReply) {}
+//    rpc AddFeature (AddFeatureRequest) returns (AddFeatureReply) {}
 
-    rpc CreateFormula (CreateFormulaRequest) returns (CreateFormulaReply) {}
+    rpc AddCoin (AddCoinRequest) returns (AddCoinReply) {}
+
+//    rpc CreateFormula (CreateFormulaRequest) returns (CreateFormulaReply) {}
+
+    rpc CreateAddress (CreateAddressRequest) returns (CreateAddressReply) {}
 
     rpc ListFeature (ListFeatureRequest) returns (ListFeatureReply) {}
 
@@ -88,17 +92,34 @@ message HelloRequest {
 // The response message containing the greetings
 message HelloReply {
     required ReplyHeader header = 1;
+    required int64 timestamp = 2;
 }
 
-// if coin_type have exists in cointable, then failed
 message AddFeatureRequest {
     required Header header = 1;
     required uint32 type = 2; // bip44: coin_type
     required uint32 idx = 3;  // bip44: address_index
+    required string symbol = 4;
+    required string name = 5;
 }
 
 message AddFeatureReply {
     required ReplyHeader header = 1;
+    required string path = 2;
+}
+
+// if coin_type have exists in cointable, then failed
+message AddCoinRequest {
+    required Header header = 1;
+    required uint32 type = 2; // bip44: coin_type
+    required uint32 idx = 3;  // bip44: address_index
+    required string symbol = 4;
+    required string name = 5;
+}
+
+message AddCoinReply {
+    required ReplyHeader header = 1;
+//    required string path = 2;
 }
 
 message CreateFormulaRequest {
@@ -114,6 +135,22 @@ message CreateFormulaReply {
     required ReplyHeader header = 1;
     // TODO: 该最大值未经验证
     required string result = 2[(nanopb).max_size = 64]; // address or password
+}
+
+message CreateAddressRequest {
+    required Header header = 1;
+    required uint32 type = 2;
+    required uint32 idx = 3;
+    // TODO: 密码需要加密,密钥应该使用会话id相关key
+    required string password = 4[(nanopb).max_size = 64];
+    // TODO: 该最大值未经验证
+    optional string name = 5[(nanopb).max_size = 32];
+}
+
+message CreateAddressReply {
+    required ReplyHeader header = 1;
+    // TODO: 该最大值未经验证
+    required string address = 2[(nanopb).max_size = 64]; // address or password
 }
 
 message SignTxRequest {

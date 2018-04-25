@@ -1,10 +1,9 @@
 package models
 
 import (
-	_ "github.com/jinzhu/gorm"
-
-	_ "github.com/jinzhu/gorm/dialects/sqlite"
 	"fmt"
+	"github.com/jinzhu/gorm"
+	//"conseweb.com/wallet/icebox/models"
 )
 
 type Formula struct {
@@ -18,6 +17,16 @@ type Formula struct {
 func (p Formula) GetEquality() (res string) {
 	res = fmt.Sprintf("%i/%i", p.T4, p.T5)
 	return res
+}
+
+func GetPath(db *gorm.DB, tp, idx uint32) string {
+	var addr Formula
+	var coin Feature
+	db.Where("t2 = ? AND t5 = ?", tp, idx).First(&addr)
+	db.First(&coin, "t2 = ?", tp)
+
+	path := coin.GetEquality() + addr.GetEquality()
+	return path
 }
 
 //func (a Formula) CreateAddrTable(db *sql.DB) {

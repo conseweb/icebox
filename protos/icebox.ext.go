@@ -9,6 +9,10 @@ const (
 	Version = 1
 )
 
+func makeTimestamp() int64 {
+	return time.Now().UnixNano() / int64(time.Millisecond)
+}
+
 func NewUInt32(v uint32) *uint32 {
 	var i = v
 	return &i
@@ -20,10 +24,13 @@ func NewInt32(v int32) *int32 {
 }
 
 
-func NewHeader(ver, sn uint32) *Header {
+func NewHeader() *Header {
+	v := NewUInt32(Version)
+	ts := uint32(makeTimestamp())
+
 	h := new(Header)
-	h.Ver = &ver
-	h.Sn = &sn
+	h.Ver = v
+	h.Sn = &ts
 	return h
 }
 
@@ -37,21 +44,39 @@ func CloneHeader(h *Header) *ReplyHeader {
 	return header
 }
 
-func NewCheckRequest(ver, n uint32) *CheckRequest {
+func NewCheckRequest() *CheckRequest {
 	req := new(CheckRequest)
-	req.Header = NewHeader(ver, n)
+	req.Header = NewHeader()
 	return req
 }
 
-func NewInitRequest(ver, n uint32, password string) *InitRequest {
+func NewInitRequest(password string) *InitRequest {
 	req := new(InitRequest)
-	req.Header = NewHeader(ver, n)
+	req.Header = NewHeader()
 	req.Password = &password
 	return req
 }
 
-func makeTimestamp() int64 {
-	return time.Now().UnixNano() / int64(time.Millisecond)
+func NewHelloRequest() *HelloRequest {
+	req := new(HelloRequest)
+	req.Header = NewHeader()
+	return req
+}
+
+func NewAddCoinRequest(tp, idx uint32, symbol, name string) *AddCoinRequest {
+	req := new(AddCoinRequest)
+	req.Header = NewHeader()
+	req.Type = &tp
+	req.Idx = &idx
+	req.Symbol = &symbol
+	req.Name = &name
+	return req
+}
+
+func NewResetRequest() *ResetRequest {
+	req := new(ResetRequest)
+	req.Header = NewHeader()
+	return req
 }
 
 func MakeCheckReply(req *CheckRequest, state int32, devid *string) *CheckReply {
@@ -72,3 +97,33 @@ func MakeInitReply(req *InitRequest, devid string) *InitReply {
 	reply.DevId = &devid
 	return reply
 }
+
+func MakeHelloReply(req *HelloRequest) *HelloReply {
+	reply := new(HelloReply)
+	reply.Header = CloneHeader(req.Header)
+	ts := makeTimestamp()
+	reply.Timestamp = &ts
+	return reply
+}
+
+func MakeAddCoinReply(req *AddCoinRequest) *AddCoinReply {
+	reply := new(AddCoinReply)
+	reply.Header = CloneHeader(req.Header)
+	//reply.Path =
+	return reply
+}
+
+func MakeCreateAddressReply(req *CreateAddressRequest, addr string) *CreateAddressReply {
+
+	reply := new(CreateAddressReply)
+	reply.Header = CloneHeader(req.Header)
+	reply.Address = &addr
+	return reply
+}
+
+func MakeResetReply(req *ResetRequest) *ResetReply {
+	reply := new(ResetReply)
+	reply.Header = CloneHeader(req.Header)
+	return reply
+}
+
