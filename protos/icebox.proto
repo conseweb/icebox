@@ -9,34 +9,52 @@ import "nanopb.proto";
 
 // rpc只是用于演示相关接口，不用作实现
 service Icebox {
-    // getdevice info, 判断是否是特定设备，是否已经进行了初始化, 如果没有则需要进行初始化操作
-    // 如果已经进行了初始化，是否需要检测数据的合法性？
+
+    rpc FirstHi(HiRequest) returns (HiReply) {}
+    // 协商会话密钥过程。会话过程采用AES进行加密，密钥使用协商出来的共享密钥的前32字节
+    rpc NegotiateKey(NegotiateRequest) returns (NegotiateReply) {}
+    // 会话需要加密
+    rpc StartSession(StartRequest) returns (StartReply) {}
+
+    rpc Conversation(ConversationRequest) returns (ConversationReply) {}
+
+    // 结束当前会话后，立刻锁定设备；
+    rpc EndSession(EndRequest) returns (EndReply) {}
+
+    // getdevice info, 判断是否已经进行了初始化, 如果没有则需要进行初始化操作
+    // 如果已经进行了初始化，需要返回device_id
     rpc CheckDevice (CheckRequest) returns (CheckReply) {}
     // initailaize device: create a main private secret key
-    // 1. init(pin)   pin as parameter
+    // 1. init: ask user input pin from device
     // 2. pin ==> memoric words ==> seed
     // 3. generate secret key and encrypt it with pin
     rpc InitDevice (InitRequest) returns (InitReply) {}
     // Sends a greeting
     rpc HandShake (HelloRequest) returns (HelloReply) {}
     //
-//    rpc AddFeature (AddFeatureRequest) returns (AddFeatureReply) {}
+    //    rpc AddFeature (AddFeatureRequest) returns (AddFeatureReply) {}
 
     rpc AddCoin (AddCoinRequest) returns (AddCoinReply) {}
 
-//    rpc CreateFormula (CreateFormulaRequest) returns (CreateFormulaReply) {}
+    //    rpc CreateFormula (CreateFormulaRequest) returns (CreateFormulaReply) {}
 
     rpc CreateAddress (CreateAddressRequest) returns (CreateAddressReply) {}
 
-    rpc ListFeature (ListFeatureRequest) returns (ListFeatureReply) {}
+    rpc CreateSecret (CreateSecretRequest) returns (CreateSecretReply) {}
 
-//    rpc QueryFormula(QueryFormulaRequst) returns (QueryFormulaReply) {}
+    rpc ListCoin (ListCoinRequest) returns (ListCoinReply) {}
+
+    rpc ListSecret (ListSecretRequest) returns (ListSecretReply) {}
+
+    //    rpc QueryFormula(QueryFormulaRequst) returns (QueryFormulaReply) {}
 
     rpc ListFormula (ListFormulaRequest) returns (ListFormulaReply) {}
 
     rpc SignTx (SignTxRequest) returns (SignTxReply) {}
 
-    rpc RemoveFeature (RemoveFeatureRequest) returns (RemoveFeatureReply) {}
+    rpc RemoveCoin (RemoveCoinRequest) returns (RemoveCoinReply) {}
+
+    rpc DeleteSecret (DeleteSecretRequest) returns (DeleteSecretReply) {}
 
     rpc DeleteFormula (DeleteFormulaRequest) returns (DeleteFormulaReply) {}
     // remove all datas
@@ -61,9 +79,79 @@ message ReplyHeader {
     optional string message = 4[(nanopb).max_size = 128];
 }
 
+message HiRequest {
+    required Header header = 1;
+    required int64 magicA = 2;
+}
+
+message HiReply {
+    required ReplyHeader header = 1;
+    required int64 magicB = 2;
+//    required string model = 4;      // 设备型号
+//    required string searial = 5;    // 设备序列号
+}
+
+message NegotiateRequest {
+    required Header header = 1;
+    // pubKeyA
+    required string keyA = 4;
+}
+
+message NegotiateReply {
+    required ReplyHeader header = 1;
+    required string keyB = 2;
+}
+
+message StartRequest {
+    required Header header = 1;
+    // session id
+    required uint32 sessionID = 2;
+    // 会话有效时长，单位：秒
+    required uint32 duration = 3;
+}
+
+message StartReply {
+    required ReplyHeader header = 1;
+    required uint32 session_id = 2;
+}
+
+message ConversationRequest {
+    required Header header = 1;
+    // session id
+    required uint32 session_id = 2;
+    // message id
+    required uint32 message_id = 3;
+    // encrypted message
+    required string content = 4;
+    // signatures
+    required string signature = 5;
+}
+
+message ConversationReply {
+    required ReplyHeader header = 1;
+    // session id
+    required uint32 session_id = 2;
+    // message id
+    required uint32 message_id = 3;
+    // encrypted message
+    required string content = 4;
+    // signatures
+    required string signature = 5;
+}
+
+message EndRequest {
+    required Header header = 1;
+}
+
+message EndReply {
+    required ReplyHeader header = 1;
+}
+
+///////////////// Bussiness protocol ///////////////////////
+
 message CheckRequest {
     required Header header = 1;
-//    required string app_id = 2;
+    //    required string app_id = 2;
 }
 
 message CheckReply {
@@ -71,7 +159,7 @@ message CheckReply {
     required int32 state = 2;  // 0: uninited, 1: inited
     // if paired then return dev_id=hash(id+app_id)
     optional string dev_id = 3;
-//    optional string sn = 4; // device serial number
+    //    optional string sn = 4; // device serial number
 }
 
 message InitRequest {
@@ -153,6 +241,22 @@ message CreateAddressReply {
     required string address = 2[(nanopb).max_size = 64]; // address or password
 }
 
+message CreateSecretRequest {
+    required Header header = 1;
+    required uint32 type = 2;
+    required uint32 idx = 3;
+    // TODO: 密码需要加密,密钥应该使用会话id相关key
+    required string password = 4[(nanopb).max_size = 64];
+    // TODO: 该最大值未经验证
+    optional string name = 5[(nanopb).max_size = 32];
+}
+
+message CreateSecretReply {
+    required ReplyHeader header = 1;
+    // TODO: 该最大值未经验证
+    required string address = 2[(nanopb).max_size = 64]; // address or password
+}
+
 message SignTxRequest {
     required Header header = 1;
     required uint32 type = 2;
@@ -171,10 +275,10 @@ message SignTxReply {
 }
 
 // list all of wallets
-message ListFeatureRequest {
+message ListCoinRequest {
     required Header header = 1;
 }
-message ListFeatureReply {
+message ListCoinReply {
     required ReplyHeader header = 1;
     required uint32 max = 2;
     repeated uint32 type = 3[(nanopb).max_count = 8];
@@ -187,6 +291,19 @@ message ListFeatureReply {
 //message QueryFormulaReply {
 //    required Header header = 1;
 //}
+
+message ListSecretRequest {
+    required Header header = 1;
+    required uint32 iscoin = 2[default = 1];
+    required uint32 type = 3;
+    optional uint32 idx = 4;
+}
+
+message ListSecretReply {
+    required ReplyHeader header = 1;
+    required uint32 max = 2;
+    repeated Formula addr = 3[(nanopb).max_count = 8];
+}
 
 message ListFormulaRequest {
     required Header header = 1;
@@ -208,12 +325,22 @@ message ListFormulaReply {
     repeated Formula addr = 3[(nanopb).max_count = 8];
 }
 
-message RemoveFeatureRequest {
+message RemoveCoinRequest {
     required Header header = 1;
     required uint32 type = 2;
 }
 
-message RemoveFeatureReply {
+message RemoveCoinReply {
+    required ReplyHeader header = 1;
+}
+
+message DeleteSecretRequest {
+    required Header header = 1;
+    required uint32 type = 2;
+    required uint32 idx = 3;
+}
+
+message DeleteSecretReply {
     required ReplyHeader header = 1;
 }
 

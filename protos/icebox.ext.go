@@ -44,6 +44,20 @@ func CloneHeader(h *Header) *ReplyHeader {
 	return header
 }
 
+func NewHiRequest(magic int64) *HiRequest {
+	req := new(HiRequest)
+	req.Header = NewHeader()
+	req.MagicA = &magic
+	return req
+}
+
+func NewNegotiateRequest(key string) *NegotiateRequest {
+	req := new(NegotiateRequest)
+	req.Header = NewHeader()
+	req.KeyA = &key
+	return req
+}
+
 func NewCheckRequest() *CheckRequest {
 	req := new(CheckRequest)
 	req.Header = NewHeader()
@@ -77,6 +91,24 @@ func NewResetRequest() *ResetRequest {
 	req := new(ResetRequest)
 	req.Header = NewHeader()
 	return req
+}
+
+func MakeHiReply(req *HiRequest, magic int64) *HiReply {
+
+	reply := new(HiReply)
+	reply.Header = CloneHeader(req.Header)
+	reply.MagicB = &magic
+
+	return reply
+}
+
+func MakeNegotiateReply(req *NegotiateRequest, key string) *NegotiateReply {
+
+	reply := new(NegotiateReply)
+	reply.Header = CloneHeader(req.Header)
+	reply.KeyB = &key
+
+	return reply
 }
 
 func MakeCheckReply(req *CheckRequest, state int32, devid *string) *CheckReply {

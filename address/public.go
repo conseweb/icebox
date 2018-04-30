@@ -49,3 +49,14 @@ func (p *PublicKey) CompressBytes() []byte {
 	return p.Curve.CompressPoint(p.X, p.Y)
 }
 
+func (p *PublicKey) DeCompress(bs string) (pk *PublicKey, err error) {
+	cp, err := FromBase58(bs)
+	if err != nil {
+		return nil, err
+	}
+
+	pk.Curve = p.Curve
+	pk.X, pk.Y, err = p.Curve.DecompressPoint(cp)
+
+	return pk, nil
+}

@@ -10,6 +10,16 @@ It is generated from these files:
 It has these top-level messages:
 	Header
 	ReplyHeader
+	HiRequest
+	HiReply
+	NegotiateRequest
+	NegotiateReply
+	StartRequest
+	StartReply
+	ConversationRequest
+	ConversationReply
+	EndRequest
+	EndReply
 	CheckRequest
 	CheckReply
 	InitRequest
@@ -24,15 +34,19 @@ It has these top-level messages:
 	CreateFormulaReply
 	CreateAddressRequest
 	CreateAddressReply
+	CreateSecretRequest
+	CreateSecretReply
 	SignTxRequest
 	SignTxReply
-	ListFeatureRequest
-	ListFeatureReply
+	ListCoinRequest
+	ListCoinReply
+	ListSecretRequest
+	ListSecretReply
 	ListFormulaRequest
 	Formula
 	ListFormulaReply
-	RemoveFeatureRequest
-	RemoveFeatureReply
+	RemoveCoinRequest
+	RemoveCoinReply
 	DeleteFormulaRequest
 	DeleteFormulaReply
 	ResetRequest
@@ -43,7 +57,7 @@ package protos
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
-import _ "."
+//import _ "."
 
 import (
 	context "golang.org/x/net/context"
@@ -131,6 +145,307 @@ func (m *ReplyHeader) GetMessage() string {
 	return ""
 }
 
+type HiRequest struct {
+	Header           *Header `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
+	MagicA           *int64  `protobuf:"varint,2,req,name=magicA" json:"magicA,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *HiRequest) Reset()                    { *m = HiRequest{} }
+func (m *HiRequest) String() string            { return proto.CompactTextString(m) }
+func (*HiRequest) ProtoMessage()               {}
+func (*HiRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+
+func (m *HiRequest) GetHeader() *Header {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+func (m *HiRequest) GetMagicA() int64 {
+	if m != nil && m.MagicA != nil {
+		return *m.MagicA
+	}
+	return 0
+}
+
+type HiReply struct {
+	Header           *ReplyHeader `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
+	MagicB           *int64       `protobuf:"varint,2,req,name=magicB" json:"magicB,omitempty"`
+	XXX_unrecognized []byte       `json:"-"`
+}
+
+func (m *HiReply) Reset()                    { *m = HiReply{} }
+func (m *HiReply) String() string            { return proto.CompactTextString(m) }
+func (*HiReply) ProtoMessage()               {}
+func (*HiReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+
+func (m *HiReply) GetHeader() *ReplyHeader {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+func (m *HiReply) GetMagicB() int64 {
+	if m != nil && m.MagicB != nil {
+		return *m.MagicB
+	}
+	return 0
+}
+
+type NegotiateRequest struct {
+	Header *Header `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
+	// pubKeyA
+	KeyA             *string `protobuf:"bytes,4,req,name=keyA" json:"keyA,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *NegotiateRequest) Reset()                    { *m = NegotiateRequest{} }
+func (m *NegotiateRequest) String() string            { return proto.CompactTextString(m) }
+func (*NegotiateRequest) ProtoMessage()               {}
+func (*NegotiateRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+
+func (m *NegotiateRequest) GetHeader() *Header {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+func (m *NegotiateRequest) GetKeyA() string {
+	if m != nil && m.KeyA != nil {
+		return *m.KeyA
+	}
+	return ""
+}
+
+type NegotiateReply struct {
+	Header           *ReplyHeader `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
+	KeyB             *string      `protobuf:"bytes,2,req,name=keyB" json:"keyB,omitempty"`
+	XXX_unrecognized []byte       `json:"-"`
+}
+
+func (m *NegotiateReply) Reset()                    { *m = NegotiateReply{} }
+func (m *NegotiateReply) String() string            { return proto.CompactTextString(m) }
+func (*NegotiateReply) ProtoMessage()               {}
+func (*NegotiateReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+
+func (m *NegotiateReply) GetHeader() *ReplyHeader {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+func (m *NegotiateReply) GetKeyB() string {
+	if m != nil && m.KeyB != nil {
+		return *m.KeyB
+	}
+	return ""
+}
+
+type StartRequest struct {
+	Header *Header `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
+	// session id
+	SessionID *uint32 `protobuf:"varint,2,req,name=sessionID" json:"sessionID,omitempty"`
+	// 会话有效时长，单位：秒
+	Duration         *uint32 `protobuf:"varint,3,req,name=duration" json:"duration,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *StartRequest) Reset()                    { *m = StartRequest{} }
+func (m *StartRequest) String() string            { return proto.CompactTextString(m) }
+func (*StartRequest) ProtoMessage()               {}
+func (*StartRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+
+func (m *StartRequest) GetHeader() *Header {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+func (m *StartRequest) GetSessionID() uint32 {
+	if m != nil && m.SessionID != nil {
+		return *m.SessionID
+	}
+	return 0
+}
+
+func (m *StartRequest) GetDuration() uint32 {
+	if m != nil && m.Duration != nil {
+		return *m.Duration
+	}
+	return 0
+}
+
+type StartReply struct {
+	Header           *ReplyHeader `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
+	SessionId        *uint32      `protobuf:"varint,2,req,name=session_id,json=sessionId" json:"session_id,omitempty"`
+	XXX_unrecognized []byte       `json:"-"`
+}
+
+func (m *StartReply) Reset()                    { *m = StartReply{} }
+func (m *StartReply) String() string            { return proto.CompactTextString(m) }
+func (*StartReply) ProtoMessage()               {}
+func (*StartReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+
+func (m *StartReply) GetHeader() *ReplyHeader {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+func (m *StartReply) GetSessionId() uint32 {
+	if m != nil && m.SessionId != nil {
+		return *m.SessionId
+	}
+	return 0
+}
+
+type ConversationRequest struct {
+	Header *Header `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
+	// session id
+	SessionId *uint32 `protobuf:"varint,2,req,name=session_id,json=sessionId" json:"session_id,omitempty"`
+	// message id
+	MessageId *uint32 `protobuf:"varint,3,req,name=message_id,json=messageId" json:"message_id,omitempty"`
+	// encrypted message
+	Content *string `protobuf:"bytes,4,req,name=content" json:"content,omitempty"`
+	// signatures
+	Signature        *string `protobuf:"bytes,5,req,name=signature" json:"signature,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *ConversationRequest) Reset()                    { *m = ConversationRequest{} }
+func (m *ConversationRequest) String() string            { return proto.CompactTextString(m) }
+func (*ConversationRequest) ProtoMessage()               {}
+func (*ConversationRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+
+func (m *ConversationRequest) GetHeader() *Header {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+func (m *ConversationRequest) GetSessionId() uint32 {
+	if m != nil && m.SessionId != nil {
+		return *m.SessionId
+	}
+	return 0
+}
+
+func (m *ConversationRequest) GetMessageId() uint32 {
+	if m != nil && m.MessageId != nil {
+		return *m.MessageId
+	}
+	return 0
+}
+
+func (m *ConversationRequest) GetContent() string {
+	if m != nil && m.Content != nil {
+		return *m.Content
+	}
+	return ""
+}
+
+func (m *ConversationRequest) GetSignature() string {
+	if m != nil && m.Signature != nil {
+		return *m.Signature
+	}
+	return ""
+}
+
+type ConversationReply struct {
+	Header *ReplyHeader `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
+	// session id
+	SessionId *uint32 `protobuf:"varint,2,req,name=session_id,json=sessionId" json:"session_id,omitempty"`
+	// message id
+	MessageId *uint32 `protobuf:"varint,3,req,name=message_id,json=messageId" json:"message_id,omitempty"`
+	// encrypted message
+	Content *string `protobuf:"bytes,4,req,name=content" json:"content,omitempty"`
+	// signatures
+	Signature        *string `protobuf:"bytes,5,req,name=signature" json:"signature,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *ConversationReply) Reset()                    { *m = ConversationReply{} }
+func (m *ConversationReply) String() string            { return proto.CompactTextString(m) }
+func (*ConversationReply) ProtoMessage()               {}
+func (*ConversationReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+
+func (m *ConversationReply) GetHeader() *ReplyHeader {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+func (m *ConversationReply) GetSessionId() uint32 {
+	if m != nil && m.SessionId != nil {
+		return *m.SessionId
+	}
+	return 0
+}
+
+func (m *ConversationReply) GetMessageId() uint32 {
+	if m != nil && m.MessageId != nil {
+		return *m.MessageId
+	}
+	return 0
+}
+
+func (m *ConversationReply) GetContent() string {
+	if m != nil && m.Content != nil {
+		return *m.Content
+	}
+	return ""
+}
+
+func (m *ConversationReply) GetSignature() string {
+	if m != nil && m.Signature != nil {
+		return *m.Signature
+	}
+	return ""
+}
+
+type EndRequest struct {
+	Header           *Header `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *EndRequest) Reset()                    { *m = EndRequest{} }
+func (m *EndRequest) String() string            { return proto.CompactTextString(m) }
+func (*EndRequest) ProtoMessage()               {}
+func (*EndRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+
+func (m *EndRequest) GetHeader() *Header {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+type EndReply struct {
+	Header           *ReplyHeader `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
+	XXX_unrecognized []byte       `json:"-"`
+}
+
+func (m *EndReply) Reset()                    { *m = EndReply{} }
+func (m *EndReply) String() string            { return proto.CompactTextString(m) }
+func (*EndReply) ProtoMessage()               {}
+func (*EndReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+
+func (m *EndReply) GetHeader() *ReplyHeader {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
 type CheckRequest struct {
 	Header           *Header `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
@@ -139,7 +454,7 @@ type CheckRequest struct {
 func (m *CheckRequest) Reset()                    { *m = CheckRequest{} }
 func (m *CheckRequest) String() string            { return proto.CompactTextString(m) }
 func (*CheckRequest) ProtoMessage()               {}
-func (*CheckRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{2} }
+func (*CheckRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
 
 func (m *CheckRequest) GetHeader() *Header {
 	if m != nil {
@@ -159,7 +474,7 @@ type CheckReply struct {
 func (m *CheckReply) Reset()                    { *m = CheckReply{} }
 func (m *CheckReply) String() string            { return proto.CompactTextString(m) }
 func (*CheckReply) ProtoMessage()               {}
-func (*CheckReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{3} }
+func (*CheckReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
 
 func (m *CheckReply) GetHeader() *ReplyHeader {
 	if m != nil {
@@ -191,7 +506,7 @@ type InitRequest struct {
 func (m *InitRequest) Reset()                    { *m = InitRequest{} }
 func (m *InitRequest) String() string            { return proto.CompactTextString(m) }
 func (*InitRequest) ProtoMessage()               {}
-func (*InitRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{4} }
+func (*InitRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
 
 func (m *InitRequest) GetHeader() *Header {
 	if m != nil {
@@ -216,7 +531,7 @@ type InitReply struct {
 func (m *InitReply) Reset()                    { *m = InitReply{} }
 func (m *InitReply) String() string            { return proto.CompactTextString(m) }
 func (*InitReply) ProtoMessage()               {}
-func (*InitReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{5} }
+func (*InitReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
 
 func (m *InitReply) GetHeader() *ReplyHeader {
 	if m != nil {
@@ -241,7 +556,7 @@ type HelloRequest struct {
 func (m *HelloRequest) Reset()                    { *m = HelloRequest{} }
 func (m *HelloRequest) String() string            { return proto.CompactTextString(m) }
 func (*HelloRequest) ProtoMessage()               {}
-func (*HelloRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{6} }
+func (*HelloRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
 
 func (m *HelloRequest) GetHeader() *Header {
 	if m != nil {
@@ -260,7 +575,7 @@ type HelloReply struct {
 func (m *HelloReply) Reset()                    { *m = HelloReply{} }
 func (m *HelloReply) String() string            { return proto.CompactTextString(m) }
 func (*HelloReply) ProtoMessage()               {}
-func (*HelloReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{7} }
+func (*HelloReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{17} }
 
 func (m *HelloReply) GetHeader() *ReplyHeader {
 	if m != nil {
@@ -288,7 +603,7 @@ type AddFeatureRequest struct {
 func (m *AddFeatureRequest) Reset()                    { *m = AddFeatureRequest{} }
 func (m *AddFeatureRequest) String() string            { return proto.CompactTextString(m) }
 func (*AddFeatureRequest) ProtoMessage()               {}
-func (*AddFeatureRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{8} }
+func (*AddFeatureRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{18} }
 
 func (m *AddFeatureRequest) GetHeader() *Header {
 	if m != nil {
@@ -334,7 +649,7 @@ type AddFeatureReply struct {
 func (m *AddFeatureReply) Reset()                    { *m = AddFeatureReply{} }
 func (m *AddFeatureReply) String() string            { return proto.CompactTextString(m) }
 func (*AddFeatureReply) ProtoMessage()               {}
-func (*AddFeatureReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{9} }
+func (*AddFeatureReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{19} }
 
 func (m *AddFeatureReply) GetHeader() *ReplyHeader {
 	if m != nil {
@@ -363,7 +678,7 @@ type AddCoinRequest struct {
 func (m *AddCoinRequest) Reset()                    { *m = AddCoinRequest{} }
 func (m *AddCoinRequest) String() string            { return proto.CompactTextString(m) }
 func (*AddCoinRequest) ProtoMessage()               {}
-func (*AddCoinRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{10} }
+func (*AddCoinRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{20} }
 
 func (m *AddCoinRequest) GetHeader() *Header {
 	if m != nil {
@@ -408,7 +723,7 @@ type AddCoinReply struct {
 func (m *AddCoinReply) Reset()                    { *m = AddCoinReply{} }
 func (m *AddCoinReply) String() string            { return proto.CompactTextString(m) }
 func (*AddCoinReply) ProtoMessage()               {}
-func (*AddCoinReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{11} }
+func (*AddCoinReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{21} }
 
 func (m *AddCoinReply) GetHeader() *ReplyHeader {
 	if m != nil {
@@ -430,7 +745,7 @@ type CreateFormulaRequest struct {
 func (m *CreateFormulaRequest) Reset()                    { *m = CreateFormulaRequest{} }
 func (m *CreateFormulaRequest) String() string            { return proto.CompactTextString(m) }
 func (*CreateFormulaRequest) ProtoMessage()               {}
-func (*CreateFormulaRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{12} }
+func (*CreateFormulaRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{22} }
 
 const Default_CreateFormulaRequest_Iscoin uint32 = 1
 
@@ -479,7 +794,7 @@ type CreateFormulaReply struct {
 func (m *CreateFormulaReply) Reset()                    { *m = CreateFormulaReply{} }
 func (m *CreateFormulaReply) String() string            { return proto.CompactTextString(m) }
 func (*CreateFormulaReply) ProtoMessage()               {}
-func (*CreateFormulaReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{13} }
+func (*CreateFormulaReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{23} }
 
 func (m *CreateFormulaReply) GetHeader() *ReplyHeader {
 	if m != nil {
@@ -509,7 +824,7 @@ type CreateAddressRequest struct {
 func (m *CreateAddressRequest) Reset()                    { *m = CreateAddressRequest{} }
 func (m *CreateAddressRequest) String() string            { return proto.CompactTextString(m) }
 func (*CreateAddressRequest) ProtoMessage()               {}
-func (*CreateAddressRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{14} }
+func (*CreateAddressRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{24} }
 
 func (m *CreateAddressRequest) GetHeader() *Header {
 	if m != nil {
@@ -556,7 +871,7 @@ type CreateAddressReply struct {
 func (m *CreateAddressReply) Reset()                    { *m = CreateAddressReply{} }
 func (m *CreateAddressReply) String() string            { return proto.CompactTextString(m) }
 func (*CreateAddressReply) ProtoMessage()               {}
-func (*CreateAddressReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{15} }
+func (*CreateAddressReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{25} }
 
 func (m *CreateAddressReply) GetHeader() *ReplyHeader {
 	if m != nil {
@@ -566,6 +881,83 @@ func (m *CreateAddressReply) GetHeader() *ReplyHeader {
 }
 
 func (m *CreateAddressReply) GetAddress() string {
+	if m != nil && m.Address != nil {
+		return *m.Address
+	}
+	return ""
+}
+
+type CreateSecretRequest struct {
+	Header *Header `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
+	Type   *uint32 `protobuf:"varint,2,req,name=type" json:"type,omitempty"`
+	Idx    *uint32 `protobuf:"varint,3,req,name=idx" json:"idx,omitempty"`
+	// TODO: 密码需要加密,密钥应该使用会话id相关key
+	Password *string `protobuf:"bytes,4,req,name=password" json:"password,omitempty"`
+	// TODO: 该最大值未经验证
+	Name             *string `protobuf:"bytes,5,opt,name=name" json:"name,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *CreateSecretRequest) Reset()                    { *m = CreateSecretRequest{} }
+func (m *CreateSecretRequest) String() string            { return proto.CompactTextString(m) }
+func (*CreateSecretRequest) ProtoMessage()               {}
+func (*CreateSecretRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{26} }
+
+func (m *CreateSecretRequest) GetHeader() *Header {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+func (m *CreateSecretRequest) GetType() uint32 {
+	if m != nil && m.Type != nil {
+		return *m.Type
+	}
+	return 0
+}
+
+func (m *CreateSecretRequest) GetIdx() uint32 {
+	if m != nil && m.Idx != nil {
+		return *m.Idx
+	}
+	return 0
+}
+
+func (m *CreateSecretRequest) GetPassword() string {
+	if m != nil && m.Password != nil {
+		return *m.Password
+	}
+	return ""
+}
+
+func (m *CreateSecretRequest) GetName() string {
+	if m != nil && m.Name != nil {
+		return *m.Name
+	}
+	return ""
+}
+
+type CreateSecretReply struct {
+	Header *ReplyHeader `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
+	// TODO: 该最大值未经验证
+	Address          *string `protobuf:"bytes,2,req,name=address" json:"address,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *CreateSecretReply) Reset()                    { *m = CreateSecretReply{} }
+func (m *CreateSecretReply) String() string            { return proto.CompactTextString(m) }
+func (*CreateSecretReply) ProtoMessage()               {}
+func (*CreateSecretReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{27} }
+
+func (m *CreateSecretReply) GetHeader() *ReplyHeader {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+func (m *CreateSecretReply) GetAddress() string {
 	if m != nil && m.Address != nil {
 		return *m.Address
 	}
@@ -587,7 +979,7 @@ type SignTxRequest struct {
 func (m *SignTxRequest) Reset()                    { *m = SignTxRequest{} }
 func (m *SignTxRequest) String() string            { return proto.CompactTextString(m) }
 func (*SignTxRequest) ProtoMessage()               {}
-func (*SignTxRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{16} }
+func (*SignTxRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{28} }
 
 func (m *SignTxRequest) GetHeader() *Header {
 	if m != nil {
@@ -641,7 +1033,7 @@ type SignTxReply struct {
 func (m *SignTxReply) Reset()                    { *m = SignTxReply{} }
 func (m *SignTxReply) String() string            { return proto.CompactTextString(m) }
 func (*SignTxReply) ProtoMessage()               {}
-func (*SignTxReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{17} }
+func (*SignTxReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{29} }
 
 func (m *SignTxReply) GetHeader() *ReplyHeader {
 	if m != nil {
@@ -658,52 +1050,128 @@ func (m *SignTxReply) GetSignedTx() string {
 }
 
 // list all of wallets
-type ListFeatureRequest struct {
+type ListCoinRequest struct {
 	Header           *Header `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
-func (m *ListFeatureRequest) Reset()                    { *m = ListFeatureRequest{} }
-func (m *ListFeatureRequest) String() string            { return proto.CompactTextString(m) }
-func (*ListFeatureRequest) ProtoMessage()               {}
-func (*ListFeatureRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{18} }
+func (m *ListCoinRequest) Reset()                    { *m = ListCoinRequest{} }
+func (m *ListCoinRequest) String() string            { return proto.CompactTextString(m) }
+func (*ListCoinRequest) ProtoMessage()               {}
+func (*ListCoinRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{30} }
 
-func (m *ListFeatureRequest) GetHeader() *Header {
+func (m *ListCoinRequest) GetHeader() *Header {
 	if m != nil {
 		return m.Header
 	}
 	return nil
 }
 
-type ListFeatureReply struct {
+type ListCoinReply struct {
 	Header           *ReplyHeader `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
 	Max              *uint32      `protobuf:"varint,2,req,name=max" json:"max,omitempty"`
 	Type             []uint32     `protobuf:"varint,3,rep,name=type" json:"type,omitempty"`
 	XXX_unrecognized []byte       `json:"-"`
 }
 
-func (m *ListFeatureReply) Reset()                    { *m = ListFeatureReply{} }
-func (m *ListFeatureReply) String() string            { return proto.CompactTextString(m) }
-func (*ListFeatureReply) ProtoMessage()               {}
-func (*ListFeatureReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{19} }
+func (m *ListCoinReply) Reset()                    { *m = ListCoinReply{} }
+func (m *ListCoinReply) String() string            { return proto.CompactTextString(m) }
+func (*ListCoinReply) ProtoMessage()               {}
+func (*ListCoinReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{31} }
 
-func (m *ListFeatureReply) GetHeader() *ReplyHeader {
+func (m *ListCoinReply) GetHeader() *ReplyHeader {
 	if m != nil {
 		return m.Header
 	}
 	return nil
 }
 
-func (m *ListFeatureReply) GetMax() uint32 {
+func (m *ListCoinReply) GetMax() uint32 {
 	if m != nil && m.Max != nil {
 		return *m.Max
 	}
 	return 0
 }
 
-func (m *ListFeatureReply) GetType() []uint32 {
+func (m *ListCoinReply) GetType() []uint32 {
 	if m != nil {
 		return m.Type
+	}
+	return nil
+}
+
+type ListSecretRequest struct {
+	Header           *Header `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
+	Iscoin           *uint32 `protobuf:"varint,2,req,name=iscoin,def=1" json:"iscoin,omitempty"`
+	Type             *uint32 `protobuf:"varint,3,req,name=type" json:"type,omitempty"`
+	Idx              *uint32 `protobuf:"varint,4,opt,name=idx" json:"idx,omitempty"`
+	XXX_unrecognized []byte  `json:"-"`
+}
+
+func (m *ListSecretRequest) Reset()                    { *m = ListSecretRequest{} }
+func (m *ListSecretRequest) String() string            { return proto.CompactTextString(m) }
+func (*ListSecretRequest) ProtoMessage()               {}
+func (*ListSecretRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{32} }
+
+const Default_ListSecretRequest_Iscoin uint32 = 1
+
+func (m *ListSecretRequest) GetHeader() *Header {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+func (m *ListSecretRequest) GetIscoin() uint32 {
+	if m != nil && m.Iscoin != nil {
+		return *m.Iscoin
+	}
+	return Default_ListSecretRequest_Iscoin
+}
+
+func (m *ListSecretRequest) GetType() uint32 {
+	if m != nil && m.Type != nil {
+		return *m.Type
+	}
+	return 0
+}
+
+func (m *ListSecretRequest) GetIdx() uint32 {
+	if m != nil && m.Idx != nil {
+		return *m.Idx
+	}
+	return 0
+}
+
+type ListSecretReply struct {
+	Header           *ReplyHeader `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
+	Max              *uint32      `protobuf:"varint,2,req,name=max" json:"max,omitempty"`
+	Addr             []*Formula   `protobuf:"bytes,3,rep,name=addr" json:"addr,omitempty"`
+	XXX_unrecognized []byte       `json:"-"`
+}
+
+func (m *ListSecretReply) Reset()                    { *m = ListSecretReply{} }
+func (m *ListSecretReply) String() string            { return proto.CompactTextString(m) }
+func (*ListSecretReply) ProtoMessage()               {}
+func (*ListSecretReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{33} }
+
+func (m *ListSecretReply) GetHeader() *ReplyHeader {
+	if m != nil {
+		return m.Header
+	}
+	return nil
+}
+
+func (m *ListSecretReply) GetMax() uint32 {
+	if m != nil && m.Max != nil {
+		return *m.Max
+	}
+	return 0
+}
+
+func (m *ListSecretReply) GetAddr() []*Formula {
+	if m != nil {
+		return m.Addr
 	}
 	return nil
 }
@@ -719,7 +1187,7 @@ type ListFormulaRequest struct {
 func (m *ListFormulaRequest) Reset()                    { *m = ListFormulaRequest{} }
 func (m *ListFormulaRequest) String() string            { return proto.CompactTextString(m) }
 func (*ListFormulaRequest) ProtoMessage()               {}
-func (*ListFormulaRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{20} }
+func (*ListFormulaRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{34} }
 
 const Default_ListFormulaRequest_Iscoin uint32 = 1
 
@@ -762,7 +1230,7 @@ type Formula struct {
 func (m *Formula) Reset()                    { *m = Formula{} }
 func (m *Formula) String() string            { return proto.CompactTextString(m) }
 func (*Formula) ProtoMessage()               {}
-func (*Formula) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{21} }
+func (*Formula) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{35} }
 
 func (m *Formula) GetType() uint32 {
 	if m != nil && m.Type != nil {
@@ -795,7 +1263,7 @@ type ListFormulaReply struct {
 func (m *ListFormulaReply) Reset()                    { *m = ListFormulaReply{} }
 func (m *ListFormulaReply) String() string            { return proto.CompactTextString(m) }
 func (*ListFormulaReply) ProtoMessage()               {}
-func (*ListFormulaReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{22} }
+func (*ListFormulaReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{36} }
 
 func (m *ListFormulaReply) GetHeader() *ReplyHeader {
 	if m != nil {
@@ -818,42 +1286,42 @@ func (m *ListFormulaReply) GetAddr() []*Formula {
 	return nil
 }
 
-type RemoveFeatureRequest struct {
+type RemoveCoinRequest struct {
 	Header           *Header `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
 	Type             *uint32 `protobuf:"varint,2,req,name=type" json:"type,omitempty"`
 	XXX_unrecognized []byte  `json:"-"`
 }
 
-func (m *RemoveFeatureRequest) Reset()                    { *m = RemoveFeatureRequest{} }
-func (m *RemoveFeatureRequest) String() string            { return proto.CompactTextString(m) }
-func (*RemoveFeatureRequest) ProtoMessage()               {}
-func (*RemoveFeatureRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{23} }
+func (m *RemoveCoinRequest) Reset()                    { *m = RemoveCoinRequest{} }
+func (m *RemoveCoinRequest) String() string            { return proto.CompactTextString(m) }
+func (*RemoveCoinRequest) ProtoMessage()               {}
+func (*RemoveCoinRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{37} }
 
-func (m *RemoveFeatureRequest) GetHeader() *Header {
+func (m *RemoveCoinRequest) GetHeader() *Header {
 	if m != nil {
 		return m.Header
 	}
 	return nil
 }
 
-func (m *RemoveFeatureRequest) GetType() uint32 {
+func (m *RemoveCoinRequest) GetType() uint32 {
 	if m != nil && m.Type != nil {
 		return *m.Type
 	}
 	return 0
 }
 
-type RemoveFeatureReply struct {
+type RemoveCoinReply struct {
 	Header           *ReplyHeader `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
 	XXX_unrecognized []byte       `json:"-"`
 }
 
-func (m *RemoveFeatureReply) Reset()                    { *m = RemoveFeatureReply{} }
-func (m *RemoveFeatureReply) String() string            { return proto.CompactTextString(m) }
-func (*RemoveFeatureReply) ProtoMessage()               {}
-func (*RemoveFeatureReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{24} }
+func (m *RemoveCoinReply) Reset()                    { *m = RemoveCoinReply{} }
+func (m *RemoveCoinReply) String() string            { return proto.CompactTextString(m) }
+func (*RemoveCoinReply) ProtoMessage()               {}
+func (*RemoveCoinReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{38} }
 
-func (m *RemoveFeatureReply) GetHeader() *ReplyHeader {
+func (m *RemoveCoinReply) GetHeader() *ReplyHeader {
 	if m != nil {
 		return m.Header
 	}
@@ -870,7 +1338,7 @@ type DeleteFormulaRequest struct {
 func (m *DeleteFormulaRequest) Reset()                    { *m = DeleteFormulaRequest{} }
 func (m *DeleteFormulaRequest) String() string            { return proto.CompactTextString(m) }
 func (*DeleteFormulaRequest) ProtoMessage()               {}
-func (*DeleteFormulaRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{25} }
+func (*DeleteFormulaRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{39} }
 
 func (m *DeleteFormulaRequest) GetHeader() *Header {
 	if m != nil {
@@ -901,7 +1369,7 @@ type DeleteFormulaReply struct {
 func (m *DeleteFormulaReply) Reset()                    { *m = DeleteFormulaReply{} }
 func (m *DeleteFormulaReply) String() string            { return proto.CompactTextString(m) }
 func (*DeleteFormulaReply) ProtoMessage()               {}
-func (*DeleteFormulaReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{26} }
+func (*DeleteFormulaReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{40} }
 
 func (m *DeleteFormulaReply) GetHeader() *ReplyHeader {
 	if m != nil {
@@ -918,7 +1386,7 @@ type ResetRequest struct {
 func (m *ResetRequest) Reset()                    { *m = ResetRequest{} }
 func (m *ResetRequest) String() string            { return proto.CompactTextString(m) }
 func (*ResetRequest) ProtoMessage()               {}
-func (*ResetRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{27} }
+func (*ResetRequest) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{41} }
 
 func (m *ResetRequest) GetHeader() *Header {
 	if m != nil {
@@ -935,7 +1403,7 @@ type ResetReply struct {
 func (m *ResetReply) Reset()                    { *m = ResetReply{} }
 func (m *ResetReply) String() string            { return proto.CompactTextString(m) }
 func (*ResetReply) ProtoMessage()               {}
-func (*ResetReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{28} }
+func (*ResetReply) Descriptor() ([]byte, []int) { return fileDescriptor0, []int{42} }
 
 func (m *ResetReply) GetHeader() *ReplyHeader {
 	if m != nil {
@@ -947,6 +1415,16 @@ func (m *ResetReply) GetHeader() *ReplyHeader {
 func init() {
 	proto.RegisterType((*Header)(nil), "Header")
 	proto.RegisterType((*ReplyHeader)(nil), "ReplyHeader")
+	proto.RegisterType((*HiRequest)(nil), "HiRequest")
+	proto.RegisterType((*HiReply)(nil), "HiReply")
+	proto.RegisterType((*NegotiateRequest)(nil), "NegotiateRequest")
+	proto.RegisterType((*NegotiateReply)(nil), "NegotiateReply")
+	proto.RegisterType((*StartRequest)(nil), "StartRequest")
+	proto.RegisterType((*StartReply)(nil), "StartReply")
+	proto.RegisterType((*ConversationRequest)(nil), "ConversationRequest")
+	proto.RegisterType((*ConversationReply)(nil), "ConversationReply")
+	proto.RegisterType((*EndRequest)(nil), "EndRequest")
+	proto.RegisterType((*EndReply)(nil), "EndReply")
 	proto.RegisterType((*CheckRequest)(nil), "CheckRequest")
 	proto.RegisterType((*CheckReply)(nil), "CheckReply")
 	proto.RegisterType((*InitRequest)(nil), "InitRequest")
@@ -961,15 +1439,19 @@ func init() {
 	proto.RegisterType((*CreateFormulaReply)(nil), "CreateFormulaReply")
 	proto.RegisterType((*CreateAddressRequest)(nil), "CreateAddressRequest")
 	proto.RegisterType((*CreateAddressReply)(nil), "CreateAddressReply")
+	proto.RegisterType((*CreateSecretRequest)(nil), "CreateSecretRequest")
+	proto.RegisterType((*CreateSecretReply)(nil), "CreateSecretReply")
 	proto.RegisterType((*SignTxRequest)(nil), "SignTxRequest")
 	proto.RegisterType((*SignTxReply)(nil), "SignTxReply")
-	proto.RegisterType((*ListFeatureRequest)(nil), "ListFeatureRequest")
-	proto.RegisterType((*ListFeatureReply)(nil), "ListFeatureReply")
+	proto.RegisterType((*ListCoinRequest)(nil), "ListCoinRequest")
+	proto.RegisterType((*ListCoinReply)(nil), "ListCoinReply")
+	proto.RegisterType((*ListSecretRequest)(nil), "ListSecretRequest")
+	proto.RegisterType((*ListSecretReply)(nil), "ListSecretReply")
 	proto.RegisterType((*ListFormulaRequest)(nil), "ListFormulaRequest")
 	proto.RegisterType((*Formula)(nil), "Formula")
 	proto.RegisterType((*ListFormulaReply)(nil), "ListFormulaReply")
-	proto.RegisterType((*RemoveFeatureRequest)(nil), "RemoveFeatureRequest")
-	proto.RegisterType((*RemoveFeatureReply)(nil), "RemoveFeatureReply")
+	proto.RegisterType((*RemoveCoinRequest)(nil), "RemoveCoinRequest")
+	proto.RegisterType((*RemoveCoinReply)(nil), "RemoveCoinReply")
 	proto.RegisterType((*DeleteFormulaRequest)(nil), "DeleteFormulaRequest")
 	proto.RegisterType((*DeleteFormulaReply)(nil), "DeleteFormulaReply")
 	proto.RegisterType((*ResetRequest)(nil), "ResetRequest")
@@ -987,11 +1469,19 @@ const _ = grpc.SupportPackageIsVersion4
 // Client API for Icebox service
 
 type IceboxClient interface {
-	// getdevice info, 判断是否是特定设备，是否已经进行了初始化, 如果没有则需要进行初始化操作
-	// 如果已经进行了初始化，是否需要检测数据的合法性？
+	FirstHi(ctx context.Context, in *HiRequest, opts ...grpc.CallOption) (*HiReply, error)
+	// 协商会话密钥过程
+	NegotiateKey(ctx context.Context, in *NegotiateRequest, opts ...grpc.CallOption) (*NegotiateReply, error)
+	// 会话需要加密
+	StartSession(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartReply, error)
+	Conversation(ctx context.Context, in *ConversationRequest, opts ...grpc.CallOption) (*ConversationReply, error)
+	// 结束当前会话后，立刻锁定设备；
+	EndSession(ctx context.Context, in *EndRequest, opts ...grpc.CallOption) (*EndReply, error)
+	// getdevice info, 判断是否已经进行了初始化, 如果没有则需要进行初始化操作
+	// 如果已经进行了初始化，需要返回device_id
 	CheckDevice(ctx context.Context, in *CheckRequest, opts ...grpc.CallOption) (*CheckReply, error)
 	// initailaize device: create a main private secret key
-	// 1. init(pin)   pin as parameter
+	// 1. init: ask user input pin from device
 	// 2. pin ==> memoric words ==> seed
 	// 3. generate secret key and encrypt it with pin
 	InitDevice(ctx context.Context, in *InitRequest, opts ...grpc.CallOption) (*InitReply, error)
@@ -999,10 +1489,12 @@ type IceboxClient interface {
 	HandShake(ctx context.Context, in *HelloRequest, opts ...grpc.CallOption) (*HelloReply, error)
 	AddCoin(ctx context.Context, in *AddCoinRequest, opts ...grpc.CallOption) (*AddCoinReply, error)
 	CreateAddress(ctx context.Context, in *CreateAddressRequest, opts ...grpc.CallOption) (*CreateAddressReply, error)
-	ListFeature(ctx context.Context, in *ListFeatureRequest, opts ...grpc.CallOption) (*ListFeatureReply, error)
+	CreateSecret(ctx context.Context, in *CreateSecretRequest, opts ...grpc.CallOption) (*CreateSecretReply, error)
+	ListCoin(ctx context.Context, in *ListCoinRequest, opts ...grpc.CallOption) (*ListCoinReply, error)
+	ListSecret(ctx context.Context, in *ListSecretRequest, opts ...grpc.CallOption) (*ListSecretReply, error)
 	ListFormula(ctx context.Context, in *ListFormulaRequest, opts ...grpc.CallOption) (*ListFormulaReply, error)
 	SignTx(ctx context.Context, in *SignTxRequest, opts ...grpc.CallOption) (*SignTxReply, error)
-	RemoveFeature(ctx context.Context, in *RemoveFeatureRequest, opts ...grpc.CallOption) (*RemoveFeatureReply, error)
+	RemoveCoin(ctx context.Context, in *RemoveCoinRequest, opts ...grpc.CallOption) (*RemoveCoinReply, error)
 	DeleteFormula(ctx context.Context, in *DeleteFormulaRequest, opts ...grpc.CallOption) (*DeleteFormulaReply, error)
 	// remove all datas
 	ResetDevice(ctx context.Context, in *ResetRequest, opts ...grpc.CallOption) (*ResetReply, error)
@@ -1014,6 +1506,51 @@ type iceboxClient struct {
 
 func NewIceboxClient(cc *grpc.ClientConn) IceboxClient {
 	return &iceboxClient{cc}
+}
+
+func (c *iceboxClient) FirstHi(ctx context.Context, in *HiRequest, opts ...grpc.CallOption) (*HiReply, error) {
+	out := new(HiReply)
+	err := grpc.Invoke(ctx, "/Icebox/FirstHi", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iceboxClient) NegotiateKey(ctx context.Context, in *NegotiateRequest, opts ...grpc.CallOption) (*NegotiateReply, error) {
+	out := new(NegotiateReply)
+	err := grpc.Invoke(ctx, "/Icebox/NegotiateKey", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iceboxClient) StartSession(ctx context.Context, in *StartRequest, opts ...grpc.CallOption) (*StartReply, error) {
+	out := new(StartReply)
+	err := grpc.Invoke(ctx, "/Icebox/StartSession", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iceboxClient) Conversation(ctx context.Context, in *ConversationRequest, opts ...grpc.CallOption) (*ConversationReply, error) {
+	out := new(ConversationReply)
+	err := grpc.Invoke(ctx, "/Icebox/Conversation", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iceboxClient) EndSession(ctx context.Context, in *EndRequest, opts ...grpc.CallOption) (*EndReply, error) {
+	out := new(EndReply)
+	err := grpc.Invoke(ctx, "/Icebox/EndSession", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
 }
 
 func (c *iceboxClient) CheckDevice(ctx context.Context, in *CheckRequest, opts ...grpc.CallOption) (*CheckReply, error) {
@@ -1061,9 +1598,27 @@ func (c *iceboxClient) CreateAddress(ctx context.Context, in *CreateAddressReque
 	return out, nil
 }
 
-func (c *iceboxClient) ListFeature(ctx context.Context, in *ListFeatureRequest, opts ...grpc.CallOption) (*ListFeatureReply, error) {
-	out := new(ListFeatureReply)
-	err := grpc.Invoke(ctx, "/Icebox/ListFeature", in, out, c.cc, opts...)
+func (c *iceboxClient) CreateSecret(ctx context.Context, in *CreateSecretRequest, opts ...grpc.CallOption) (*CreateSecretReply, error) {
+	out := new(CreateSecretReply)
+	err := grpc.Invoke(ctx, "/Icebox/CreateSecret", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iceboxClient) ListCoin(ctx context.Context, in *ListCoinRequest, opts ...grpc.CallOption) (*ListCoinReply, error) {
+	out := new(ListCoinReply)
+	err := grpc.Invoke(ctx, "/Icebox/ListCoin", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *iceboxClient) ListSecret(ctx context.Context, in *ListSecretRequest, opts ...grpc.CallOption) (*ListSecretReply, error) {
+	out := new(ListSecretReply)
+	err := grpc.Invoke(ctx, "/Icebox/ListSecret", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1088,9 +1643,9 @@ func (c *iceboxClient) SignTx(ctx context.Context, in *SignTxRequest, opts ...gr
 	return out, nil
 }
 
-func (c *iceboxClient) RemoveFeature(ctx context.Context, in *RemoveFeatureRequest, opts ...grpc.CallOption) (*RemoveFeatureReply, error) {
-	out := new(RemoveFeatureReply)
-	err := grpc.Invoke(ctx, "/Icebox/RemoveFeature", in, out, c.cc, opts...)
+func (c *iceboxClient) RemoveCoin(ctx context.Context, in *RemoveCoinRequest, opts ...grpc.CallOption) (*RemoveCoinReply, error) {
+	out := new(RemoveCoinReply)
+	err := grpc.Invoke(ctx, "/Icebox/RemoveCoin", in, out, c.cc, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -1118,11 +1673,19 @@ func (c *iceboxClient) ResetDevice(ctx context.Context, in *ResetRequest, opts .
 // Server API for Icebox service
 
 type IceboxServer interface {
-	// getdevice info, 判断是否是特定设备，是否已经进行了初始化, 如果没有则需要进行初始化操作
-	// 如果已经进行了初始化，是否需要检测数据的合法性？
+	FirstHi(context.Context, *HiRequest) (*HiReply, error)
+	// 协商会话密钥过程
+	NegotiateKey(context.Context, *NegotiateRequest) (*NegotiateReply, error)
+	// 会话需要加密
+	StartSession(context.Context, *StartRequest) (*StartReply, error)
+	Conversation(context.Context, *ConversationRequest) (*ConversationReply, error)
+	// 结束当前会话后，立刻锁定设备；
+	EndSession(context.Context, *EndRequest) (*EndReply, error)
+	// getdevice info, 判断是否已经进行了初始化, 如果没有则需要进行初始化操作
+	// 如果已经进行了初始化，需要返回device_id
 	CheckDevice(context.Context, *CheckRequest) (*CheckReply, error)
 	// initailaize device: create a main private secret key
-	// 1. init(pin)   pin as parameter
+	// 1. init: ask user input pin from device
 	// 2. pin ==> memoric words ==> seed
 	// 3. generate secret key and encrypt it with pin
 	InitDevice(context.Context, *InitRequest) (*InitReply, error)
@@ -1130,10 +1693,12 @@ type IceboxServer interface {
 	HandShake(context.Context, *HelloRequest) (*HelloReply, error)
 	AddCoin(context.Context, *AddCoinRequest) (*AddCoinReply, error)
 	CreateAddress(context.Context, *CreateAddressRequest) (*CreateAddressReply, error)
-	ListFeature(context.Context, *ListFeatureRequest) (*ListFeatureReply, error)
+	CreateSecret(context.Context, *CreateSecretRequest) (*CreateSecretReply, error)
+	ListCoin(context.Context, *ListCoinRequest) (*ListCoinReply, error)
+	ListSecret(context.Context, *ListSecretRequest) (*ListSecretReply, error)
 	ListFormula(context.Context, *ListFormulaRequest) (*ListFormulaReply, error)
 	SignTx(context.Context, *SignTxRequest) (*SignTxReply, error)
-	RemoveFeature(context.Context, *RemoveFeatureRequest) (*RemoveFeatureReply, error)
+	RemoveCoin(context.Context, *RemoveCoinRequest) (*RemoveCoinReply, error)
 	DeleteFormula(context.Context, *DeleteFormulaRequest) (*DeleteFormulaReply, error)
 	// remove all datas
 	ResetDevice(context.Context, *ResetRequest) (*ResetReply, error)
@@ -1141,6 +1706,96 @@ type IceboxServer interface {
 
 func RegisterIceboxServer(s *grpc.Server, srv IceboxServer) {
 	s.RegisterService(&_Icebox_serviceDesc, srv)
+}
+
+func _Icebox_FirstHi_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(HiRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IceboxServer).FirstHi(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Icebox/FirstHi",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IceboxServer).FirstHi(ctx, req.(*HiRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Icebox_NegotiateKey_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(NegotiateRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IceboxServer).NegotiateKey(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Icebox/NegotiateKey",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IceboxServer).NegotiateKey(ctx, req.(*NegotiateRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Icebox_StartSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(StartRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IceboxServer).StartSession(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Icebox/StartSession",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IceboxServer).StartSession(ctx, req.(*StartRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Icebox_Conversation_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ConversationRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IceboxServer).Conversation(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Icebox/Conversation",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IceboxServer).Conversation(ctx, req.(*ConversationRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Icebox_EndSession_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(EndRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IceboxServer).EndSession(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Icebox/EndSession",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IceboxServer).EndSession(ctx, req.(*EndRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 func _Icebox_CheckDevice_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
@@ -1233,20 +1888,56 @@ func _Icebox_CreateAddress_Handler(srv interface{}, ctx context.Context, dec fun
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Icebox_ListFeature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(ListFeatureRequest)
+func _Icebox_CreateSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(CreateSecretRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(IceboxServer).ListFeature(ctx, in)
+		return srv.(IceboxServer).CreateSecret(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Icebox/ListFeature",
+		FullMethod: "/Icebox/CreateSecret",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IceboxServer).ListFeature(ctx, req.(*ListFeatureRequest))
+		return srv.(IceboxServer).CreateSecret(ctx, req.(*CreateSecretRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Icebox_ListCoin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListCoinRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IceboxServer).ListCoin(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Icebox/ListCoin",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IceboxServer).ListCoin(ctx, req.(*ListCoinRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Icebox_ListSecret_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ListSecretRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IceboxServer).ListSecret(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Icebox/ListSecret",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IceboxServer).ListSecret(ctx, req.(*ListSecretRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1287,20 +1978,20 @@ func _Icebox_SignTx_Handler(srv interface{}, ctx context.Context, dec func(inter
 	return interceptor(ctx, in, info, handler)
 }
 
-func _Icebox_RemoveFeature_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(RemoveFeatureRequest)
+func _Icebox_RemoveCoin_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(RemoveCoinRequest)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(IceboxServer).RemoveFeature(ctx, in)
+		return srv.(IceboxServer).RemoveCoin(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/Icebox/RemoveFeature",
+		FullMethod: "/Icebox/RemoveCoin",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(IceboxServer).RemoveFeature(ctx, req.(*RemoveFeatureRequest))
+		return srv.(IceboxServer).RemoveCoin(ctx, req.(*RemoveCoinRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -1346,6 +2037,26 @@ var _Icebox_serviceDesc = grpc.ServiceDesc{
 	HandlerType: (*IceboxServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
+			MethodName: "FirstHi",
+			Handler:    _Icebox_FirstHi_Handler,
+		},
+		{
+			MethodName: "NegotiateKey",
+			Handler:    _Icebox_NegotiateKey_Handler,
+		},
+		{
+			MethodName: "StartSession",
+			Handler:    _Icebox_StartSession_Handler,
+		},
+		{
+			MethodName: "Conversation",
+			Handler:    _Icebox_Conversation_Handler,
+		},
+		{
+			MethodName: "EndSession",
+			Handler:    _Icebox_EndSession_Handler,
+		},
+		{
 			MethodName: "CheckDevice",
 			Handler:    _Icebox_CheckDevice_Handler,
 		},
@@ -1366,8 +2077,16 @@ var _Icebox_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Icebox_CreateAddress_Handler,
 		},
 		{
-			MethodName: "ListFeature",
-			Handler:    _Icebox_ListFeature_Handler,
+			MethodName: "CreateSecret",
+			Handler:    _Icebox_CreateSecret_Handler,
+		},
+		{
+			MethodName: "ListCoin",
+			Handler:    _Icebox_ListCoin_Handler,
+		},
+		{
+			MethodName: "ListSecret",
+			Handler:    _Icebox_ListSecret_Handler,
 		},
 		{
 			MethodName: "ListFormula",
@@ -1378,8 +2097,8 @@ var _Icebox_serviceDesc = grpc.ServiceDesc{
 			Handler:    _Icebox_SignTx_Handler,
 		},
 		{
-			MethodName: "RemoveFeature",
-			Handler:    _Icebox_RemoveFeature_Handler,
+			MethodName: "RemoveCoin",
+			Handler:    _Icebox_RemoveCoin_Handler,
 		},
 		{
 			MethodName: "DeleteFormula",
@@ -1397,64 +2116,86 @@ var _Icebox_serviceDesc = grpc.ServiceDesc{
 func init() { proto.RegisterFile("icebox.proto", fileDescriptor0) }
 
 var fileDescriptor0 = []byte{
-	// 935 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xc4, 0x57, 0x51, 0x6b, 0xe3, 0x46,
-	0x10, 0xb6, 0x2c, 0x59, 0x71, 0x46, 0x72, 0x2e, 0xb7, 0x4e, 0x8a, 0x4f, 0x5c, 0xb9, 0x74, 0xdb,
-	0x07, 0x97, 0xa3, 0x1b, 0x1a, 0x5a, 0x0a, 0x07, 0xe5, 0x9a, 0xcb, 0x71, 0x24, 0x5c, 0x4b, 0xcb,
-	0xde, 0x41, 0x69, 0x4b, 0x09, 0x8a, 0x77, 0x88, 0xc5, 0x59, 0x92, 0xab, 0x95, 0x5d, 0xe7, 0xad,
-	0x50, 0xe8, 0x0f, 0xb8, 0x3e, 0xf6, 0xb5, 0x7f, 0xa3, 0xff, 0xad, 0xec, 0x6a, 0x2d, 0x4b, 0x76,
-	0x28, 0x32, 0x84, 0xde, 0xdb, 0xee, 0xc8, 0x33, 0xfb, 0x7d, 0xb3, 0xdf, 0xcc, 0x8e, 0xc1, 0x8f,
-	0x46, 0x78, 0x95, 0x2e, 0xd8, 0x34, 0x4b, 0xf3, 0x34, 0xf0, 0x93, 0x30, 0x49, 0xa7, 0x57, 0xc5,
-	0x8e, 0x7e, 0x02, 0xee, 0x39, 0x86, 0x02, 0x33, 0xd2, 0x07, 0x7b, 0x8e, 0xd9, 0xc0, 0x3a, 0x6a,
-	0x0f, 0x7b, 0x4f, 0xac, 0x4f, 0xb9, 0xda, 0x91, 0x3d, 0x68, 0xcb, 0x64, 0xd0, 0x56, 0x36, 0xde,
-	0x96, 0x09, 0x1d, 0x83, 0xc7, 0x71, 0x3a, 0xb9, 0xd9, 0xc2, 0x87, 0x10, 0x70, 0x46, 0xa9, 0xc0,
-	0x81, 0xad, 0x2d, 0x7a, 0x4d, 0x8e, 0x60, 0x27, 0x46, 0x29, 0xc3, 0x6b, 0x1c, 0x38, 0x47, 0xd6,
-	0x70, 0xf7, 0x99, 0xfb, 0xf6, 0xa9, 0xdd, 0xfd, 0xcd, 0xe2, 0x4b, 0x33, 0x3d, 0x06, 0xff, 0x6c,
-	0x8c, 0xa3, 0x37, 0x1c, 0x7f, 0x99, 0xa1, 0xcc, 0xc9, 0x23, 0x70, 0xc7, 0xfa, 0x50, 0x7d, 0x9a,
-	0x77, 0xb2, 0xc3, 0x0a, 0x0c, 0xdc, 0x98, 0xe9, 0x25, 0x80, 0x71, 0x98, 0x4e, 0x6e, 0xc8, 0x47,
-	0x6b, 0x3f, 0xf7, 0x59, 0x05, 0xf7, 0xd2, 0x87, 0x1c, 0x40, 0x47, 0xe6, 0x61, 0x8e, 0x1a, 0x6d,
-	0x87, 0x17, 0x1b, 0x72, 0x08, 0xae, 0xc0, 0xf9, 0x65, 0x24, 0x06, 0xb6, 0xc2, 0xc6, 0x3b, 0x02,
-	0xe7, 0x17, 0x82, 0x72, 0xf0, 0x2e, 0x92, 0x28, 0x6f, 0x0a, 0x88, 0x50, 0xe8, 0x4e, 0x43, 0x29,
-	0x7f, 0x4d, 0x33, 0xa1, 0xe3, 0xaf, 0x48, 0x96, 0x76, 0xfa, 0x2d, 0xec, 0x16, 0x31, 0x9b, 0x63,
-	0x7e, 0x58, 0xa2, 0x2b, 0x82, 0x76, 0xde, 0x3e, 0x6d, 0x77, 0x8f, 0x96, 0x20, 0x8f, 0xc1, 0x3f,
-	0xc7, 0xc9, 0x24, 0x6d, 0x9c, 0xb6, 0xef, 0x00, 0x8c, 0xc3, 0x36, 0x10, 0x76, 0xf3, 0x28, 0x46,
-	0x99, 0x87, 0xf1, 0x54, 0xa3, 0xb0, 0xf9, 0xca, 0x40, 0xff, 0xb0, 0xe0, 0xfe, 0xa9, 0x10, 0x2f,
-	0x30, 0xcc, 0x67, 0x19, 0x36, 0x4e, 0x17, 0x01, 0x27, 0xbf, 0x99, 0xa2, 0x11, 0x8e, 0x5e, 0x93,
-	0x7d, 0xb0, 0x23, 0xb1, 0x30, 0xca, 0x51, 0x4b, 0xf2, 0x1e, 0xb8, 0xf2, 0x26, 0xbe, 0x4a, 0x27,
-	0x03, 0x47, 0xb1, 0xe7, 0x66, 0xa7, 0xbc, 0x93, 0x30, 0xc6, 0x41, 0x47, 0x5b, 0xf5, 0x9a, 0xbe,
-	0x84, 0x7b, 0x55, 0x1c, 0xcd, 0xf9, 0x11, 0x70, 0xa6, 0x61, 0x3e, 0x2e, 0x12, 0xcc, 0xf5, 0x9a,
-	0xfe, 0x6e, 0xc1, 0xde, 0xa9, 0x10, 0x67, 0x69, 0x94, 0xbc, 0x43, 0x4a, 0x9f, 0x81, 0x5f, 0x82,
-	0x68, 0xcc, 0x87, 0xfe, 0x69, 0xc1, 0xc1, 0x59, 0x86, 0x61, 0x8e, 0x2f, 0xd2, 0x2c, 0x9e, 0x4d,
-	0xc2, 0xc6, 0x0c, 0x1e, 0x80, 0x1b, 0xc9, 0x51, 0x1a, 0x99, 0x7a, 0x56, 0x35, 0x6e, 0x0c, 0x25,
-	0x39, 0x7b, 0x93, 0x9c, 0xb3, 0x22, 0xf7, 0xa0, 0x24, 0x61, 0xad, 0xb4, 0x5a, 0x70, 0xf9, 0x01,
-	0xc8, 0x1a, 0xa8, 0xe6, 0x37, 0xf4, 0x3e, 0xb8, 0x19, 0xca, 0xd9, 0x24, 0xaf, 0x16, 0xc1, 0x57,
-	0xdc, 0x18, 0xe9, 0x5f, 0x25, 0xe1, 0x53, 0x21, 0x32, 0x94, 0xf2, 0x8e, 0xaf, 0xec, 0x83, 0x4a,
-	0x69, 0x3b, 0x55, 0x00, 0xa5, 0xf9, 0xbf, 0x88, 0xff, 0xb4, 0x24, 0x5e, 0x82, 0x6b, 0x4e, 0xfc,
-	0x11, 0xec, 0x84, 0x85, 0x57, 0x9d, 0xf9, 0xd2, 0x4a, 0xff, 0xb6, 0xa0, 0xf7, 0x2a, 0xba, 0x4e,
-	0x5e, 0x2f, 0xee, 0x5e, 0xa6, 0x61, 0x9c, 0xce, 0x92, 0x5c, 0x33, 0x76, 0xb8, 0xd9, 0x29, 0xa2,
-	0x02, 0x65, 0x5e, 0xc8, 0x74, 0x09, 0x47, 0x9b, 0xd4, 0xa7, 0x7c, 0x11, 0x89, 0x81, 0x5b, 0xfb,
-	0xa4, 0x4c, 0xf4, 0x7b, 0xf0, 0x96, 0x28, 0x9b, 0x93, 0xa7, 0xd0, 0x95, 0xd1, 0x75, 0x82, 0xe2,
-	0xf5, 0xa2, 0xd6, 0x51, 0xdb, 0xbc, 0xb4, 0xd3, 0xcf, 0x81, 0x7c, 0x1d, 0xc9, 0x7c, 0xcb, 0xee,
-	0x43, 0x11, 0xf6, 0x6b, 0x6e, 0xcd, 0x41, 0xed, 0x83, 0x1d, 0x87, 0x0b, 0x93, 0x3c, 0xb5, 0xd4,
-	0xb4, 0x8b, 0xca, 0xb0, 0x87, 0x3d, 0x4d, 0x7b, 0xbf, 0x5b, 0xa4, 0x95, 0xce, 0x0d, 0xba, 0xff,
-	0xa9, 0x0c, 0x2d, 0x73, 0x79, 0xf4, 0x1b, 0xd8, 0x31, 0x67, 0x96, 0x0e, 0xd6, 0xa6, 0x43, 0x7b,
-	0x75, 0xdb, 0x0f, 0xc1, 0x95, 0x97, 0x4a, 0x53, 0x3a, 0x70, 0x79, 0x79, 0x1d, 0xa9, 0x34, 0x4b,
-	0x53, 0x93, 0xad, 0xed, 0x0b, 0x77, 0x33, 0x5b, 0x1f, 0x82, 0x63, 0xce, 0xb1, 0x87, 0xde, 0x49,
-	0x97, 0x99, 0xa0, 0x65, 0xde, 0xd4, 0x47, 0xfa, 0x12, 0x0e, 0x38, 0xc6, 0xe9, 0x1c, 0xef, 0xe0,
-	0x55, 0xa1, 0x4f, 0x80, 0xac, 0x05, 0x6b, 0xde, 0x4a, 0x7f, 0x86, 0x83, 0xe7, 0x38, 0xc1, 0xed,
-	0x3b, 0x69, 0xa3, 0x22, 0x53, 0xd0, 0xd6, 0xc2, 0x37, 0x87, 0x76, 0x0c, 0x3e, 0x47, 0x89, 0x8d,
-	0x07, 0x14, 0x7a, 0x02, 0x60, 0x1c, 0x1a, 0x1f, 0x72, 0xf2, 0x8f, 0x03, 0xee, 0x85, 0x1e, 0x27,
-	0xc9, 0x63, 0xf0, 0xf4, 0xc0, 0xf5, 0x1c, 0xe7, 0xd1, 0x08, 0x49, 0x8f, 0x55, 0xe7, 0xb5, 0xc0,
-	0x63, 0xab, 0x69, 0x8c, 0xb6, 0xc8, 0x10, 0x40, 0x0d, 0x3a, 0xe6, 0xb7, 0x3e, 0xab, 0x4c, 0x52,
-	0x01, 0xb0, 0x72, 0x06, 0xa2, 0x2d, 0xf2, 0x31, 0xec, 0x9e, 0x87, 0x89, 0x78, 0x35, 0x0e, 0xdf,
-	0xa8, 0xa0, 0xd5, 0x69, 0x26, 0xf0, 0xd8, 0x6a, 0x56, 0xa1, 0x2d, 0xf2, 0x18, 0x76, 0xcc, 0x6b,
-	0x48, 0xee, 0xb1, 0xfa, 0xe3, 0x1c, 0xf4, 0x58, 0xf5, 0xa1, 0xa4, 0x2d, 0xf2, 0x25, 0xf4, 0x6a,
-	0x5d, 0x97, 0x1c, 0xb2, 0xdb, 0x9e, 0x88, 0xa0, 0xcf, 0x36, 0x9b, 0x33, 0x6d, 0x91, 0x2f, 0xc0,
-	0xab, 0x34, 0x08, 0xd2, 0x67, 0x9b, 0x5d, 0x26, 0xb8, 0xcf, 0xd6, 0x7b, 0x48, 0xc5, 0xd1, 0x94,
-	0x9f, 0x71, 0xac, 0xa9, 0x67, 0xe9, 0x58, 0xb9, 0x73, 0x9d, 0x32, 0xb7, 0x68, 0x91, 0x64, 0x8f,
-	0xd5, 0x3a, 0x7a, 0xe0, 0xb3, 0x4a, 0xef, 0x2c, 0xa8, 0xd5, 0x04, 0x4d, 0x0e, 0xd9, 0x6d, 0xd5,
-	0x12, 0xf4, 0xd9, 0xa6, 0xee, 0x0b, 0xf7, 0x9a, 0xe8, 0xc8, 0x21, 0xbb, 0x4d, 0xe3, 0x41, 0x9f,
-	0x6d, 0x6a, 0x53, 0xdf, 0x82, 0xa7, 0x65, 0x54, 0xea, 0xa0, 0xaa, 0xc2, 0xc0, 0x63, 0x2b, 0x8d,
-	0xd1, 0xd6, 0xb3, 0xee, 0x8f, 0xae, 0xfe, 0xe3, 0x21, 0xff, 0x0d, 0x00, 0x00, 0xff, 0xff, 0x1f,
-	0xdf, 0x8c, 0x01, 0x96, 0x0c, 0x00, 0x00,
+	// 1285 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0xcc, 0x58, 0xdd, 0x6f, 0x1b, 0x45,
+	0x10, 0xf7, 0xf9, 0xe3, 0x6c, 0xcf, 0xd9, 0x89, 0xbd, 0x49, 0x91, 0x7b, 0x2a, 0x6a, 0xba, 0x20,
+	0x64, 0x04, 0xdd, 0x42, 0x54, 0xa9, 0x52, 0x24, 0x54, 0xf2, 0x41, 0xea, 0x50, 0x3e, 0x2f, 0x95,
+	0x10, 0x45, 0x28, 0xba, 0xf8, 0x56, 0xc9, 0x29, 0xf6, 0x9d, 0xb9, 0x5d, 0x1b, 0xfb, 0x0d, 0x09,
+	0x09, 0xf1, 0x5c, 0xde, 0xe0, 0x95, 0x47, 0x24, 0xfe, 0x45, 0xb4, 0x1f, 0xf7, 0x65, 0x47, 0xd5,
+	0x19, 0x52, 0xe0, 0x6d, 0x77, 0xce, 0x3b, 0x3b, 0xbf, 0xd9, 0x99, 0xdf, 0xcc, 0x18, 0x5a, 0xfe,
+	0x90, 0x9e, 0x87, 0x73, 0x32, 0x89, 0x42, 0x1e, 0xda, 0xad, 0xc0, 0x0d, 0xc2, 0xc9, 0xb9, 0xda,
+	0xe1, 0xfb, 0x60, 0x0e, 0xa8, 0xeb, 0xd1, 0x08, 0x6d, 0x41, 0x65, 0x46, 0xa3, 0x9e, 0xb1, 0x53,
+	0xee, 0xb7, 0xf7, 0x8c, 0xf7, 0x1d, 0xb1, 0x43, 0x1b, 0x50, 0x66, 0x41, 0xaf, 0x2c, 0x64, 0x4e,
+	0x99, 0x05, 0xf8, 0x12, 0x2c, 0x87, 0x4e, 0x46, 0x8b, 0x35, 0xce, 0x20, 0x04, 0xd5, 0x61, 0xe8,
+	0xd1, 0x5e, 0x45, 0x4a, 0xe4, 0x1a, 0xed, 0x40, 0x7d, 0x4c, 0x19, 0x73, 0x2f, 0x68, 0xaf, 0xba,
+	0x63, 0xf4, 0x9b, 0x07, 0xe6, 0x8b, 0xc7, 0x95, 0xc6, 0x0f, 0x86, 0x13, 0x8b, 0xf1, 0x11, 0x34,
+	0x07, 0xbe, 0x43, 0xbf, 0x9b, 0x52, 0xc6, 0xd1, 0x5d, 0x30, 0x2f, 0xe5, 0x8d, 0xf2, 0x2a, 0x6b,
+	0xb7, 0x4e, 0x94, 0x01, 0x8e, 0x16, 0xa3, 0xd7, 0xc0, 0x1c, 0xbb, 0x17, 0xfe, 0x70, 0x5f, 0xde,
+	0x5b, 0x71, 0xf4, 0x0e, 0x3f, 0x81, 0xba, 0xd0, 0x32, 0x19, 0x2d, 0xd0, 0x9b, 0x4b, 0x3a, 0x5a,
+	0x24, 0x83, 0x64, 0x45, 0xd1, 0x41, 0x4e, 0xd1, 0x01, 0x7e, 0x02, 0x9d, 0xcf, 0xe8, 0x45, 0xc8,
+	0x7d, 0x97, 0xd3, 0xc2, 0x56, 0x21, 0xa8, 0x5e, 0xd1, 0xc5, 0x7e, 0xaf, 0xba, 0x53, 0xee, 0x37,
+	0x1d, 0xb9, 0xc6, 0x1f, 0xc3, 0x46, 0x46, 0x51, 0x71, 0xc3, 0x94, 0x2e, 0x65, 0x96, 0xd2, 0x75,
+	0x80, 0x7d, 0x68, 0x9d, 0x72, 0x37, 0xe2, 0x85, 0x0d, 0xba, 0x03, 0x4d, 0x46, 0x19, 0xf3, 0xc3,
+	0xe0, 0xe4, 0x48, 0xbf, 0x50, 0x2a, 0x40, 0x36, 0x34, 0xbc, 0x69, 0xe4, 0x72, 0x3f, 0x0c, 0xf4,
+	0x63, 0x25, 0x7b, 0xfc, 0x25, 0x80, 0xbe, 0xaa, 0xb8, 0xc9, 0xaf, 0x03, 0x68, 0xe5, 0x67, 0xbe,
+	0xb7, 0x7c, 0x9d, 0x87, 0xff, 0x30, 0x60, 0xeb, 0x30, 0x0c, 0x66, 0x34, 0x62, 0xf2, 0x8e, 0xc2,
+	0x28, 0x5e, 0xae, 0x57, 0x7c, 0xd6, 0x41, 0x24, 0x3e, 0x2b, 0x20, 0x4d, 0x2d, 0x39, 0xf1, 0x50,
+	0x0f, 0xea, 0xc3, 0x30, 0xe0, 0x34, 0xe0, 0xfa, 0x5d, 0xe2, 0xad, 0xf4, 0x8e, 0x7f, 0x11, 0xb8,
+	0x7c, 0x1a, 0xd1, 0x5e, 0x4d, 0x7e, 0x4b, 0x05, 0xf8, 0x4f, 0x03, 0xba, 0x79, 0x73, 0x6f, 0xca,
+	0x13, 0xaf, 0xca, 0xe2, 0xfb, 0x00, 0x1f, 0x05, 0x5e, 0x51, 0xb7, 0xe2, 0xf7, 0xa0, 0x21, 0x7f,
+	0x5e, 0x18, 0x16, 0x7e, 0x00, 0xad, 0xc3, 0x4b, 0x3a, 0xbc, 0x2a, 0x7c, 0xc5, 0x19, 0x80, 0x3e,
+	0x50, 0xdc, 0x77, 0xdb, 0x50, 0x63, 0xdc, 0xe5, 0x54, 0xba, 0xad, 0xe6, 0xa8, 0x0d, 0xba, 0x05,
+	0xa6, 0x47, 0x67, 0xca, 0x5d, 0x46, 0xbf, 0xe9, 0xd4, 0x3c, 0x3a, 0x3b, 0xf1, 0xb0, 0x03, 0xd6,
+	0x49, 0xe0, 0x17, 0x4f, 0x08, 0x0c, 0x8d, 0x89, 0xcb, 0xd8, 0xf7, 0x61, 0xa4, 0x9e, 0x25, 0x25,
+	0xa2, 0x44, 0x8e, 0x3f, 0x87, 0xa6, 0xd2, 0x59, 0xdc, 0xe6, 0x3b, 0x89, 0x75, 0x4a, 0x69, 0xed,
+	0xc5, 0xe3, 0x72, 0x63, 0x27, 0x36, 0xf2, 0x01, 0xb4, 0x06, 0x74, 0x34, 0x0a, 0x0b, 0xbb, 0xed,
+	0x0b, 0x00, 0x7d, 0x60, 0x1d, 0x13, 0x9a, 0xdc, 0x1f, 0x53, 0xc6, 0xdd, 0xf1, 0x44, 0x73, 0x59,
+	0x2a, 0xc0, 0x3f, 0x19, 0xd0, 0xdd, 0xf7, 0xbc, 0x63, 0x2a, 0x23, 0x65, 0x1d, 0x42, 0xe3, 0x8b,
+	0x09, 0xd5, 0x11, 0x2c, 0xd7, 0xa8, 0x03, 0x15, 0xdf, 0x9b, 0xeb, 0xa8, 0x15, 0x4b, 0xc1, 0xa1,
+	0x6c, 0x31, 0x3e, 0x0f, 0x47, 0x3a, 0x5c, 0xf5, 0x4e, 0x9c, 0x0e, 0xdc, 0x71, 0x1c, 0xa8, 0x72,
+	0x8d, 0x9f, 0xc2, 0x66, 0xd6, 0x8e, 0xb5, 0xf8, 0x70, 0xe2, 0xf2, 0xcb, 0x98, 0x0f, 0xc5, 0x1a,
+	0xff, 0x68, 0xc0, 0xc6, 0xbe, 0xe7, 0x1d, 0x86, 0x7e, 0xf0, 0x1f, 0x42, 0x7a, 0x08, 0xad, 0xc4,
+	0x88, 0xe2, 0xb9, 0xf4, 0x8b, 0x01, 0xdb, 0x87, 0x11, 0x75, 0x39, 0x3d, 0x0e, 0xa3, 0xf1, 0x74,
+	0xe4, 0x16, 0x46, 0x70, 0x1b, 0x4c, 0x9f, 0x0d, 0x43, 0x5f, 0xd7, 0x5c, 0x51, 0x87, 0xb5, 0x20,
+	0x01, 0x57, 0x59, 0x05, 0x57, 0x4d, 0xc1, 0xdd, 0x4e, 0x40, 0x18, 0x69, 0xac, 0x2a, 0x2c, 0x5f,
+	0x03, 0x5a, 0x32, 0x6a, 0x1d, 0xd2, 0x33, 0x23, 0xca, 0xa6, 0x23, 0x9e, 0x4d, 0x82, 0x0f, 0x1d,
+	0x2d, 0xc4, 0xbf, 0x25, 0x80, 0xf7, 0x3d, 0x2f, 0xa2, 0x8c, 0xdd, 0xf0, 0x93, 0xdd, 0xcb, 0xa4,
+	0x76, 0x35, 0x6b, 0x40, 0x22, 0x7e, 0x19, 0xf0, 0x6f, 0x62, 0xe0, 0x89, 0x71, 0xc5, 0x81, 0xdf,
+	0x85, 0xba, 0xab, 0x4e, 0xe5, 0x91, 0xc7, 0x52, 0xfc, 0xab, 0xa8, 0x7c, 0x52, 0xfb, 0x29, 0x1d,
+	0x46, 0x94, 0xff, 0xaf, 0x90, 0x3f, 0x87, 0x6e, 0xde, 0xb6, 0x1b, 0x04, 0xfe, 0xbb, 0x01, 0xed,
+	0x53, 0xff, 0x22, 0x78, 0x36, 0xbf, 0xf9, 0xfc, 0x74, 0xc7, 0xe1, 0x54, 0x57, 0xc8, 0xaa, 0xa3,
+	0x77, 0x02, 0xa7, 0x47, 0x19, 0x57, 0xf9, 0x19, 0x9b, 0x23, 0x45, 0xe2, 0x13, 0x9f, 0xfb, 0x5e,
+	0xcf, 0xcc, 0x7d, 0x12, 0x22, 0xfc, 0x15, 0x58, 0xb1, 0x95, 0xc5, 0xc1, 0x63, 0x68, 0x88, 0xd2,
+	0x4b, 0xbd, 0x67, 0xf3, 0x5c, 0x29, 0x29, 0x3b, 0x89, 0x1c, 0xef, 0xc2, 0xe6, 0x27, 0x3e, 0xe3,
+	0xeb, 0x10, 0x14, 0x3e, 0x87, 0x76, 0x7a, 0xa6, 0xb8, 0x39, 0x1d, 0xa8, 0x8c, 0xdd, 0xb9, 0x76,
+	0x9b, 0x58, 0x4a, 0xc0, 0x8a, 0x0c, 0x2a, 0xfd, 0xb6, 0x04, 0xdc, 0x69, 0x28, 0x87, 0xe2, 0x29,
+	0x74, 0xc5, 0x1d, 0x6b, 0x46, 0xe3, 0xdf, 0x25, 0x1e, 0x43, 0xbf, 0x1a, 0x0e, 0x94, 0x3b, 0xd6,
+	0x0f, 0xb4, 0x55, 0x70, 0x6f, 0x40, 0x55, 0x04, 0x99, 0x04, 0x67, 0xed, 0x36, 0x88, 0xe6, 0xab,
+	0x04, 0xa6, 0xf8, 0x88, 0x67, 0x80, 0xc4, 0x7d, 0xff, 0x16, 0xc1, 0x26, 0x38, 0x3f, 0x85, 0xba,
+	0xbe, 0x33, 0x39, 0x60, 0xac, 0x1e, 0x28, 0xa7, 0xe1, 0x7c, 0x07, 0x4c, 0x76, 0xa6, 0xf1, 0x64,
+	0xa2, 0xb3, 0xc6, 0x04, 0x1b, 0xe1, 0x10, 0x3a, 0x39, 0x18, 0xaf, 0xdc, 0x6f, 0x03, 0xe8, 0x3a,
+	0x74, 0x1c, 0xce, 0xe8, 0x3f, 0xad, 0xac, 0xf8, 0x11, 0x6c, 0x66, 0x35, 0x15, 0x2f, 0x8f, 0xdf,
+	0xc2, 0xf6, 0x11, 0x1d, 0xd1, 0xf5, 0xab, 0x63, 0x21, 0xfe, 0xc0, 0x7b, 0x80, 0x96, 0xd4, 0xaf,
+	0xd5, 0x05, 0x3b, 0x94, 0x15, 0xcf, 0x1b, 0xbc, 0x0b, 0xa0, 0x0f, 0x14, 0xbe, 0x64, 0xf7, 0xe7,
+	0x3a, 0x98, 0x27, 0x72, 0x8c, 0x47, 0xf7, 0xa0, 0x7e, 0xec, 0x47, 0x8c, 0x0f, 0x7c, 0x04, 0x24,
+	0x99, 0x91, 0xed, 0x06, 0xd1, 0x93, 0x2e, 0x2e, 0xa1, 0x87, 0xd0, 0x4a, 0x86, 0xcc, 0xa7, 0x74,
+	0x81, 0xba, 0x64, 0x79, 0x78, 0xb5, 0x37, 0x49, 0x7e, 0x0c, 0xc5, 0x25, 0xf4, 0xae, 0x1e, 0x27,
+	0x4f, 0xd5, 0x60, 0x82, 0xda, 0x24, 0x3b, 0x5d, 0xda, 0x16, 0x49, 0x27, 0x40, 0x5c, 0x42, 0x7b,
+	0xd0, 0xca, 0x8e, 0x43, 0x68, 0x9b, 0x5c, 0x33, 0xcc, 0xd9, 0x88, 0xac, 0xcc, 0x4c, 0xb8, 0x84,
+	0xde, 0x92, 0x93, 0x49, 0x7c, 0x8f, 0x45, 0xd2, 0x31, 0xc5, 0x6e, 0x92, 0x78, 0x08, 0xc1, 0x25,
+	0xf4, 0x0e, 0x58, 0x72, 0x5e, 0x38, 0xa2, 0x33, 0x7f, 0x48, 0x51, 0x9b, 0x64, 0xc7, 0x0d, 0xdb,
+	0x22, 0xe9, 0x30, 0x81, 0x4b, 0xa8, 0x0f, 0x20, 0xfa, 0x74, 0xfd, 0xdb, 0x16, 0xc9, 0x0c, 0x02,
+	0x36, 0x90, 0xa4, 0x85, 0xc7, 0x25, 0xf4, 0x36, 0x34, 0x07, 0x6e, 0xe0, 0x9d, 0x5e, 0xba, 0x57,
+	0x42, 0x69, 0xb6, 0x19, 0xb7, 0x2d, 0x92, 0xb6, 0xda, 0xd2, 0x82, 0xba, 0x6e, 0xe6, 0xd0, 0x26,
+	0xc9, 0xf7, 0x96, 0x76, 0x9b, 0x64, 0xfb, 0x3c, 0x5c, 0x42, 0x1f, 0x40, 0x3b, 0xd7, 0x34, 0xa0,
+	0x5b, 0xe4, 0xba, 0x0e, 0xc7, 0xde, 0x22, 0xab, 0xbd, 0x85, 0xf6, 0x68, 0xa6, 0xf2, 0x0a, 0x8f,
+	0xae, 0x36, 0x09, 0xc2, 0xa3, 0xcb, 0xe5, 0x19, 0x97, 0x10, 0x81, 0x46, 0x5c, 0x25, 0x50, 0x87,
+	0x2c, 0x15, 0x19, 0x7b, 0x83, 0xe4, 0x4a, 0x88, 0x8c, 0x10, 0x48, 0xa9, 0x17, 0x21, 0xb2, 0x42,
+	0xff, 0x76, 0x87, 0x2c, 0x71, 0x33, 0x2e, 0xa1, 0x47, 0x60, 0x65, 0x98, 0x07, 0x6d, 0x91, 0x55,
+	0x3a, 0xb5, 0xbb, 0x64, 0x99, 0x9c, 0xe4, 0xdb, 0x98, 0xaa, 0xa2, 0xa2, 0x0d, 0x92, 0x6b, 0x00,
+	0xec, 0x16, 0xc9, 0x94, 0x5a, 0x65, 0x58, 0xca, 0x10, 0x08, 0x91, 0x15, 0xe2, 0xb1, 0x3b, 0x64,
+	0x89, 0x42, 0x94, 0xe7, 0x73, 0xf9, 0x8b, 0x6e, 0x91, 0xeb, 0xe8, 0xc2, 0xde, 0x22, 0xab, 0x69,
+	0xae, 0xe2, 0x4c, 0x66, 0x64, 0x12, 0x67, 0xd9, 0x84, 0xb6, 0x2d, 0x92, 0xa6, 0x2b, 0x2e, 0x1d,
+	0x34, 0x9e, 0x9b, 0xf2, 0xbf, 0x33, 0xf6, 0x57, 0x00, 0x00, 0x00, 0xff, 0xff, 0xfa, 0xca, 0xd7,
+	0xab, 0x59, 0x13, 0x00, 0x00,
 }
