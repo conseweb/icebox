@@ -14,10 +14,10 @@ import (
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/testdata"
 
-	pb "conseweb.com/wallet/icebox/protos"
 	"os"
 	"github.com/rs/zerolog"
 	_ "github.com/rs/zerolog/log"
+	pb "conseweb.com/wallet/icebox/protos"
 )
 
 var (

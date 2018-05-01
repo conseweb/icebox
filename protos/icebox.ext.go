@@ -72,8 +72,8 @@ func NewInitRequest(password string) *InitRequest {
 	return req
 }
 
-func NewHelloRequest() *HelloRequest {
-	req := new(HelloRequest)
+func NewPingRequest() *PingRequest {
+	req := new(PingRequest)
 	req.Header = NewHeader()
 	return req
 }
@@ -131,8 +131,8 @@ func MakeInitReply(req *InitRequest, devid string) *InitReply {
 	return reply
 }
 
-func MakeHelloReply(req *HelloRequest) *HelloReply {
-	reply := new(HelloReply)
+func MakePingReply(req *PingRequest) *PingReply {
+	reply := new(PingReply)
 	reply.Header = CloneHeader(req.Header)
 	ts := makeTimestamp()
 	reply.Timestamp = &ts

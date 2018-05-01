@@ -16,7 +16,7 @@ service Icebox {
     // 会话需要加密
     rpc StartSession (StartRequest) returns (StartReply) {}
 
-    rpc Conversation (ConversationRequest) returns (ConversationReply) {}
+    rpc Conversation (stream ConversationRequest) returns (stream ConversationReply) {}
 
     // 结束当前会话后，立刻锁定设备；
     rpc EndSession (EndRequest) returns (EndReply) {}
@@ -30,7 +30,7 @@ service Icebox {
     // 3. generate secret key and encrypt it with pin
     rpc InitDevice (InitRequest) returns (InitReply) {}
     // Sends a greeting
-    rpc HandShake (HelloRequest) returns (HelloReply) {}
+    rpc Ping (PingRequest) returns (PingReply) {}
     //
     //    rpc AddFeature (AddFeatureRequest) returns (AddFeatureReply) {}
 
@@ -164,6 +164,7 @@ message CheckReply {
 
 message InitRequest {
     required Header header = 1;
+    // 真实设备是没有这个字段的
     required string password = 2[(nanopb).max_size = 128];
     // TODO: 需要强制要求最低密码强度，如果密码强度太弱，设备侧返回错误
 }
@@ -173,12 +174,12 @@ message InitReply {
 }
 
 // The request message containing the user's name.
-message HelloRequest {
+message PingRequest {
     required Header header = 1;
 }
 
 // The response message containing the greetings
-message HelloReply {
+message PingReply {
     required ReplyHeader header = 1;
     required int64 timestamp = 2;
 }

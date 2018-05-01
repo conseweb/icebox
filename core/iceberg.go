@@ -25,17 +25,21 @@ import (
 	"conseweb.com/wallet/icebox/common/crypto/koblitz/kelliptic"
 	"github.com/btcsuite/btcd/btcec"
 	"conseweb.com/wallet/icebox/coinutil/base58"
+	"conseweb.com/wallet/icebox/coinutil"
+	"encoding/binary"
+	"github.com/rs/zerolog"
 )
 
 const (
 	icebox_path = "ss"
-	secret_path = "root/ss/secret.dat"
+	secret_path = "root/ss/secret.dat"	// encrypted priv key
 	devid_path = "root/ss/devid.dat"
 	db_path = "root/ss/db.dat"
+	session_path = "root/ss/session.dat"  // session priv key and peer's public key
 )
 
 var (
-	logger = flogging.MustGetLoggerWithDefaultLevel("core")
+	logger = flogging.MustGetLogger("core", zerolog.DebugLevel)
 )
 
 type CoinID struct {
@@ -56,15 +60,23 @@ func exists(fn string) bool {
 	return true
 }
 
+type Session struct {
+	id 	uint32 		// session id
+	key string			// private key
+	peerKey []byte		// peer's public key
+	sharedKey []byte	// shared public key
+}
+
 type iceberg struct {
 	id string
 	db gorm.DB
+	session Session
 	// session info
-	session_id uint32
+	//session_id uint32
 	// a
-	session_key string
+	//session_key string
 	// Q
-	shared_key []byte
+	//shared_key []byte
 
 	// features
 	features map[CoinID] models.Coin
@@ -108,7 +120,7 @@ func (s *iceberg) NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) (*
 
 	// should be base58 compressed
 	keyA := *req.KeyA
-	logger.Info().Msgf("Received keyA: %s", keyA)
+	logger.Debug().Msgf("Received keyA: %s", keyA)
 
 	r := fmt.Sprintf("%d", makeTimestamp())
 	ek := s.generateSessionKey(r)
@@ -140,7 +152,7 @@ func (s *iceberg) NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) (*
 	spk := pk.SerializeCompressed()
 	bpk := base58.Encode(spk)
 	if bpk == keyA {
-		logger.Info().Msgf("Encode ok!")
+		logger.Debug().Msgf("Encode ok!")
 	}
 	//var curve = kelliptic.S256()
 	//pkA.Curve = curve
@@ -152,26 +164,27 @@ func (s *iceberg) NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) (*
 
 	shared := address.NewPublickKey("256")
 	shared.X, shared.Y = shared.ScalarMult(pk.X, pk.Y, sk.Serialize())
-	s.shared_key = shared.Bytes()
+	s.session.sharedKey = shared.Bytes()
 
 	// generate aes key
-	aesKey := s.shared_key[:32]
+	aesKey := s.session.sharedKey[:16]
 
-	logger.Info().Msgf("Got shared key: %s", base58.Encode(aesKey))
+	logger.Debug().Msgf("Got shared key: %s", base58.Encode(aesKey))
 	pkB := sk.PubKey()
 	bpkB := base58.Encode(pkB.SerializeCompressed())
-	logger.Info().Msgf("Iceberg's public session key: %s", bpkB)
+	logger.Debug().Msgf("Iceberg's public session key: %s", bpkB)
 	reply := pb.MakeNegotiateReply(req, bpkB)
 
 	return reply, nil
 }
 
-func (s *iceberg) Conversation(ctx context.Context, req *pb.ConversationRequest) (*pb.ConversationReply, error)  {
+func (s *iceberg) StartSession(ctx context.Context, req *pb.StartRequest) (*pb.StartReply, error) {
+
 	return nil, errors.New("Not implemented!")
 }
 
-func (s *iceberg) StartSession(ctx context.Context, req *pb.StartRequest) (*pb.StartReply, error) {
-	return nil, errors.New("Not implemented!")
+func (s *iceberg) Conversation(pb.Icebox_ConversationServer) error  {
+	return errors.New("Not implemented!")
 }
 
 func (s *iceberg) EndSession(ctx context.Context, req *pb.EndRequest) (*pb.EndReply, error) {
@@ -223,8 +236,8 @@ func (s *iceberg) InitDevice(ctx context.Context, req *pb.InitRequest) (*pb.Init
 	return reply, nil
 }
 
-func (s *iceberg) HandShake(ctx context.Context, req *pb.HelloRequest) (*pb.HelloReply, error)  {
-	reply := pb.MakeHelloReply(req)
+func (s *iceberg) Ping(ctx context.Context, req *pb.PingRequest) (*pb.PingReply, error)  {
+	reply := pb.MakePingReply(req)
 	return reply, nil
 }
 
@@ -335,7 +348,11 @@ func (s *iceberg) generateSessionKey(r string) *bip32.ExtendedKey {
 	seed := bip39.NewSeed(mnemonic, r)
 
 	masterKey, _ := bip32.NewMaster(seed, &chaincfg.MainNetParams)
-	s.session_key = masterKey.String()
+
+	pk, _ := masterKey.ECPubKey()
+	pkHash := coinutil.Hash160(pk.SerializeCompressed())
+	s.session.key = masterKey.String()
+	s.session.id = binary.BigEndian.Uint32(pkHash[:4])
 	return masterKey
 }
 

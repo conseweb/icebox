@@ -2,16 +2,18 @@ package core
 
 import (
 	"conseweb.com/wallet/icebox/common/fsm"
+	pb "conseweb.com/wallet/icebox/protos"
 )
 
 // example FSM for demonstration purposes.
-type AppFSM struct {
+type DeviceConnectionFSM struct {
 	To  string
 	FSM *fsm.FSM
+	Client *pb.IceboxClient
 }
 
-func NewAppFSM(to string) *AppFSM {
-	d := &AppFSM{
+func NewDeviceConnectionFSM(to string) *DeviceConnectionFSM {
+	d := &DeviceConnectionFSM{
 		To: to,
 	}
 
@@ -19,10 +21,8 @@ func NewAppFSM(to string) *AppFSM {
 	// est_uninited : established and uninited
 	// est_inited : established and inited
 	d.FSM = fsm.NewFSM(
-		"started",
+		"unplugged",
 		fsm.Events{
-			{Name: "DT_EXISTS", Src: []string{"started"}, Dst: "plugged"},
-			{Name: "DT_NOTEXISTS", Src: []string{"started"}, Dst: "unplugged"},
 			{Name: "IN", Src: []string{"unplugged"}, Dst: "plugged"},
 			{Name: "OUT", Src: []string{"plugged", "confirmed", "negotiated", "est_unchecked", "est_inited", "est_uninited"}, Dst: "unplugged"},
 			{Name: "HELLO", Src: []string{"plugged"}, Dst: "confirmed"},
@@ -47,26 +47,24 @@ func NewAppFSM(to string) *AppFSM {
 	return d
 }
 
-func (d *AppFSM) enterState(e *fsm.Event) {
-
+func (d *DeviceConnectionFSM) enterState(e *fsm.Event) {
 	logger.Debug().Msgf("The bi-directional stream to %s is %s, from event %s\n", d.To, e.Dst, e.Event)
-	//logger.Debugf("The bi-directional stream to %s is %s, from event %s\n", d.To, e.Dst, e.Event)
 }
 
-func (d *AppFSM) beforeHello(e *fsm.Event) {
+func (d *DeviceConnectionFSM) beforeHello(e *fsm.Event) {
 	logger.Debug().Msgf("Before reception of %s, dest is %s, current is %s", e.Event, e.Dst, d.FSM.Current())
 	//logger.Debugf("Before reception of %s, dest is %s, current is %s", e.Event, e.Dst, d.FSM.Current())
 }
 
-func (d *AppFSM) afterHello(e *fsm.Event) {
+func (d *DeviceConnectionFSM) afterHello(e *fsm.Event) {
 	logger.Debug().Msgf("After reception of %s, dest is %s, current is %s", e.Event, e.Dst, d.FSM.Current())
 	//logger.Debugf("After reception of %s, dest is %s, current is %s", e.Event, e.Dst, d.FSM.Current())
 }
 
-func (d *AppFSM) afterPing(e *fsm.Event) {
+func (d *DeviceConnectionFSM) afterPing(e *fsm.Event) {
 	logger.Debug().Msgf("After reception of %s, dest is %s, current is %s", e.Event, e.Dst, d.FSM.Current())
 }
 
-func (d *AppFSM) beforePing(e *fsm.Event) {
+func (d *DeviceConnectionFSM) beforePing(e *fsm.Event) {
 	logger.Debug().Msgf("Before %s, dest is %s, current is %s", e.Event, e.Dst, d.FSM.Current())
 }
