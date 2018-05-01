@@ -1,48 +1,13 @@
 package core
 
 import (
-	//"github.com/looplab/fsm"
-	//"go.uber.org/zap"
-	//"github.com/rs/zerolog"
-	//"github.com/rs/zerolog/log"
-	"github.com/rs/zerolog"
-	//"os"
-	"flag"
-	//"go.uber.org/zap"
 	"conseweb.com/wallet/icebox/common/fsm"
 )
-
 
 // example FSM for demonstration purposes.
 type AppFSM struct {
 	To  string
 	FSM *fsm.FSM
-}
-
-var (
-	//logger zerolog.Logger
-)
-
-func init() {
-	//x, _ := zap.NewProduction()
-	//defer x.Sync() // flushes buffer, if any
-	//logger = x.Sugar()
-	zerolog.TimeFieldFormat = ""
-	debug := flag.Bool("debug", false, "sets log level to debug")
-
-	flag.Parse()
-
-	// Default level for this example is info, unless debug flag is present
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	if *debug {
-		zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	}
-
-	//logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
-
-	//if isConsole {
-	//	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr})
-	//}
 }
 
 func NewAppFSM(to string) *AppFSM {

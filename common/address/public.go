@@ -3,13 +3,30 @@ package address
 import (
 	"crypto/elliptic"
 	"encoding/hex"
-	"github.com/sour-is/koblitz/kelliptic"
+	"conseweb.com/wallet/icebox/common/crypto/koblitz/kelliptic"
 	"math/big"
 )
 
 type PublicKey struct {
 	*kelliptic.Curve
 	X, Y *big.Int
+}
+
+func NewPublickKey(name string) *PublicKey {
+	pk := new(PublicKey)
+	switch name {
+	case "256":
+		pk.Curve = kelliptic.S256()
+	case "160":
+		pk.Curve = kelliptic.S160()
+	case "192":
+		pk.Curve = kelliptic.S192()
+	case "224":
+		pk.Curve = kelliptic.S224()
+	default:
+		return nil
+	}
+	return pk
 }
 
 func (p *PublicKey) String() string {
@@ -49,14 +66,13 @@ func (p *PublicKey) CompressBytes() []byte {
 	return p.Curve.CompressPoint(p.X, p.Y)
 }
 
-func (p *PublicKey) DeCompress(bs string) (pk *PublicKey, err error) {
+func DeCompress(bs string, pk *PublicKey) (err error) {
 	cp, err := FromBase58(bs)
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	pk.Curve = p.Curve
-	pk.X, pk.Y, err = p.Curve.DecompressPoint(cp)
+	pk.Curve.DecompressPoint(cp)
 
-	return pk, nil
+	return nil
 }

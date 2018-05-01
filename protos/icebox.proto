@@ -10,16 +10,16 @@ import "nanopb.proto";
 // rpc只是用于演示相关接口，不用作实现
 service Icebox {
 
-    rpc FirstHi(HiRequest) returns (HiReply) {}
+    rpc Hello (HiRequest) returns (HiReply) {}
     // 协商会话密钥过程。会话过程采用AES进行加密，密钥使用协商出来的共享密钥的前32字节
-    rpc NegotiateKey(NegotiateRequest) returns (NegotiateReply) {}
+    rpc NegotiateKey (NegotiateRequest) returns (NegotiateReply) {}
     // 会话需要加密
-    rpc StartSession(StartRequest) returns (StartReply) {}
+    rpc StartSession (StartRequest) returns (StartReply) {}
 
-    rpc Conversation(ConversationRequest) returns (ConversationReply) {}
+    rpc Conversation (ConversationRequest) returns (ConversationReply) {}
 
     // 结束当前会话后，立刻锁定设备；
-    rpc EndSession(EndRequest) returns (EndReply) {}
+    rpc EndSession (EndRequest) returns (EndReply) {}
 
     // getdevice info, 判断是否已经进行了初始化, 如果没有则需要进行初始化操作
     // 如果已经进行了初始化，需要返回device_id
@@ -93,7 +93,7 @@ message HiReply {
 
 message NegotiateRequest {
     required Header header = 1;
-    // pubKeyA
+    // pubKeyA: client(requester)'s public key
     required string keyA = 4;
 }
 

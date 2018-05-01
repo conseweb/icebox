@@ -26,7 +26,7 @@ import (
 const GRPCModuleID = "grpc"
 
 func initgrpclogger() {
-	glogger := MustGetLogger(GRPCModuleID)
+	glogger := MustGetLoggerWithDefaultLevel(GRPCModuleID)
 	grpclog.SetLoggerV2(grpczerolog.New(*glogger))
 }
 

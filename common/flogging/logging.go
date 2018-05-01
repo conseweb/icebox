@@ -26,6 +26,8 @@ import (
 	//"github.com/op/go-logging"
 
 	"github.com/rs/zerolog"
+	"errors"
+	"fmt"
 )
 
 const (
@@ -39,8 +41,7 @@ var (
 
 	defaultOutput *os.File
 
-	modules          map[string]string // Holds the map of all modules and their respective log level
-	peerStartModules map[string]string
+	modules map[string]string // Holds the map of all modules and their respective log level
 
 	lock sync.RWMutex
 	once sync.Once
@@ -48,7 +49,11 @@ var (
 
 func init() {
 	//logger = zerolog.New(os.Stdout).With().Timestamp().Logger()
-	//logger = logging.MustGetLogger(pkgLogID)
+	//logger = logging.MustGetLoggerWithDefaultLevel(pkgLogID)
+	zerolog.TimestampFieldName = "t"
+	zerolog.LevelFieldName = "l"
+	zerolog.MessageFieldName = "msg"
+
 	Reset()
 	initgrpclogger()
 }
@@ -64,14 +69,6 @@ func Reset() {
 	//InitFromSpec("")
 }
 
-// SetFormat sets the logging format.
-//func SetFormat(formatSpec string) zerolog.Formatter {
-//	if formatSpec == "" {
-//		formatSpec = defaultFormat
-//	}
-//	return logging.MustStringFormatter(formatSpec)
-//}
-
 // InitBackend sets up the logging backend based on
 // the provided logging formatter and I/O writer.
 //func InitBackend(formatter logging.Formatter, output io.Writer) {
@@ -86,13 +83,19 @@ func DefaultLevel() string {
 }
 
 // GetModuleLevel gets the current logging level for the specified module.
-//func GetModuleLevel(module string) string {
-//	// logging.GetLevel() returns the logging level for the module, if defined.
-//	// Otherwise, it returns the default logging level, as set by
-//	// `flogging/logging.go`.
-//	level := zerolog.GetLevel(module).String()
-//	return level
-//}
+func GetModuleLevel(module string) (*string, error) {
+	// logging.GetLevel() returns the logging level for the module, if defined.
+	// Otherwise, it returns the default logging level, as set by
+	// `flogging/logging.go`.
+	//level := zerolog.GetLevel(module).String()
+	//return level
+	if value, ok := modules[module]; ok {
+		return &value, nil
+	} else {
+		return nil, errors.New(fmt.Sprintf("module not found: %s", module))
+	}
+
+}
 
 // SetModuleLevel sets the logging level for the modules that match the supplied
 // regular expression. Can be used to dynamically change the log level for the
@@ -131,18 +134,32 @@ func DefaultLevel() string {
 //	return logLevel.String(), err
 //}
 
-// MustGetLogger is used in place of `logging.MustGetLogger` to allow us to
+// MustGetLoggerWithDefaultLevel is used in place of `logging.MustGetLoggerWithDefaultLevel` to allow us to
 // store a map of all modules and submodules that have loggers in the system.
-func MustGetLogger(module string) *zerolog.Logger {
-	//l := logging.MustGetLogger(module)
-	//lock.Lock()
-	//defer lock.Unlock()
-	//modules[module] = GetModuleLevel(module)
+func MustGetLoggerWithDefaultLevel(module string) *zerolog.Logger {
+	dftLvl := zerolog.GlobalLevel()
+	l := zerolog.New(defaultOutput).
+		Level(dftLvl).
+		With().Str("m", module).
+		Timestamp().Logger()
 
-	l := zerolog.New(defaultOutput).With().Str("module", module).Timestamp().Logger()
-	//var ctx context.Context
-	//x := log.With().Str("module", module).Timestamp().Logger().WithContext(ctx)
-	//l := log.Ctx(x)
+	lock.Lock()
+	defer lock.Unlock()
+	modules[module] = dftLvl.String()
+
+	return &l
+}
+
+func MustGetLogger(module string, lvl zerolog.Level) *zerolog.Logger {
+	l := zerolog.New(defaultOutput).
+		Level(lvl).
+		With().Str("m", module).
+		Timestamp().Logger()
+
+	lock.Lock()
+	defer lock.Unlock()
+	modules[module] = lvl.String()
+
 	return &l
 }
 
@@ -192,52 +209,11 @@ func MustGetLogger(module string) *zerolog.Logger {
 //	// iterate through modules to reload their level in the modules map based on
 //	// the new default level
 //	for k := range modules {
-//		MustGetLogger(k)
+//		MustGetLoggerWithDefaultLevel(k)
 //	}
 //	// register flogging logger in the modules map
-//	MustGetLogger(pkgLogID)
+//	MustGetLoggerWithDefaultLevel(pkgLogID)
 //
 //	return levelAll.String()
 //}
 
-// SetPeerStartupModulesMap saves the modules and their log levels.
-// this function should only be called at the end of peer startup.
-//func SetPeerStartupModulesMap() {
-//	lock.Lock()
-//	defer lock.Unlock()
-//
-//	once.Do(func() {
-//		peerStartModules = make(map[string]string)
-//		for k, v := range modules {
-//			peerStartModules[k] = v
-//		}
-//	})
-//}
-
-// GetPeerStartupLevel returns the peer startup level for the specified module.
-// It will return an empty string if the input parameter is empty or the module
-// is not found
-//func GetPeerStartupLevel(module string) string {
-//	if module != "" {
-//		if level, ok := peerStartModules[module]; ok {
-//			return level
-//		}
-//	}
-//
-//	return ""
-//}
-
-// RevertToPeerStartupLevels reverts the log levels for all modules to the level
-// defined at the end of peer startup.
-//func RevertToPeerStartupLevels() error {
-//	lock.RLock()
-//	defer lock.RUnlock()
-//	for key := range peerStartModules {
-//		_, err := setModuleLevel(key, peerStartModules[key], false, true)
-//		if err != nil {
-//			return err
-//		}
-//	}
-//	logger.Info().Msgf("Log levels reverted to the levels defined at the end of peer startup")
-//	return nil
-//}

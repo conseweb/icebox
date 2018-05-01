@@ -116,12 +116,12 @@ func stopClient() {
 
 func TestFirstHi(t *testing.T) {
 	grpclog.Printf("TestFirstHi()")
-	reply := common.FirstSayHi(client)
+	reply := common.Hello(client)
 
 	//var err error
 	//req := pb.NewHiRequest(common.App_magic)
 	//fmt.Println("HiRequest: ", req)
-	//res, err := client.FirstHi(context.Background(), req)
+	//res, err := client.Hello(context.Background(), req)
 	//if err != nil {
 	//	grpclog.Fatalf("%v.firstSayHi(_) = _, %v: ", client, err)
 	//}
@@ -133,7 +133,7 @@ func TestFirstHi(t *testing.T) {
 //	Convey(`Decrypted text should equal original message.`, t, func() {
 //		var err error
 //		req := pb.NewHiRequest(App_magic)
-//		res, err := common.FirstHi(context.Background(), req)
+//		res, err := common.Hello(context.Background(), req)
 //		if err != nil {
 //			grpclog.Fatalln(err)
 //		}
@@ -141,7 +141,7 @@ func TestFirstHi(t *testing.T) {
 //		if res.GetHeader().GetCode() == 0 && res.GetMagicB() == Device_magic {
 //			// send negoniate request
 //			ireq := pb.NewNegotiateRequest(App_magic)
-//			irep, xe := common.FirstHi(context.Background(), ireq)
+//			irep, xe := common.Hello(context.Background(), ireq)
 //			if xe != nil {
 //				grpclog.Fatalln(xe)
 //			}

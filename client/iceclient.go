@@ -13,6 +13,8 @@ import (
 	"os"
 
 	"conseweb.com/wallet/icebox/client/common"
+	"github.com/rs/zerolog"
+	"conseweb.com/wallet/icebox/common/flogging"
 )
 
 
@@ -22,6 +24,8 @@ var (
 	// Address gRPC服务地址
 	serverAddr         = flag.String("server_addr", "127.0.0.1:50052", "The server address in the format of host:port")
 	serverHostOverride = flag.String("server_host_override", "x.test.youtube.com", "The server name use to verify the hostname returned by TLS handshake")
+
+	logger = flogging.MustGetLogger("client", zerolog.InfoLevel)
 )
 
 func main() {
@@ -56,7 +60,12 @@ func main() {
 
 	// 调用方法
 	//res := checkDevice(common)
-	common.FirstSayHi(client)
+	reply := common.Hello(client)
+	if reply.GetHeader().GetCode() == 0 {
+		logger.Info().Msgf("Received hello's reply")
+
+		common.Negotiate(client)
+	}
 
 	// send reset request
 	//resetDevice(common)

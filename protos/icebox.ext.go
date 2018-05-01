@@ -51,6 +51,7 @@ func NewHiRequest(magic int64) *HiRequest {
 	return req
 }
 
+// key: KeyA, public key of requester side
 func NewNegotiateRequest(key string) *NegotiateRequest {
 	req := new(NegotiateRequest)
 	req.Header = NewHeader()

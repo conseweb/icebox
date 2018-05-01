@@ -8,7 +8,6 @@ import (
 	"conseweb.com/wallet/icebox/common/flogging"
 	"fmt"
 	"github.com/cheapRoc/grpc-zerolog"
-	"github.com/rs/zerolog"
 	"net"
 	"conseweb.com/wallet/icebox/core"
 	"google.golang.org/grpc"
@@ -17,6 +16,8 @@ import (
 
 	pb "conseweb.com/wallet/icebox/protos"
 	"os"
+	"github.com/rs/zerolog"
+	_ "github.com/rs/zerolog/log"
 )
 
 var (
@@ -29,12 +30,8 @@ var (
 	// Address gRPC服务地址
 	Address = fmt.Sprintf("localhost:%d", *port)
 
-	logger = flogging.MustGetLogger("main")
+	logger = flogging.MustGetLogger("main", zerolog.InfoLevel)
 )
-
-func init() {
-
-}
 
 func startTrace() {
 	trace.AuthRequest = func(req *http.Request) (any, sensitive bool) {
@@ -45,20 +42,17 @@ func startTrace() {
 }
 
 func main() {
-	grpclog.SetLoggerV2(grpczerolog.New(*logger))
+	//log.Logger = logger.Level(zerolog.DebugLevel)
+	//zerolog.SetGlobalLevel(zerolog.DebugLevel)
 
-	zerolog.TimeFieldFormat = ""
-	//debug := flag.Bool("debug", false, "sets log level to debug")
+	grpclog.SetLoggerV2(grpczerolog.New(*logger))
 
 	flag.Parse()
 
-	// Default level for this example is info, unless debug flag is present
-	zerolog.SetGlobalLevel(zerolog.InfoLevel)
-	//if *debug {
-	//	zerolog.SetGlobalLevel(zerolog.DebugLevel)
-	//}
-
+	//log.Debug().Msg("Testing debug level ...")
 	logger.Info().Msg("Starting ....")
+
+	logger.Debug().Msg("Testing 2 debug level ...")
 
 	lis, err := net.Listen("tcp", Address)
 	if err != nil {

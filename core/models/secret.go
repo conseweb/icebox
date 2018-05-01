@@ -10,8 +10,10 @@ type Secret struct {
 	T1      uint32 `gorm:"not null"`                    // domain or site
 	T2 		uint32 `gorm:"not:null"`					// username or account
 	T3      uint32 `gorm:"not null"`					// index
+	Site	string
 	Account string
 	Name    string
+	Key 	string	// TOTP secret key
 }
 
 func (p Secret) GetEquality() (res string) {

@@ -16,12 +16,15 @@ import (
 	"io/ioutil"
 	"conseweb.com/wallet/icebox/common/guid"
 	"encoding/hex"
-	"conseweb.com/wallet/icebox/address"
+	"conseweb.com/wallet/icebox/common/address"
 	"github.com/btcsuite/btcd/chaincfg"
 	"time"
 	"conseweb.com/wallet/icebox/coinutil/bip32"
 	"conseweb.com/wallet/icebox/core/common"
 	"conseweb.com/wallet/icebox/common/flogging"
+	"conseweb.com/wallet/icebox/common/crypto/koblitz/kelliptic"
+	"github.com/btcsuite/btcd/btcec"
+	"conseweb.com/wallet/icebox/coinutil/base58"
 )
 
 const (
@@ -32,8 +35,7 @@ const (
 )
 
 var (
-
-	logger = flogging.MustGetLogger("main")
+	logger = flogging.MustGetLoggerWithDefaultLevel("core")
 )
 
 type CoinID struct {
@@ -94,7 +96,7 @@ func (s *iceberg) GenerateEquality() (res string) {
 //	return nil, err
 //}
 
-func (s *iceberg) FirstHi(ctx context.Context, req *pb.HiRequest) (*pb.HiReply, error) {
+func (s *iceberg) Hello(ctx context.Context, req *pb.HiRequest) (*pb.HiReply, error) {
 	if common.App_magic == req.GetMagicA() {
 		reply := pb.MakeHiReply(req, common.Device_magic)
 		return reply, nil
@@ -106,29 +108,60 @@ func (s *iceberg) NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) (*
 
 	// should be base58 compressed
 	keyA := *req.KeyA
+	logger.Info().Msgf("Received keyA: %s", keyA)
 
 	r := fmt.Sprintf("%d", makeTimestamp())
 	ek := s.generateSessionKey(r)
-	sk, err := ek.ECPrivKey2()
+	sk, err := ek.ECPrivKey()
+	if err != nil {
+		return nil, err
+	}
 	//pk, _ := ek.ECPubKey2()
 	//reply := pb.MakeNegotiateReply(req, pk.Compress())
 	// generate session shared key
 	// sk * KeyA
 
-	var pkA *address.PublicKey
-	pkA, err = pkA.DeCompress(keyA)
+	var pkA = new(address.PublicKey)
+	pkA.Curve = kelliptic.S256()
+	cp := base58.Decode(keyA)
+	//cp, err := address.FromBase58(keyA)
+	//if err != nil {
+	//	logger.Fatal().Err(err).Msg("")
+	//	return nil, err
+	//}
+	var curve = btcec.S256()
+	pk, err := btcec.ParsePubKey(cp, curve)
 	if err != nil {
+		logger.Fatal().Err(err).Msg("")
 		return nil, err
 	}
-	shared := address.PublicKey{}
-	shared.Curve = sk.Curve
-	shared.X, shared.Y = shared.ScalarMult(pkA.X, pkA.Y, sk.Bytes())
+	//logger.Info().Msgf("Received pkA: %s", pk)
+
+	spk := pk.SerializeCompressed()
+	bpk := base58.Encode(spk)
+	if bpk == keyA {
+		logger.Info().Msgf("Encode ok!")
+	}
+	//var curve = kelliptic.S256()
+	//pkA.Curve = curve
+	//pkA.X, pkA.Y, err = pkA.Curve.DecompressPoint(cp)
+	//err = address.DeCompress(keyA, pkA)
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	shared := address.NewPublickKey("256")
+	shared.X, shared.Y = shared.ScalarMult(pk.X, pk.Y, sk.Serialize())
 	s.shared_key = shared.Bytes()
 
 	// generate aes key
 	aesKey := s.shared_key[:32]
 
-	reply := pb.MakeNegotiateReply(req, string(aesKey))
+	logger.Info().Msgf("Got shared key: %s", base58.Encode(aesKey))
+	pkB := sk.PubKey()
+	bpkB := base58.Encode(pkB.SerializeCompressed())
+	logger.Info().Msgf("Iceberg's public session key: %s", bpkB)
+	reply := pb.MakeNegotiateReply(req, bpkB)
 
 	return reply, nil
 }
@@ -269,6 +302,10 @@ func (s *iceberg) SignTx(context.Context, *pb.SignTxRequest) (*pb.SignTxReply, e
 }
 
 func (s *iceberg) RemoveCoin(context.Context, *pb.RemoveCoinRequest) (*pb.RemoveCoinReply, error)  {
+	return nil, errors.New("Not implemented!")
+}
+
+func (s *iceberg) DeleteSecret(context.Context, *pb.DeleteSecretRequest) (*pb.DeleteSecretReply, error)  {
 	return nil, errors.New("Not implemented!")
 }
 
