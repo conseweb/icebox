@@ -25,9 +25,9 @@ import (
 	"conseweb.com/wallet/icebox/common/crypto/koblitz/kelliptic"
 	"github.com/btcsuite/btcd/btcec"
 	"conseweb.com/wallet/icebox/coinutil/base58"
-	"conseweb.com/wallet/icebox/coinutil"
 	"encoding/binary"
 	"github.com/rs/zerolog"
+	"github.com/conseweb/coinutil"
 )
 
 const (
@@ -417,16 +417,16 @@ func (s *iceberg) newPrivKey(sfn, password string) (key *address.PrivateKey, err
 	fmt.Println("Master public key: ", publicKey)
 
 	// encrypt private key
-	key, err = masterKey.ECPrivKey2()
-	if key.IsValid() {
-		// password此处才是真正用作对称加密密钥
-		secret := bip38.Encrypt(key, password)
-		err = ioutil.WriteFile(sfn, []byte(secret), 0644)
-		if err != nil {
-			return nil, err
-		}
-		return key, nil
-	}
+	//key, err = masterKey.ECPrivKey()
+	//if key.IsValid() {
+	//	// password此处才是真正用作对称加密密钥
+	//	secret := bip38.Encrypt(key, password)
+	//	err = ioutil.WriteFile(sfn, []byte(secret), 0644)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	return key, nil
+	//}
 
 	return nil, errors.New("Invalid private key.")
 }
