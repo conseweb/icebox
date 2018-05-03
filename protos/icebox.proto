@@ -40,7 +40,7 @@ message IceboxMessage {
     required bytes signature = 5;
 }
 
-
+//go:generate mockgen -source=icebox.pb.go -destination=../mocks/mock_Icebox.go -package=mocks conseweb.com/wallet/icebox/protos IceboxClient,IceboxServer
 // rpc只是用于演示相关接口，不用作实现
 service Icebox {
 
@@ -221,22 +221,8 @@ message PingReply {
     required int64 timestamp = 2;
 }
 
-message AddFeatureRequest {
-//    required Header header = 1;
-    required uint32 type = 2; // bip44: coin_type
-    required uint32 idx = 3;  // bip44: address_index
-    required string symbol = 4;
-    required string name = 5;
-}
-
-message AddFeatureReply {
-//    required ReplyHeader header = 1;
-    required string path = 2;
-}
-
 // if coin_type have exists in cointable, then failed
 message AddCoinRequest {
-//    required Header header = 1;
     required uint32 type = 2; // bip44: coin_type
     required uint32 idx = 3;  // bip44: address_index
     required string symbol = 4;
@@ -298,24 +284,14 @@ message SignTxReply {
 
 // list all of wallets
 message ListCoinRequest {
-//    required Header header = 1;
 }
+
 message ListCoinReply {
-//    required ReplyHeader header = 1;
     required uint32 max = 2;
     repeated uint32 type = 3[(nanopb).max_count = 8];
 }
 
-//message QueryFormulaRequst {
-//    required Header header = 1;
-//}
-//
-//message QueryFormulaReply {
-//    required Header header = 1;
-//}
-
 message ListSecretRequest {
-//    required Header header = 1;
     required uint32 type = 2;
     optional uint32 idx = 3;
 }
@@ -328,13 +304,11 @@ message Secret {
 }
 
 message ListSecretReply {
-//    required ReplyHeader header = 1;
     required uint32 max = 2;
     repeated Secret secret = 3[(nanopb).max_count = 8];
 }
 
 message ListAddressRequest {
-//    required Header header = 1;
     required string password = 1;
     required uint32 type = 2;
     optional uint32 idx = 3;
@@ -348,47 +322,38 @@ message Address {
 }
 
 message ListAddressReply {
-//    required ReplyHeader header = 1;
     required uint32 max = 2;
     repeated Address addr = 3[(nanopb).max_count = 8];
 }
 
 message RemoveCoinRequest {
-//    required Header header = 1;
     required string password = 1;
     required uint32 type = 2;
 }
 
 message RemoveCoinReply {
-//    required ReplyHeader header = 1;
 }
 
 message DeleteSecretRequest {
-//    required Header header = 1;
     required string password = 1;
     required uint32 type = 2;
     required uint32 idx = 3;
 }
 
 message DeleteSecretReply {
-//    required ReplyHeader header = 1;
 }
 
 message DeleteAddressRequest {
-//    required Header header = 1;
     required string password = 1;
     required uint32 type = 2;
     required uint32 idx = 3;
 }
 
 message DeleteAddressReply {
-//    required ReplyHeader header = 1;
 }
 
 message ResetRequest {
-//    required Header header = 1;
     required string password = 1;
 }
 message ResetReply {
-//    required ReplyHeader header = 1;
 }

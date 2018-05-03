@@ -40,9 +40,6 @@ var (
 	logger = flogging.MustGetLogger("core", zerolog.DebugLevel)
 )
 
-//go:generate mockgen -package=mocks conseweb.com/wallet/icebox/protos IceboxServer > ../mocks/mock_IceboxServer.go
-
-
 type CoinID struct {
 	T1	   uint32 			// for bip44: purpose = 44;
 	T2     uint32           // for bip44: coin_type;

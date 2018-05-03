@@ -36,7 +36,7 @@ func TestMain(m *testing.M) {
 }
 
 func startServer() {
-	grpclog.Printf("startServer()")
+	grpclog.Infoln("startServer()")
 	cmdStr := "./iceserver"
 	serverCmd = exec.Command(cmdStr)
 	serverCmd.Dir = "."
