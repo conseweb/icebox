@@ -248,26 +248,10 @@ message AddCoinReply {
 //    required string path = 2;
 }
 
-message CreateFormulaRequest {
-//    required Header header = 1;
-    required uint32 iscoin = 2[default = 1]; // default = 1
-    required uint32 type = 3;
-    required uint32 idx = 4;
-    // TODO: 该最大值未经验证
-    optional string name = 5[(nanopb).max_size = 32];
-}
-
-message CreateFormulaReply {
-//    required ReplyHeader header = 1;
-    // TODO: 该最大值未经验证
-    required string result = 2[(nanopb).max_size = 64]; // address or password
-}
-
 message CreateAddressRequest {
 //    required Header header = 1;
     required uint32 type = 2;
     required uint32 idx = 3;
-    // TODO: 密码需要加密,密钥应该使用会话id相关key
     required string password = 4[(nanopb).max_size = 64];
     // TODO: 该最大值未经验证
     optional string name = 5[(nanopb).max_size = 32];
@@ -283,7 +267,6 @@ message CreateSecretRequest {
 //    required Header header = 1;
     required uint32 type = 2;
     required uint32 idx = 3;
-    // TODO: 密码需要加密,密钥应该使用会话id相关key
     required string password = 4[(nanopb).max_size = 64];
     // TODO: 该最大值未经验证
     optional string name = 5[(nanopb).max_size = 32];

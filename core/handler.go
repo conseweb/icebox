@@ -33,15 +33,15 @@ import (
 	"conseweb.com/wallet/icebox/common/crypto"
 	"golang.org/x/crypto/scrypt"
 	"bytes"
-	//"github.com/conseweb/coinutil"
-	//"github.com/conseweb/coinutil"
-	//"github.com/conseweb/coinutil"
 	"github.com/btcsuite/btcutil"
 )
 
 var (
 	logger = flogging.MustGetLogger("core", zerolog.DebugLevel)
 )
+
+//go:generate mockgen -package=mocks conseweb.com/wallet/icebox/protos IceboxServer > ../mocks/mock_IceboxServer.go
+
 
 type CoinID struct {
 	T1	   uint32 			// for bip44: purpose = 44;
@@ -89,7 +89,7 @@ func makeTimestamp() int64 {
 }
 
 
-func NewIceberg() *IcebergHandler  {
+func NewIcebergHandler() *IcebergHandler  {
 	d := &IcebergHandler{
 		negotiated: false,
 		session: new(Session),
@@ -167,7 +167,7 @@ func (d *IcebergHandler) beforePingEvent(e *fsm.Event, state string) {
 
 func (s *IcebergHandler) Hello(ctx context.Context, req *pb.HiRequest) (*pb.HiReply, error) {
 	if common.App_magic == req.GetMagicA() {
-		reply := pb.MakeHiReply(common.Device_magic)
+		reply := pb.NewHiReply(common.Device_magic)
 		return reply, nil
 	}
 	return nil, errors.New("Unknown app!")
@@ -186,7 +186,7 @@ func (s *IcebergHandler) NegotiateKey(ctx context.Context, req *pb.NegotiateRequ
 		return nil, err
 	}
 	//pk, _ := ek.ECPubKey2()
-	//reply := pb.MakeNegotiateReply(req, pk.Compress())
+	//reply := pb.NewNegotiateReply(req, pk.Compress())
 	// generate session shared key
 	// sk * KeyA
 
@@ -232,7 +232,7 @@ func (s *IcebergHandler) NegotiateKey(ctx context.Context, req *pb.NegotiateRequ
 	logger.Debug().Msgf("Iceberg's public session key: %s", bpkB)
 	h := sha256.New()
 	h.Write(pkB.SerializeCompressed())
-	reply := pb.MakeNegotiateReply(bpkB, base58.Encode(h.Sum(nil)))
+	reply := pb.NewNegotiateReply(bpkB, base58.Encode(h.Sum(nil)))
 
 	return reply, nil
 }
@@ -253,7 +253,7 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 	t := req.GetType()
 	switch t {
 	case pb.IceboxMessage_ERROR:
-		return nil, errors.New("Some errors happend.")
+		return nil, errors.New("Some errors happend, should never be here!")
 	case pb.IceboxMessage_HELLO:
 		// unmarshal message
 		x := &pb.HiRequest{}
@@ -378,36 +378,20 @@ func (s *IcebergHandler) EndSession(ctx context.Context, req *pb.EndRequest) (*p
 
 ////////////////////////////////// Bussiness Logic ////////////////////////////////////////
 
-// HandleIceboxStream Main loop for handling the associated stream
-//func HandleIceboxStream(ice *IcebergHandler, ctxt context.Context, stream pb.Icebox_ChatServer) error {
-//	deadline, ok := ctxt.Deadline()
-//	logger.Debug().Msgf("Current context deadline = %s, ok = %v", deadline, ok)
-//	handler := NewIceberg()
-//	return handler.processStream()
-//}
-
-func (s *IcebergHandler) processStream() error {
-	return nil
-}
-
-//func (s *IcebergHandler) HandleIceboxStream(ctxt context.Context, stream pb.Icebox_ChatServer) error {
-//	return HandleIceboxStream(s, ctxt, stream)
-//}
-
 func (s *IcebergHandler) CheckDevice(ctx context.Context, req *pb.CheckRequest) (*pb.CheckReply, error) {
 	// check device is initialized
 
 	if !s.isInitialized() {
 		// return uninit
 		// zero := int32(0)
-		reply := pb.MakeCheckReply(0,nil)
+		reply := pb.NewCheckReply(0,nil)
 		return reply, nil
 	}
 
 	// 初步判断依据初始化了，需要获取深度数据以进行检测
 	devid, _ := s.loadDeviceID(common.Devid_path)
 	//one := int32(1)
-	reply := pb.MakeCheckReply(1, &devid)
+	reply := pb.NewCheckReply(1, &devid)
 	return reply, nil
 }
 
@@ -431,14 +415,14 @@ func (s *IcebergHandler) InitDevice(ctx context.Context, req *pb.InitRequest) (*
 		return nil, err
 	}
 
-	reply := pb.MakeInitReply(devid)
+	reply := pb.NewInitReply(devid)
 	fmt.Println("==> done init device")
 
 	return reply, nil
 }
 
 func (s *IcebergHandler) Ping(ctx context.Context, req *pb.PingRequest) (*pb.PingReply, error)  {
-	reply := pb.MakePingReply()
+	reply := pb.NewPingReply()
 	return reply, nil
 }
 
@@ -448,7 +432,7 @@ func (s *IcebergHandler) AddCoin(ctx context.Context, req *pb.AddCoinRequest) (*
 	symbol := req.GetSymbol()
 	name := req.GetName()
 	s.db.Create(&models.Coin{T2: tp, T3: idx, Symbol: symbol, Name: name})
-	reply := pb.MakeAddCoinReply()
+	reply := pb.NewAddCoinReply()
 	return reply, nil
 }
 
@@ -471,7 +455,7 @@ func (s *IcebergHandler) CreateAddress(ctx context.Context, req *pb.CreateAddres
 	if err != nil {
 		return nil, err
 	}
-	reply := pb.MakeCreateAddressReply(*addr)
+	reply := pb.NewCreateAddressReply(*addr)
 	return reply, nil
 }
 
@@ -494,7 +478,7 @@ func (s *IcebergHandler) CreateSecret(ctx context.Context, req *pb.CreateSecretR
 	//masterKey, _ := s.loadSecretKey(secret_path, pwd)
 	//ek, _ := bip32.NewKeyFromString(masterKey.String())
 	//bip44.NewKeyFromMasterKey(ek, tp, 0, 0, idx)
-	//reply := pb.MakeCreateAddressReply(req, p)
+	//reply := pb.NewCreateAddressReply(req, p)
 	//return reply, nil
 	return nil, errors.New("Not implemented!")
 }
@@ -524,7 +508,7 @@ func (s *IcebergHandler) ListAddress(ctx context.Context, req *pb.ListAddressReq
 
 	addrs := make([]*pb.Address, 1)
 	addrs = append(addrs, x)
-	reply := pb.MakeListAddressReply(uint32(cnt), addrs)
+	reply := pb.NewListAddressReply(uint32(cnt), addrs)
 	return reply, nil
 }
 
@@ -552,7 +536,7 @@ func (s *IcebergHandler) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb
 	if err != nil {
 		return nil, err
 	}
-	reply := pb.MakeSignTxReply(tx.SignedTx)
+	reply := pb.NewSignTxReply(tx.SignedTx)
 	return reply, nil
 }
 
@@ -575,7 +559,7 @@ func (s *IcebergHandler) ResetDevice(ctx context.Context, req *pb.ResetRequest) 
 		return nil, err
 	}
 
-	reply := pb.MakeResetReply()
+	reply := pb.NewResetReply()
 	return reply, nil
 }
 
@@ -676,7 +660,6 @@ func (s *IcebergHandler) newPrivKey(sfn, password string) (key *address.PrivateK
 		// password此处才是真正用作对称加密密钥
 		//sk := masterKey.String()
 		encrypted, err := BIP32Encrypt(masterKey, password)
-		//crypto.Encrypt([]byte(password), sk)
 		if err != nil {
 			return nil, err
 		}
@@ -724,46 +707,6 @@ func (s *IcebergHandler) generateAddress(tp, idx uint32, password string) (*stri
 	a := addr.EncodeAddress()
 	return &a, nil
 }
-
-func BIP32Encrypt(p *bip32.ExtendedKey, passphrase string) (*string, error) {
-	//bip38 := new(BIP38Key)
-
-	sp := p.String()
-	ah := address.Hash256([]byte(sp))[:4]
-	dh, _ := scrypt.Key([]byte(passphrase), ah, 16384, 8, 8, 64)
-
-	//bip38.Flag = byte(0xC0)
-	buf := new(bytes.Buffer)
-	buf.Write(ah)
-	es, err := crypto.Encrypt(dh[:32], sp)
-	if err != nil {
-		return nil, err
-	}
-	buf.WriteString(es)
-	bs := base58.Encode(buf.Bytes())
-
-	return &bs, nil
-}
-
-func BIP32Decrypt(data string, passphrase string) (*bip32.ExtendedKey, error) {
-	//bip38 := new(BIP38Key)
-
-	ds := base58.Decode(data)
-	//buf := bytes.NewBuffer(ds)
-	ah := ds[:4]
-	//sp := p.String()
-	//ah := address.Hash256([]byte(sp))[:4]
-	dh, _ := scrypt.Key([]byte(passphrase), ah, 16384, 8, 8, 64)
-
-	//bip38.Flag = byte(0xC0)
-	ct, err := crypto.Decrypt(dh[:32], string(ds[4:]))
-	if err != nil {
-		return nil, err
-	}
-	ks, err := bip32.NewKeyFromString(ct)
-	return ks, err
-}
-
 
 func (s *IcebergHandler) loadSecretKey(fn, password string) (key *bip32.ExtendedKey, err error) {
 	var data []byte
@@ -816,5 +759,43 @@ func (s *IcebergHandler) isInitialized() bool {
 	return true
 }
 
+func BIP32Encrypt(p *bip32.ExtendedKey, passphrase string) (*string, error) {
+	//bip38 := new(BIP38Key)
+
+	sp := p.String()
+	ah := address.Hash256([]byte(sp))[:4]
+	dh, _ := scrypt.Key([]byte(passphrase), ah, 16384, 8, 8, 64)
+
+	//bip38.Flag = byte(0xC0)
+	buf := new(bytes.Buffer)
+	buf.Write(ah)
+	es, err := crypto.Encrypt(dh[:32], sp)
+	if err != nil {
+		return nil, err
+	}
+	buf.WriteString(es)
+	bs := base58.Encode(buf.Bytes())
+
+	return &bs, nil
+}
+
+func BIP32Decrypt(data string, passphrase string) (*bip32.ExtendedKey, error) {
+	//bip38 := new(BIP38Key)
+
+	ds := base58.Decode(data)
+	//buf := bytes.NewBuffer(ds)
+	ah := ds[:4]
+	//sp := p.String()
+	//ah := address.Hash256([]byte(sp))[:4]
+	dh, _ := scrypt.Key([]byte(passphrase), ah, 16384, 8, 8, 64)
+
+	//bip38.Flag = byte(0xC0)
+	ct, err := crypto.Decrypt(dh[:32], string(ds[4:]))
+	if err != nil {
+		return nil, err
+	}
+	ks, err := bip32.NewKeyFromString(ct)
+	return ks, err
+}
 
 

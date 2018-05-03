@@ -109,7 +109,6 @@ func NewPingRequest() *PingRequest {
 
 func NewAddCoinRequest(tp, idx uint32, symbol, name string) *AddCoinRequest {
 	req := new(AddCoinRequest)
-	//req.Header = NewHeader()
 	req.Type = &tp
 	req.Idx = &idx
 	req.Symbol = &symbol
@@ -134,6 +133,14 @@ func NewListAddressRequest(tp, idx uint32, pass string) *ListAddressRequest {
 	return req
 }
 
+func NewDeleteAddressRequest(tp, idx uint32, pass string) *DeleteAddressRequest {
+	req := new(DeleteAddressRequest)
+	req.Type = &tp
+	req.Idx = &idx
+	req.Password = &pass
+	return req
+}
+
 func NewSignTxRequest(tp, idx uint32, amount uint64, dest, txid, pass string) *SignTxRequest {
 	req := new(SignTxRequest)
 	req.Type = &tp
@@ -151,7 +158,7 @@ func NewResetRequest() *ResetRequest {
 	return req
 }
 
-func MakeHiReply(magic int64) *HiReply {
+func NewHiReply(magic int64) *HiReply {
 
 	reply := new(HiReply)
 	//reply.Header = CloneHeader(req.Header)
@@ -160,7 +167,7 @@ func MakeHiReply(magic int64) *HiReply {
 	return reply
 }
 
-func MakeNegotiateReply(key, hash string) *NegotiateReply {
+func NewNegotiateReply(key, hash string) *NegotiateReply {
 
 	reply := new(NegotiateReply)
 	//reply.Header = CloneHeader(req.Header)
@@ -170,7 +177,7 @@ func MakeNegotiateReply(key, hash string) *NegotiateReply {
 	return reply
 }
 
-func MakeCheckReply(state int32, devid *string) *CheckReply {
+func NewCheckReply(state int32, devid *string) *CheckReply {
 
 	reply := new(CheckReply)
 	//reply.Header = CloneHeader(req.Header)
@@ -181,7 +188,7 @@ func MakeCheckReply(state int32, devid *string) *CheckReply {
 	return reply
 }
 
-func MakeInitReply(devid string) *InitReply {
+func NewInitReply(devid string) *InitReply {
 
 	reply := new(InitReply)
 	//reply.Header = CloneHeader(req.Header)
@@ -189,7 +196,7 @@ func MakeInitReply(devid string) *InitReply {
 	return reply
 }
 
-func MakePingReply() *PingReply {
+func NewPingReply() *PingReply {
 	reply := new(PingReply)
 	//reply.Header = CloneHeader(req.Header)
 	ts := makeTimestamp()
@@ -197,33 +204,38 @@ func MakePingReply() *PingReply {
 	return reply
 }
 
-func MakeAddCoinReply() *AddCoinReply {
+func NewAddCoinReply() *AddCoinReply {
 	reply := new(AddCoinReply)
 	//reply.Header = CloneHeader(req.Header)
 	//reply.Path =
 	return reply
 }
 
-func MakeCreateAddressReply(addr string) *CreateAddressReply {
+func NewCreateAddressReply(addr string) *CreateAddressReply {
 	reply := new(CreateAddressReply)
 	reply.Address = &addr
 	return reply
 }
 
-func MakeListAddressReply(cnt uint32, addrs []*Address) *ListAddressReply {
+func NewListAddressReply(cnt uint32, addrs []*Address) *ListAddressReply {
 	reply := new(ListAddressReply)
 	reply.Addr = addrs
 	reply.Max = &cnt
 	return reply
 }
 
-func MakeSignTxReply(tx string) *SignTxReply {
+func NewDeleteAddressReply(addr string) *DeleteAddressReply {
+	reply := new(DeleteAddressReply)
+	return reply
+}
+
+func NewSignTxReply(tx string) *SignTxReply {
 	reply := new(SignTxReply)
 	reply.SignedTx = &tx
 	return reply
 }
 
-func MakeResetReply() *ResetReply {
+func NewResetReply() *ResetReply {
 	reply := new(ResetReply)
 	//reply.Header = CloneHeader(req.Header)
 	return reply

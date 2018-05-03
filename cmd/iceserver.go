@@ -76,7 +76,7 @@ func main() {
 		opts = []grpc.ServerOption{grpc.Creds(creds)}
 	}
 	grpcServer := grpc.NewServer(opts...)
-	serv := core.NewIceberg()
+	serv := core.NewIcebergHandler()
 	pb.RegisterIceboxServer(grpcServer, serv)
 
 	// 开启trace

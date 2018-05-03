@@ -379,6 +379,33 @@ func (d *Handler) ListAddress(tp, idx uint32, pwd string) (*pb.ListAddressReply,
 
 }
 
+func (d *Handler) DeleteAddress(tp, idx uint32, pwd string) (*pb.DeleteAddressReply, error) {
+	var err error
+	req := pb.NewDeleteAddressRequest(tp, idx, pwd)
+	payload, _ := proto.Marshal(req)
+	msg := pb.NewIceboxMessage(pb.IceboxMessage_DELETE_ADDRESS, payload)
+	irep, xe := d.Client.Chat(context.Background(), msg)
+	if xe != nil {
+		grpclog.Fatalln(xe)
+		return nil, xe
+	}
+
+	if irep.GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", irep.GetPayload())
+	}
+
+	var caRep = &pb.DeleteAddressReply{}
+	err = proto.Unmarshal(irep.GetPayload(), caRep)
+	if err != nil {
+		grpclog.Fatalln(err)
+		return nil, err
+	}
+
+	grpclog.Infoln("DeleteAddressReply: ", caRep)
+	return caRep, nil
+
+}
+
 func (d *Handler) SignTx(tp, idx uint32, amount uint64, dest, txid, pwd string) (*pb.SignTxReply, error) {
 	var err error
 	req := pb.NewSignTxRequest(tp, idx, amount, dest, txid, pwd)
