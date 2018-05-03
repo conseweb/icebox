@@ -23,6 +23,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcutil"
 	"github.com/btcsuite/btcutil/base58"
+	"conseweb.com/wallet/icebox/common/address"
 )
 
 const (
@@ -372,6 +373,12 @@ func (k *ExtendedKey) ECPrivKey() (*btcec.PrivateKey, error) {
 	}
 
 	privKey, _ := btcec.PrivKeyFromBytes(btcec.S256(), k.key)
+	return privKey, nil
+}
+
+func (k *ExtendedKey) ECPrivKey2() (*address.PrivateKey, error) {
+	var privKey = new(address.PrivateKey)
+	privKey = privKey.SetBytes(k.key)
 	return privKey, nil
 }
 

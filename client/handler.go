@@ -15,6 +15,8 @@ import (
 	"github.com/btcsuite/btcd/btcec"
 	"conseweb.com/wallet/icebox/coinutil/bip39"
 	"github.com/btcsuite/btcd/chaincfg"
+	"github.com/gogo/protobuf/proto"
+	"crypto/sha256"
 )
 
 const (
@@ -118,25 +120,24 @@ func (d *Handler) enterUnplugged(e *fsm.Event, state string) {
 }
 
 func (d *Handler) beforeHello(e *fsm.Event, state string) {
-	logger.Debug().Msgf("Before %s, dest is %s, current is %s", e.Event, e.Dst, d.FSM.Current())
+	logger.Debug().Msgf("Before %s, dest is %s, current is %s", e.Event, e.Dst, state)
 	//logger.Debugf("Before reception of %s, dest is %s, current is %s", e.Event, e.Dst, d.FSM.Current())
 }
 
 func (d *Handler) afterHello(e *fsm.Event, state string) {
-	logger.Debug().Msgf("After %s, dest is %s, current is %s", e.Event, e.Dst, d.FSM.Current())
+	logger.Debug().Msgf("After %s, dest is %s, current is %s", e.Event, e.Dst, state)
 	//logger.Debugf("After reception of %s, dest is %s, current is %s", e.Event, e.Dst, d.FSM.Current())
 }
 
 func (d *Handler) afterPing(e *fsm.Event, state string) {
-	logger.Debug().Msgf("After %s, dest is %s, current is %s", e.Event, e.Dst, d.FSM.Current())
+	logger.Debug().Msgf("After %s, dest is %s, current is %s", e.Event, e.Dst, state)
 }
 
 func (d *Handler) beforePing(e *fsm.Event, state string) {
-	logger.Debug().Msgf("Before %s, dest is %s, current is %s", e.Event, e.Dst, d.FSM.Current())
+	logger.Debug().Msgf("Before %s, dest is %s, current is %s", e.Event, e.Dst, state)
 }
 
 func (d *Handler) handleMessage() error {
-
 	return nil
 }
 
@@ -174,24 +175,22 @@ func (d *Handler) generateSessionKey(r string) *bip32.ExtendedKey {
 func (d *Handler) Hello() *pb.HiReply {
 	var err error
 	req := pb.NewHiRequest(common.App_magic)
-	res, err := d.Client.Hello(context.Background(), req)
+	payload, _ := proto.Marshal(req)
+	ct := pb.NewIceboxMessage(pb.IceboxMessage_HELLO, payload)
+
+	res, err := d.Client.Chat(context.Background(), ct)
 	if err != nil {
 		//grpclog.Fatalln(err)
-		grpclog.Fatalf("%v.firstSayHi(_) = _, %v: ", d.Client, err)
+		grpclog.Fatalf("%v.Chat(_) = _, %v: ", d.Client, err)
 	}
-	fmt.Println("HiReply: ", res)
-	//if res.GetHeader().GetCode() == 0 && res.GetMagicB() == device_magic {
-	//	// send negoniate request
-	//	r := fmt.Sprintf("%d", makeTimestamp())
-	//	key := generateSessionKey(r)
-	//	ireq := pb.NewNegotiateRequest(key.String())
-	//	irep, xe := common.Hello(context.Background(), ireq)
-	//	if xe != nil {
-	//		grpclog.Fatalln(xe)
-	//	}
-	//	fmt.Println("InitReply: ", irep)
-	//}
-	return res
+	grpclog.Infoln("HiReply: ", res)
+
+	var result = &pb.HiReply{}
+	err = proto.Unmarshal(res.GetPayload(), result)
+	if err != nil {
+		return nil
+	}
+	return result
 }
 
 func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
@@ -209,14 +208,26 @@ func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
 	//bs := address.ToBase58(b, len(b))
 	bs := base58.Encode(b)
 	logger.Debug().Msgf("Base58 raw public string: '%s'", bs)
-	req := pb.NewNegotiateRequest(bs)
-	res, err := d.Client.NegotiateKey(context.Background(), req)
+	h := sha256.New()
+	h.Write([]byte(b))
+	hb := h.Sum(nil)
+	req := pb.NewNegotiateRequest(bs, base58.Encode(hb))
+	payload, _ := proto.Marshal(req)
+	x := pb.NewIceboxMessage(pb.IceboxMessage_NEGOTIATE, payload)
+	res, err := d.Client.Chat(context.Background(), x)
 	if err != nil {
 		grpclog.Fatalf("%v.Negotiate(_) = _, %v: ", d.Client, err)
 		return nil, err
 	}
-	logger.Debug().Msgf("NegotiateReply: %s", res)
-	kb := res.GetKeyB()
+
+	var result = &pb.NegotiateReply{}
+	err = proto.Unmarshal(res.GetPayload(), result)
+	if err != nil {
+		logger.Fatal().Err(err).Msg("")
+		return nil, err
+	}
+	logger.Debug().Msgf("NegotiateReply: %s", result)
+	kb := result.GetKeyB()
 	pkb := base58.Decode(kb)
 	pkB, err := btcec.ParsePubKey(pkb, btcec.S256())
 	if err != nil {
@@ -229,57 +240,168 @@ func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
 	skb := shared.Bytes()
 	d.session.sharedKey = skb
 
-	aesKey := base58.Encode(skb[:32])
+	aesKey := base58.Encode(skb[:16])
 	d.session.shortKey = aesKey
 
 	logger.Debug().Msgf("Shared key: %s", aesKey)
 
-	return res, nil
-}
-
-func (d *Handler) Conversation() (*pb.ConversationReply, error) {
-
-	return nil, nil
+	return result, nil
 }
 
 func (d *Handler) CheckDevice() (*pb.CheckReply, error) {
 	var err error
 	req := pb.NewCheckRequest()
-	res, err := d.Client.CheckDevice(context.Background(), req)
+	payload, _ := proto.Marshal(req)
+	ct := pb.NewIceboxMessage(pb.IceboxMessage_CHECK, payload)
+
+	res, err := d.Client.Chat(context.Background(), ct)
 	if err != nil {
-		grpclog.Fatalln(err)
+		grpclog.Fatalf("%v.Chat(_) = _, %v: ", d.Client, err)
+	}
+
+	var result = &pb.CheckReply{}
+	err = proto.Unmarshal(res.GetPayload(), result)
+	if err != nil {
 		return nil, err
 	}
-	grpclog.Infoln("CheckReply: ", res)
-	if res.GetHeader().GetCode() == 0 && res.GetState() == 0 {
-		// send initrequest
-		ireq := pb.NewInitRequest("Secret")
-		irep, xe := d.Client.InitDevice(context.Background(), ireq)
-		if xe != nil {
-			grpclog.Fatalln(xe)
-			return nil, xe
-		}
-		grpclog.Infoln("InitReply: ", irep)
+	grpclog.Infoln("CheckReply: ", result)
+	return result, nil
+}
+
+func (d *Handler) InitDevice(pas string) (*pb.InitReply, error) {
+	// send initrequest
+	ireq := pb.NewInitRequest(pas)
+	payload, _ := proto.Marshal(ireq)
+	ct := pb.NewIceboxMessage(pb.IceboxMessage_INIT, payload)
+	irep, xe := d.Client.Chat(context.Background(), ct)
+	if xe != nil {
+		grpclog.Fatalln(xe)
+		return nil, xe
 	}
-	return res, nil
+
+	var intRep = &pb.InitReply{}
+	err := proto.Unmarshal(irep.GetPayload(), intRep)
+	if err != nil {
+		return nil, err
+	}
+
+	grpclog.Infoln("InitReply: ", intRep)
+	return intRep, nil
 }
 
 func (d *Handler) PingDevice() {
 	req := pb.NewPingRequest()
-	res, err := d.Client.Ping(context.Background(), req)
+	payload, _ := proto.Marshal(req)
+	ct := pb.NewIceboxMessage(pb.IceboxMessage_PING, payload)
+	res, err := d.Client.Chat(context.Background(), ct)
 	if err != nil {
 		grpclog.Fatalln(err)
 	}
-	grpclog.Infoln("HelloReply: ", res)
+
+	var pr = &pb.PingReply{}
+	err = proto.Unmarshal(res.GetPayload(), pr)
+	if err != nil {
+		grpclog.Fatalln(err)
+	}
+
+	grpclog.Infoln("PingReply: ", pr)
 }
 
 func (d *Handler) ResetDevice() {
 	var err error
 	resetReq := pb.NewResetRequest()
-	var res1 *pb.ResetReply
-	res1, err = d.Client.ResetDevice(context.Background(), resetReq)
+	payload, _ := proto.Marshal(resetReq)
+	ct := pb.NewIceboxMessage(pb.IceboxMessage_RESET, payload)
+	res, err := d.Client.Chat(context.Background(), ct)
+	if err != nil {
+		grpclog.Fatalln(err)
+	}
+
+	var res1 = &pb.ResetReply{}
+	err = proto.Unmarshal(res.GetPayload(), res1)
 	if err != nil {
 		grpclog.Fatalln(err)
 	}
 	grpclog.Infoln("ResetReply: ", res1)
+}
+
+func (d *Handler) CreateAddress(tp, idx uint32, name, pwd string) (*pb.CreateAddressReply, error) {
+	var err error
+	req := pb.NewCreateAddressRequest(tp, idx, name, pwd)
+	payload, _ := proto.Marshal(req)
+	msg := pb.NewIceboxMessage(pb.IceboxMessage_CREATE_ADDRESS, payload)
+	irep, xe := d.Client.Chat(context.Background(), msg)
+	if xe != nil {
+		grpclog.Fatalln(xe)
+		return nil, xe
+	}
+
+	if irep.GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", irep.GetPayload())
+	}
+
+	var caRep = &pb.CreateAddressReply{}
+	err = proto.Unmarshal(irep.GetPayload(), caRep)
+	if err != nil {
+		grpclog.Fatalln(err)
+		return nil, err
+	}
+
+	grpclog.Infoln("CreateAddressReply: ", caRep)
+	return caRep, nil
+
+}
+
+func (d *Handler) ListAddress(tp, idx uint32, pwd string) (*pb.ListAddressReply, error) {
+	var err error
+	req := pb.NewListAddressRequest(tp, idx, pwd)
+	payload, _ := proto.Marshal(req)
+	msg := pb.NewIceboxMessage(pb.IceboxMessage_LIST_ADDRESS, payload)
+	irep, xe := d.Client.Chat(context.Background(), msg)
+	if xe != nil {
+		grpclog.Fatalln(xe)
+		return nil, xe
+	}
+
+	if irep.GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", irep.GetPayload())
+	}
+
+	var caRep = &pb.ListAddressReply{}
+	err = proto.Unmarshal(irep.GetPayload(), caRep)
+	if err != nil {
+		grpclog.Fatalln(err)
+		return nil, err
+	}
+
+	grpclog.Infoln("ListAddressReply: ", caRep)
+	return caRep, nil
+
+}
+
+func (d *Handler) SignTx(tp, idx uint32, amount uint64, dest, txid, pwd string) (*pb.SignTxReply, error) {
+	var err error
+	req := pb.NewSignTxRequest(tp, idx, amount, dest, txid, pwd)
+	payload, _ := proto.Marshal(req)
+	msg := pb.NewIceboxMessage(pb.IceboxMessage_SIGN_TX, payload)
+	irep, xe := d.Client.Chat(context.Background(), msg)
+	if xe != nil {
+		grpclog.Fatalln(xe)
+		return nil, xe
+	}
+
+	if irep.GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", irep.GetPayload())
+	}
+
+	var caRep = &pb.SignTxReply{}
+	err = proto.Unmarshal(irep.GetPayload(), caRep)
+	if err != nil {
+		grpclog.Fatalln(err)
+		return nil, err
+	}
+
+	grpclog.Infoln("SignTxReply: ", caRep)
+	return caRep, nil
+
 }

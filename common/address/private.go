@@ -98,6 +98,16 @@ func (p *PrivateKey) String() string {
 	return ToBase58(addr, 51)
 }
 
+func (p *PrivateKey) String2() string {
+	addr := make([]byte, 33)
+
+	addr[0] = 0x80
+	copy(addr[1:33], p.D.Bytes())
+
+	return ToBase58(addr, 51)
+}
+
+
 func (p *PrivateKey) Sign(m []byte) (s []byte, err error) {
 	K := new(ecdsa.PrivateKey)
 	K.Curve, K.X, K.Y, K.D = p.Curve, p.X, p.Y, p.D

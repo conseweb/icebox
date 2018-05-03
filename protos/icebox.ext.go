@@ -3,6 +3,9 @@ package protos
 import (
 
 	"time"
+	"math/rand"
+	"bytes"
+	"fmt"
 )
 
 const (
@@ -23,64 +26,90 @@ func NewInt32(v int32) *int32 {
 	return &i
 }
 
-
-func NewHeader() *Header {
+func NewIceboxMessage(t IceboxMessage_Type, p []byte) *IceboxMessage  {
+	m := new(IceboxMessage)
 	v := NewUInt32(Version)
-	ts := uint32(makeTimestamp())
+	m.Version = v
+	var sid = rand.Uint32()
+	m.SessionId = &sid
+	m.Type = &t
+	if p != nil {
+		m.Payload = p
+	}
+	m.Signature = []byte{'g', 'o', 'l', 'a', 'n', 'g'}
 
-	h := new(Header)
-	h.Ver = v
-	h.Sn = &ts
-	return h
+	return m
 }
 
-func CloneHeader(h *Header) *ReplyHeader {
-	zero := NewUInt32(0)
+func AddSignature(msg *IceboxMessage) []byte {
+	bs := fmt.Sprintf("%d%d", msg.GetVersion(), msg.GetSessionId())
 
-	header := new(ReplyHeader)
-	header.Sn = h.Sn
-	header.Ver = h.Ver
-	header.Code = zero
-	return header
+	buf := new(bytes.Buffer)
+	buf.WriteString(bs)
+	buf.Write(msg.Payload)
+
+	return buf.Bytes()
 }
+
+
+//func NewHeader() *Header {
+//	v := NewUInt32(Version)
+//	ts := uint32(makeTimestamp())
+//
+//	h := new(Header)
+//	h.Ver = v
+//	h.Sn = &ts
+//	return h
+//}
+
+//func CloneHeader(h *Header) *ReplyHeader {
+//	zero := NewUInt32(0)
+//
+//	header := new(ReplyHeader)
+//	header.Sn = h.Sn
+//	header.Ver = h.Ver
+//	header.Code = zero
+//	return header
+//}
 
 func NewHiRequest(magic int64) *HiRequest {
 	req := new(HiRequest)
-	req.Header = NewHeader()
+	//req.Header = NewHeader()
 	req.MagicA = &magic
 	return req
 }
 
 // key: KeyA, public key of requester side
-func NewNegotiateRequest(key string) *NegotiateRequest {
+func NewNegotiateRequest(key, hash string) *NegotiateRequest {
 	req := new(NegotiateRequest)
-	req.Header = NewHeader()
+	req.Hash = &hash
+	//req.Header = NewHeader()
 	req.KeyA = &key
 	return req
 }
 
 func NewCheckRequest() *CheckRequest {
 	req := new(CheckRequest)
-	req.Header = NewHeader()
+	//req.Header = NewHeader()
 	return req
 }
 
 func NewInitRequest(password string) *InitRequest {
 	req := new(InitRequest)
-	req.Header = NewHeader()
+	//req.Header = NewHeader()
 	req.Password = &password
 	return req
 }
 
 func NewPingRequest() *PingRequest {
 	req := new(PingRequest)
-	req.Header = NewHeader()
+	//req.Header = NewHeader()
 	return req
 }
 
 func NewAddCoinRequest(tp, idx uint32, symbol, name string) *AddCoinRequest {
 	req := new(AddCoinRequest)
-	req.Header = NewHeader()
+	//req.Header = NewHeader()
 	req.Type = &tp
 	req.Idx = &idx
 	req.Symbol = &symbol
@@ -88,34 +117,63 @@ func NewAddCoinRequest(tp, idx uint32, symbol, name string) *AddCoinRequest {
 	return req
 }
 
-func NewResetRequest() *ResetRequest {
-	req := new(ResetRequest)
-	req.Header = NewHeader()
+func NewCreateAddressRequest(tp, idx uint32, name, pass string) *CreateAddressRequest {
+	req := new(CreateAddressRequest)
+	req.Type = &tp
+	req.Idx = &idx
+	req.Password = &pass
+	req.Name = &name
 	return req
 }
 
-func MakeHiReply(req *HiRequest, magic int64) *HiReply {
+func NewListAddressRequest(tp, idx uint32, pass string) *ListAddressRequest {
+	req := new(ListAddressRequest)
+	req.Type = &tp
+	req.Idx = &idx
+	req.Password = &pass
+	return req
+}
+
+func NewSignTxRequest(tp, idx uint32, amount uint64, dest, txid, pass string) *SignTxRequest {
+	req := new(SignTxRequest)
+	req.Type = &tp
+	req.Idx = &idx
+	req.Amount = &amount
+	req.Dest = &dest
+	req.Txid = &txid
+	req.Password = &pass
+	return req
+}
+
+func NewResetRequest() *ResetRequest {
+	req := new(ResetRequest)
+	//req.Header = NewHeader()
+	return req
+}
+
+func MakeHiReply(magic int64) *HiReply {
 
 	reply := new(HiReply)
-	reply.Header = CloneHeader(req.Header)
+	//reply.Header = CloneHeader(req.Header)
 	reply.MagicB = &magic
 
 	return reply
 }
 
-func MakeNegotiateReply(req *NegotiateRequest, key string) *NegotiateReply {
+func MakeNegotiateReply(key, hash string) *NegotiateReply {
 
 	reply := new(NegotiateReply)
-	reply.Header = CloneHeader(req.Header)
+	//reply.Header = CloneHeader(req.Header)
 	reply.KeyB = &key
+	reply.Hash = &hash
 
 	return reply
 }
 
-func MakeCheckReply(req *CheckRequest, state int32, devid *string) *CheckReply {
+func MakeCheckReply(state int32, devid *string) *CheckReply {
 
 	reply := new(CheckReply)
-	reply.Header = CloneHeader(req.Header)
+	//reply.Header = CloneHeader(req.Header)
 	reply.State = &state
 	if devid != nil {
 		reply.DevId = devid
@@ -123,40 +181,51 @@ func MakeCheckReply(req *CheckRequest, state int32, devid *string) *CheckReply {
 	return reply
 }
 
-func MakeInitReply(req *InitRequest, devid string) *InitReply {
+func MakeInitReply(devid string) *InitReply {
 
 	reply := new(InitReply)
-	reply.Header = CloneHeader(req.Header)
+	//reply.Header = CloneHeader(req.Header)
 	reply.DevId = &devid
 	return reply
 }
 
-func MakePingReply(req *PingRequest) *PingReply {
+func MakePingReply() *PingReply {
 	reply := new(PingReply)
-	reply.Header = CloneHeader(req.Header)
+	//reply.Header = CloneHeader(req.Header)
 	ts := makeTimestamp()
 	reply.Timestamp = &ts
 	return reply
 }
 
-func MakeAddCoinReply(req *AddCoinRequest) *AddCoinReply {
+func MakeAddCoinReply() *AddCoinReply {
 	reply := new(AddCoinReply)
-	reply.Header = CloneHeader(req.Header)
+	//reply.Header = CloneHeader(req.Header)
 	//reply.Path =
 	return reply
 }
 
-func MakeCreateAddressReply(req *CreateAddressRequest, addr string) *CreateAddressReply {
-
+func MakeCreateAddressReply(addr string) *CreateAddressReply {
 	reply := new(CreateAddressReply)
-	reply.Header = CloneHeader(req.Header)
 	reply.Address = &addr
 	return reply
 }
 
-func MakeResetReply(req *ResetRequest) *ResetReply {
+func MakeListAddressReply(cnt uint32, addrs []*Address) *ListAddressReply {
+	reply := new(ListAddressReply)
+	reply.Addr = addrs
+	reply.Max = &cnt
+	return reply
+}
+
+func MakeSignTxReply(tx string) *SignTxReply {
+	reply := new(SignTxReply)
+	reply.SignedTx = &tx
+	return reply
+}
+
+func MakeResetReply() *ResetReply {
 	reply := new(ResetReply)
-	reply.Header = CloneHeader(req.Header)
+	//reply.Header = CloneHeader(req.Header)
 	return reply
 }
 

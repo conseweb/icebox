@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"conseweb.com/wallet/icebox/common/crypto/koblitz/kelliptic"
 	"math/big"
+	"conseweb.com/wallet/icebox/coinutil/base58"
 )
 
 type PublicKey struct {
@@ -48,6 +49,15 @@ func (p *PublicKey) Address() string {
 	copy(hash[1:], Hash160(b))
 
 	return ToBase58(hash, 34)
+}
+
+func (p *PublicKey) Address2() string {
+	b := p.Bytes()
+
+	hash := make([]byte, 21)
+	copy(hash[1:], Hash160(b))
+
+	return base58.Encode(hash)
 }
 
 func (p *PublicKey) AddressBytes() []byte {
