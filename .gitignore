@@ -2,3 +2,4 @@ bip33
 iceserver
 session_key.dat
 .idea
+go_build_iceserver_go
