@@ -131,8 +131,10 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 		}
 		reply, err := s.helper.Hello(ctx, x)
 		if err != nil {
-			return nil, err
+			msg := handleError(err)
+			return msg, nil
 		}
+
 		payload, _ := proto.Marshal(reply)
 		ret := pb.NewIceboxMessage(pb.IceboxMessage_HELLO, payload)
 		return ret, nil
@@ -140,7 +142,7 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 		x := &pb.NegotiateRequest{}
 		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
 		if unmarshalErr != nil {
-			logger.Fatal().Err(unmarshalErr).Msgf("Failed to unmarshall . Sending %s", pb.IceboxMessage_ERROR)
+			//logger.Fatal().Err(unmarshalErr).Msgf("Failed to unmarshall. Sending %s", pb.IceboxMessage_ERROR)
 			msg := handleError(unmarshalErr)
 			return msg, nil
 		}
@@ -157,7 +159,7 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 		x := &pb.CheckRequest{}
 		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
 		if unmarshalErr != nil {
-			logger.Fatal().Err(unmarshalErr).Msgf("Failed to unmarshall . Sending %s", pb.IceboxMessage_ERROR)
+			//logger.Fatal().Err(unmarshalErr).Msgf("Failed to unmarshall . Sending %s", pb.IceboxMessage_ERROR)
 			msg := handleError(unmarshalErr)
 			return msg, nil
 		}
@@ -173,7 +175,7 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 		x := &pb.InitRequest{}
 		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
 		if unmarshalErr != nil {
-			logger.Fatal().Err(unmarshalErr).Msgf("Failed to unmarshall . Sending %s", pb.IceboxMessage_ERROR)
+			//logger.Fatal().Err(unmarshalErr).Msgf("Failed to unmarshall . Sending %s", pb.IceboxMessage_ERROR)
 			msg := handleError(unmarshalErr)
 			return msg, nil
 		}

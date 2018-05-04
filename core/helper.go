@@ -31,6 +31,7 @@ import (
 	"crypto/sha256"
 	_ "github.com/mattn/go-sqlite3"  // must exists, or will cause -- sql: unknown driver "sqlite3"
 
+	"github.com/gogo/protobuf/proto"
 )
 
 //go:generate mockgen -source=helper.go -destination=../mocks/mock_Iceberg.go -package=mocks conseweb.com/wallet/icebox/core Iceberg
@@ -72,6 +73,7 @@ func (s *iceHelper) Hello(ctx context.Context, req *pb.HiRequest) (*pb.HiReply, 
 		reply := pb.NewHiReply(common.Device_magic)
 		return reply, nil
 	}
+
 	return nil, errors.New("Unknown app!")
 }
 
@@ -145,13 +147,12 @@ func (s *IcebergHandler) StartSession(ctx context.Context, req *pb.StartRequest)
 }
 
 func handleError(err error) *pb.IceboxMessage {
-	payload := []byte(err.Error())
+	xe := pb.NewError(500, err.Error())
+	payload, _ := proto.Marshal(xe)
 	//logger.Fatal().Err(err).Msgf("Failed to unmarshall . Sending %s", pb.IceboxMessage_ERROR)
 	msg := pb.NewIceboxMessage(pb.IceboxMessage_ERROR, payload)
 	return msg
 }
-
-
 
 func (s *iceHelper) EndSession(ctx context.Context, req *pb.EndRequest) (*pb.EndReply, error) {
 	return nil, errors.New("Not implemented!")

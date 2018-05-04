@@ -77,6 +77,13 @@ func AddSignature(msg *IceboxMessage) []byte {
 //	return header
 //}
 
+func NewError(code int32, msg string) *Error  {
+	xe := new(Error)
+	xe.Code = &code
+	xe.Message = &msg
+	return xe
+}
+
 func NewHiRequest(magic int64) *HiRequest {
 	req := new(HiRequest)
 	//req.Header = NewHeader()

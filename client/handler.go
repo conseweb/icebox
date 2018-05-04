@@ -185,6 +185,10 @@ func (d *Handler) Hello() *pb.HiReply {
 	}
 	grpclog.Infoln("HiReply: ", res)
 
+	if res.GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", res.GetPayload())
+	}
+
 	var result = &pb.HiReply{}
 	err = proto.Unmarshal(res.GetPayload(), result)
 	if err != nil {
@@ -218,6 +222,10 @@ func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
 	if err != nil {
 		grpclog.Fatalf("%v.Negotiate(_) = _, %v: ", d.Client, err)
 		return nil, err
+	}
+
+	if res.GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", res.GetPayload())
 	}
 
 	var result = &pb.NegotiateReply{}
@@ -259,6 +267,10 @@ func (d *Handler) CheckDevice() (*pb.CheckReply, error) {
 		grpclog.Fatalf("%v.Chat(_) = _, %v: ", d.Client, err)
 	}
 
+	if res.GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", res.GetPayload())
+	}
+
 	var result = &pb.CheckReply{}
 	err = proto.Unmarshal(res.GetPayload(), result)
 	if err != nil {
@@ -273,14 +285,18 @@ func (d *Handler) InitDevice(pas string) (*pb.InitReply, error) {
 	ireq := pb.NewInitRequest(pas)
 	payload, _ := proto.Marshal(ireq)
 	ct := pb.NewIceboxMessage(pb.IceboxMessage_INIT, payload)
-	irep, xe := d.Client.Chat(context.Background(), ct)
+	res, xe := d.Client.Chat(context.Background(), ct)
 	if xe != nil {
 		grpclog.Fatalln(xe)
 		return nil, xe
 	}
 
+	if res.GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", res.GetPayload())
+	}
+
 	var intRep = &pb.InitReply{}
-	err := proto.Unmarshal(irep.GetPayload(), intRep)
+	err := proto.Unmarshal(res.GetPayload(), intRep)
 	if err != nil {
 		return nil, err
 	}
@@ -296,6 +312,10 @@ func (d *Handler) PingDevice() {
 	res, err := d.Client.Chat(context.Background(), ct)
 	if err != nil {
 		grpclog.Fatalln(err)
+	}
+
+	if res.GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", res.GetPayload())
 	}
 
 	var pr = &pb.PingReply{}
@@ -315,6 +335,10 @@ func (d *Handler) ResetDevice() {
 	res, err := d.Client.Chat(context.Background(), ct)
 	if err != nil {
 		grpclog.Fatalln(err)
+	}
+
+	if res.GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", res.GetPayload())
 	}
 
 	var res1 = &pb.ResetReply{}

@@ -40,7 +40,6 @@ message IceboxMessage {
     required bytes signature = 5;
 }
 
-//go:generate mockgen -source=icebox.pb.go -destination=../mocks/mock_Icebox.go -package=mocks conseweb.com/wallet/icebox/protos IceboxClient,IceboxServer
 // rpc只是用于演示相关接口，不用作实现
 service Icebox {
 

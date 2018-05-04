@@ -10,63 +10,63 @@ import (
 	reflect "reflect"
 )
 
-// MockIceboxMessage is a mock of IceboxMessage interface
-type MockIceboxMessage struct {
+// MockIceboxMsgIntf is a mock of IceboxMsgIntf interface
+type MockIceboxMsgIntf struct {
 	ctrl     *gomock.Controller
-	recorder *MockIceboxMessageMockRecorder
+	recorder *MockIceboxMsgIntfMockRecorder
 }
 
-// MockIceboxMessageMockRecorder is the mock recorder for MockIceboxMessage
-type MockIceboxMessageMockRecorder struct {
-	mock *MockIceboxMessage
+// MockIceboxMsgIntfMockRecorder is the mock recorder for MockIceboxMsgIntf
+type MockIceboxMsgIntfMockRecorder struct {
+	mock *MockIceboxMsgIntf
 }
 
-// NewMockIceboxMessage creates a new mock instance
-func NewMockIceboxMessage(ctrl *gomock.Controller) *MockIceboxMessage {
-	mock := &MockIceboxMessage{ctrl: ctrl}
-	mock.recorder = &MockIceboxMessageMockRecorder{mock}
+// NewMockIceboxMsgIntf creates a new mock instance
+func NewMockIceboxMsgIntf(ctrl *gomock.Controller) *MockIceboxMsgIntf {
+	mock := &MockIceboxMsgIntf{ctrl: ctrl}
+	mock.recorder = &MockIceboxMsgIntfMockRecorder{mock}
 	return mock
 }
 
 // EXPECT returns an object that allows the caller to indicate expected use
-func (m *MockIceboxMessage) EXPECT() *MockIceboxMessageMockRecorder {
+func (m *MockIceboxMsgIntf) EXPECT() *MockIceboxMsgIntfMockRecorder {
 	return m.recorder
 }
 
 // Reset mocks base method
-func (m *MockIceboxMessage) Reset() {
+func (m *MockIceboxMsgIntf) Reset() {
 	m.ctrl.Call(m, "Reset")
 }
 
 // Reset indicates an expected call of Reset
-func (mr *MockIceboxMessageMockRecorder) Reset() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reset", reflect.TypeOf((*MockIceboxMessage)(nil).Reset))
+func (mr *MockIceboxMsgIntfMockRecorder) Reset() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Reset", reflect.TypeOf((*MockIceboxMsgIntf)(nil).Reset))
 }
 
 // String mocks base method
-func (m *MockIceboxMessage) String() string {
+func (m *MockIceboxMsgIntf) String() string {
 	ret := m.ctrl.Call(m, "String")
 	ret0, _ := ret[0].(string)
 	return ret0
 }
 
 // String indicates an expected call of String
-func (mr *MockIceboxMessageMockRecorder) String() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockIceboxMessage)(nil).String))
+func (mr *MockIceboxMsgIntfMockRecorder) String() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "String", reflect.TypeOf((*MockIceboxMsgIntf)(nil).String))
 }
 
 // ProtoMessage mocks base method
-func (m *MockIceboxMessage) ProtoMessage() {
+func (m *MockIceboxMsgIntf) ProtoMessage() {
 	m.ctrl.Call(m, "ProtoMessage")
 }
 
 // ProtoMessage indicates an expected call of ProtoMessage
-func (mr *MockIceboxMessageMockRecorder) ProtoMessage() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProtoMessage", reflect.TypeOf((*MockIceboxMessage)(nil).ProtoMessage))
+func (mr *MockIceboxMsgIntfMockRecorder) ProtoMessage() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ProtoMessage", reflect.TypeOf((*MockIceboxMsgIntf)(nil).ProtoMessage))
 }
 
 // Descriptor mocks base method
-func (m *MockIceboxMessage) Descriptor() ([]byte, []int) {
+func (m *MockIceboxMsgIntf) Descriptor() ([]byte, []int) {
 	ret := m.ctrl.Call(m, "Descriptor")
 	ret0, _ := ret[0].([]byte)
 	ret1, _ := ret[1].([]int)
@@ -74,66 +74,66 @@ func (m *MockIceboxMessage) Descriptor() ([]byte, []int) {
 }
 
 // Descriptor indicates an expected call of Descriptor
-func (mr *MockIceboxMessageMockRecorder) Descriptor() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Descriptor", reflect.TypeOf((*MockIceboxMessage)(nil).Descriptor))
+func (mr *MockIceboxMsgIntfMockRecorder) Descriptor() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Descriptor", reflect.TypeOf((*MockIceboxMsgIntf)(nil).Descriptor))
 }
 
 // GetVersion mocks base method
-func (m *MockIceboxMessage) GetVersion() uint32 {
+func (m *MockIceboxMsgIntf) GetVersion() uint32 {
 	ret := m.ctrl.Call(m, "GetVersion")
 	ret0, _ := ret[0].(uint32)
 	return ret0
 }
 
 // GetVersion indicates an expected call of GetVersion
-func (mr *MockIceboxMessageMockRecorder) GetVersion() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersion", reflect.TypeOf((*MockIceboxMessage)(nil).GetVersion))
+func (mr *MockIceboxMsgIntfMockRecorder) GetVersion() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetVersion", reflect.TypeOf((*MockIceboxMsgIntf)(nil).GetVersion))
 }
 
 // GetType mocks base method
-func (m *MockIceboxMessage) GetType() protos.IceboxMessage_Type {
+func (m *MockIceboxMsgIntf) GetType() protos.IceboxMessage_Type {
 	ret := m.ctrl.Call(m, "GetType")
 	ret0, _ := ret[0].(protos.IceboxMessage_Type)
 	return ret0
 }
 
 // GetType indicates an expected call of GetType
-func (mr *MockIceboxMessageMockRecorder) GetType() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetType", reflect.TypeOf((*MockIceboxMessage)(nil).GetType))
+func (mr *MockIceboxMsgIntfMockRecorder) GetType() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetType", reflect.TypeOf((*MockIceboxMsgIntf)(nil).GetType))
 }
 
 // GetSessionId mocks base method
-func (m *MockIceboxMessage) GetSessionId() uint32 {
+func (m *MockIceboxMsgIntf) GetSessionId() uint32 {
 	ret := m.ctrl.Call(m, "GetSessionId")
 	ret0, _ := ret[0].(uint32)
 	return ret0
 }
 
 // GetSessionId indicates an expected call of GetSessionId
-func (mr *MockIceboxMessageMockRecorder) GetSessionId() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSessionId", reflect.TypeOf((*MockIceboxMessage)(nil).GetSessionId))
+func (mr *MockIceboxMsgIntfMockRecorder) GetSessionId() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSessionId", reflect.TypeOf((*MockIceboxMsgIntf)(nil).GetSessionId))
 }
 
 // GetPayload mocks base method
-func (m *MockIceboxMessage) GetPayload() []byte {
+func (m *MockIceboxMsgIntf) GetPayload() []byte {
 	ret := m.ctrl.Call(m, "GetPayload")
 	ret0, _ := ret[0].([]byte)
 	return ret0
 }
 
 // GetPayload indicates an expected call of GetPayload
-func (mr *MockIceboxMessageMockRecorder) GetPayload() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPayload", reflect.TypeOf((*MockIceboxMessage)(nil).GetPayload))
+func (mr *MockIceboxMsgIntfMockRecorder) GetPayload() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetPayload", reflect.TypeOf((*MockIceboxMsgIntf)(nil).GetPayload))
 }
 
 // GetSignature mocks base method
-func (m *MockIceboxMessage) GetSignature() []byte {
+func (m *MockIceboxMsgIntf) GetSignature() []byte {
 	ret := m.ctrl.Call(m, "GetSignature")
 	ret0, _ := ret[0].([]byte)
 	return ret0
 }
 
 // GetSignature indicates an expected call of GetSignature
-func (mr *MockIceboxMessageMockRecorder) GetSignature() *gomock.Call {
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSignature", reflect.TypeOf((*MockIceboxMessage)(nil).GetSignature))
+func (mr *MockIceboxMsgIntfMockRecorder) GetSignature() *gomock.Call {
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetSignature", reflect.TypeOf((*MockIceboxMsgIntf)(nil).GetSignature))
 }

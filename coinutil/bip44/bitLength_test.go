@@ -18,8 +18,9 @@ func TestBitLength(t *testing.T) {
 	if err != nil {
 		t.Errorf("%v", err)
 	}
-	if len(child.Key) != 32 {
-		t.Errorf("len: %d, child.Key:%x\n", len(child.Key), child.Key)
+	k := child.Key()
+	if len(k) != 32 {
+		t.Errorf("len: %d, child.Key:%x\n", len(k), k)
 		t.Errorf("%v", child.String())
 	}
 
@@ -34,8 +35,9 @@ func TestBitLength(t *testing.T) {
 	if err != nil {
 		t.Errorf("%v", err)
 	}
-	if len(child.Key) != 32 {
-		t.Errorf("len: %d, child.Key:%x\n", len(child.Key), child.Key)
+	k = child.Key()
+	if len(k) != 32 {
+		t.Errorf("len: %d, child.Key:%x\n", len(k), k)
 		t.Errorf("%v", child.String())
 	}
 }

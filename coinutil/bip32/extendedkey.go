@@ -141,6 +141,10 @@ func NewExtendedKey(version, key, chainCode, parentFP []byte, depth uint8,
 	}
 }
 
+func (k *ExtendedKey) Key() []byte  {
+	return k.key
+}
+
 // pubKeyBytes returns bytes for the serialized compressed public key associated
 // with this extended key in an efficient manner including memoization as
 // necessary.
