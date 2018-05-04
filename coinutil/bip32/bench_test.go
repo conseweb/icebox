@@ -7,7 +7,7 @@ package bip32_test
 import (
 	"testing"
 
-	"github.com/btcsuite/btcutil/hdkeychain"
+	"conseweb.com/wallet/icebox/coinutil/bip32"
 )
 
 // bip0032MasterPriv1 is the master private extended key from the first set of
@@ -19,14 +19,14 @@ const bip0032MasterPriv1 = "xprv9s21ZrQH143K3QTDL4LXw2F7HEK3wJUD2nW2nRk4stbP" +
 // child from a master private extended key.
 func BenchmarkDeriveHardened(b *testing.B) {
 	b.StopTimer()
-	masterKey, err := hdkeychain.NewKeyFromString(bip0032MasterPriv1)
+	masterKey, err := bip32.NewKeyFromString(bip0032MasterPriv1)
 	if err != nil {
 		b.Errorf("Failed to decode master seed: %v", err)
 	}
 	b.StartTimer()
 
 	for i := 0; i < b.N; i++ {
-		masterKey.Child(hdkeychain.HardenedKeyStart)
+		masterKey.Child(bip32.HardenedKeyStart)
 	}
 }
 
@@ -34,7 +34,7 @@ func BenchmarkDeriveHardened(b *testing.B) {
 // (non-hardened) child from a master private extended key.
 func BenchmarkDeriveNormal(b *testing.B) {
 	b.StopTimer()
-	masterKey, err := hdkeychain.NewKeyFromString(bip0032MasterPriv1)
+	masterKey, err := bip32.NewKeyFromString(bip0032MasterPriv1)
 	if err != nil {
 		b.Errorf("Failed to decode master seed: %v", err)
 	}
@@ -49,7 +49,7 @@ func BenchmarkDeriveNormal(b *testing.B) {
 // key to a public extended key.
 func BenchmarkPrivToPub(b *testing.B) {
 	b.StopTimer()
-	masterKey, err := hdkeychain.NewKeyFromString(bip0032MasterPriv1)
+	masterKey, err := bip32.NewKeyFromString(bip0032MasterPriv1)
 	if err != nil {
 		b.Errorf("Failed to decode master seed: %v", err)
 	}
@@ -64,7 +64,7 @@ func BenchmarkPrivToPub(b *testing.B) {
 // extended key.
 func BenchmarkDeserialize(b *testing.B) {
 	for i := 0; i < b.N; i++ {
-		hdkeychain.NewKeyFromString(bip0032MasterPriv1)
+		bip32.NewKeyFromString(bip0032MasterPriv1)
 	}
 }
 
@@ -72,7 +72,7 @@ func BenchmarkDeserialize(b *testing.B) {
 // extended key.
 func BenchmarkSerialize(b *testing.B) {
 	b.StopTimer()
-	masterKey, err := hdkeychain.NewKeyFromString(bip0032MasterPriv1)
+	masterKey, err := bip32.NewKeyFromString(bip0032MasterPriv1)
 	if err != nil {
 		b.Errorf("Failed to decode master seed: %v", err)
 	}

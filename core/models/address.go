@@ -15,7 +15,7 @@ type Address struct {
 }
 
 func (p Address) GetEquality() (res string) {
-	res = fmt.Sprintf("%i/%i", p.T4, p.T5)
+	res = fmt.Sprintf("%d/%d", p.T4, p.T5)
 	return res
 }
 

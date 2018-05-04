@@ -21,17 +21,17 @@ type Transaction struct {
 
 func CreateTransaction(secret string, destination string, amount int64, txHash string) (Transaction, error) {
 	var transaction Transaction
-	wif, err := btcutil.DecodeWIF(secret)
+	wif, err := coinutil.DecodeWIF(secret)
 	if err != nil {
 		return Transaction{}, err
 	}
-	addresspubkey, _ := btcutil.NewAddressPubKey(wif.PrivKey.PubKey().SerializeUncompressed(), &chaincfg.MainNetParams)
+	addresspubkey, _ := coinutil.NewAddressPubKey(wif.PrivKey.PubKey().SerializeUncompressed(), &chaincfg.MainNetParams)
 	sourceTx := wire.NewMsgTx(wire.TxVersion)
 	sourceUtxoHash, _ := chainhash.NewHashFromStr(txHash)
 	sourceUtxo := wire.NewOutPoint(sourceUtxoHash, 0)
 	sourceTxIn := wire.NewTxIn(sourceUtxo, nil, nil)
-	destinationAddress, err := btcutil.DecodeAddress(destination, &chaincfg.MainNetParams)
-	sourceAddress, err := btcutil.DecodeAddress(addresspubkey.EncodeAddress(), &chaincfg.MainNetParams)
+	destinationAddress, err := coinutil.DecodeAddress(destination, &chaincfg.MainNetParams)
+	sourceAddress, err := coinutil.DecodeAddress(addresspubkey.EncodeAddress(), &chaincfg.MainNetParams)
 	if err != nil {
 		return Transaction{}, err
 	}

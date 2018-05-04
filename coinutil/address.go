@@ -2,7 +2,7 @@
 // Use of this source code is governed by an ISC
 // license that can be found in the LICENSE file.
 
-package btcutil
+package coinutil
 
 import (
 	"bytes"
@@ -13,8 +13,8 @@ import (
 
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil/base58"
-	"github.com/btcsuite/btcutil/bech32"
+	"conseweb.com/wallet/icebox/coinutil/base58"
+	"conseweb.com/wallet/icebox/coinutil/bech32"
 	"golang.org/x/crypto/ripemd160"
 )
 

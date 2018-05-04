@@ -11,8 +11,12 @@ import (
 	"google.golang.org/grpc/grpclog"
 	"net"
 	"time"
-	"conseweb.com/wallet/icebox/client/common"
-	"os"
+	"conseweb.com/wallet/icebox/core/common"
+
+	"github.com/golang/mock/gomock"
+	"github.com/golang/protobuf/proto"
+	"context"
+	"github.com/bmizerany/assert"
 )
 
 const (
@@ -24,15 +28,30 @@ var client pb.IceboxClient
 var conn *grpc.ClientConn
 var serverCmd *exec.Cmd
 
+//go:generate mockgen -source=handler_test.go -destination=../mocks/mock_IceboxMessage.go -package=mocks conseweb.com/wallet/icebox/core IceboxMessage
+
+type IceboxMessage interface {
+	Reset()
+	String() string
+	ProtoMessage()
+	Descriptor() ([]byte, []int)
+
+	GetVersion() uint32
+	GetType() pb.IceboxMessage_Type
+	GetSessionId() uint32
+	GetPayload() []byte
+	GetSignature() []byte
+}
+
 func TestMain(m *testing.M) {
-	grpclog.Printf("TestMain()")
+	grpclog.Infoln("TestMain()")
 	//startServer()
 	//startServer2()
-	client, conn = startClient()
-	returnCode := m.Run()
-	stopClient()
+	//client, conn = startClient()
+	//returnCode := m.Run()
+	//stopClient()
 	//stopServer()
-	os.Exit(returnCode)
+	//os.Exit(returnCode)
 }
 
 func startServer() {
@@ -114,18 +133,44 @@ func stopClient() {
 	conn.Close()
 }
 
-func TestFirstHi(t *testing.T) {
-	grpclog.Printf("TestFirstHi()")
-	reply := common.Hello(client)
 
-	//var err error
-	//req := pb.NewHiRequest(common.App_magic)
-	//fmt.Println("HiRequest: ", req)
-	//res, err := client.Hello(context.Background(), req)
-	//if err != nil {
-	//	grpclog.Fatalf("%v.firstSayHi(_) = _, %v: ", client, err)
-	//}
-	grpclog.Println("HiReply: ", reply)
+
+//type MockedHiRequest struct {
+//	mock.Mock
+//}
+//
+//func (m *MockedHiRequest) GetMagicA() int {
+//	args := m.Called()
+//	return args.Int(1)
+//}
+
+func TestHello(t *testing.T) {
+	grpclog.Infoln("TestFirstHi()")
+
+	//serv := NewIcebergHandler()
+
+	mockCtrl := gomock.NewController(t)
+	defer mockCtrl.Finish()
+
+	//dummyError := errors.New("dummy error")
+	//mockIce := mocks.NewMockIceboxMessage(mockCtrl)
+	////
+	//////x := pb.NewInt64(1)
+	//mockIce.EXPECT().GetVersion().Return(1)
+	//mockIce.EXPECT().GetSessionId().Return(1234567)
+	//mockIce.EXPECT().GetType().Return(pb.IceboxMessage_UNDEFINED)
+
+	req := pb.NewHiRequest(common.App_magic+1)
+	payload, _ := proto.Marshal(req)
+	ct := pb.NewIceboxMessage(pb.IceboxMessage_HELLO+1, payload)
+	handler := NewIcebergHandler()
+	res, err := handler.Chat(context.Background(), ct)
+	assert.Equal(t, err, nil)
+
+	var result = &pb.HiReply{}
+	err = proto.Unmarshal(res.GetPayload(), result)
+	assert.Equal(t, err, nil)
+	assert.Equal(t, result.GetMagicB(), common.Device_magic)
 }
 
 

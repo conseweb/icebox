@@ -8,21 +8,21 @@ import (
 	"fmt"
 
 	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcutil/hdkeychain"
+	"conseweb.com/wallet/icebox/coinutil/bip32"
 )
 
 // This example demonstrates how to generate a cryptographically random seed
 // then use it to create a new master node (extended key).
 func ExampleNewMaster() {
 	// Generate a random seed at the recommended length.
-	seed, err := hdkeychain.GenerateSeed(hdkeychain.RecommendedSeedLen)
+	seed, err := bip32.GenerateSeed(bip32.RecommendedSeedLen)
 	if err != nil {
 		fmt.Println(err)
 		return
 	}
 
 	// Generate a new master node using the seed.
-	key, err := hdkeychain.NewMaster(seed, &chaincfg.MainNetParams)
+	key, err := bip32.NewMaster(seed, &chaincfg.MainNetParams)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -63,7 +63,7 @@ func Example_defaultWalletLayout() {
 	// Start by getting an extended key instance for the master node.
 	// This gives the path:
 	//   m
-	masterKey, err := hdkeychain.NewKeyFromString(master)
+	masterKey, err := bip32.NewKeyFromString(master)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -71,7 +71,7 @@ func Example_defaultWalletLayout() {
 
 	// Derive the extended key for account 0.  This gives the path:
 	//   m/0H
-	acct0, err := masterKey.Child(hdkeychain.HardenedKeyStart + 0)
+	acct0, err := masterKey.Child(bip32.HardenedKeyStart + 0)
 	if err != nil {
 		fmt.Println(err)
 		return
@@ -159,7 +159,7 @@ func Example_audits() {
 	// Start by getting an extended key instance for the master node.
 	// This gives the path:
 	//   m
-	masterKey, err := hdkeychain.NewKeyFromString(master)
+	masterKey, err := bip32.NewKeyFromString(master)
 	if err != nil {
 		fmt.Println(err)
 		return

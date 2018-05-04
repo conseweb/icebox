@@ -18,7 +18,7 @@ type Coin struct {
 }
 
 func (p Coin) GetEquality() (res string) {
-	res = fmt.Sprintf("m/%i'/%i'/%i'/", p.T1, p.T2, p.T3)
+	res = fmt.Sprintf("m/%d'/%d'/%d'/", p.T1, p.T2, p.T3)
 	return res
 }
 

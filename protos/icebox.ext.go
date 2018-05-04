@@ -21,6 +21,11 @@ func NewUInt32(v uint32) *uint32 {
 	return &i
 }
 
+func NewInt64(v int64) *int64 {
+	var i = v
+	return &i
+}
+
 func NewInt32(v int32) *int32 {
 	var i = v
 	return &i

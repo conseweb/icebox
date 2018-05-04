@@ -12,7 +12,7 @@ import (
 	"testing"
 
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcutil/txsort"
+	"conseweb.com/wallet/icebox/coinutil/txsort"
 )
 
 // TestSort ensures the transaction sorting works according to the BIP.

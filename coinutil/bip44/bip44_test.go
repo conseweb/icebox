@@ -7,6 +7,7 @@ import (
 	"conseweb.com/wallet/icebox/coinutil/bip32"
 	"conseweb.com/wallet/icebox/coinutil/bip39"
 	. "conseweb.com/wallet/icebox/coinutil/bip44"
+	"github.com/btcsuite/btcd/chaincfg"
 )
 
 func TestNewKeyFromMnemonic(t *testing.T) {
@@ -36,7 +37,7 @@ func TestNewKeyFromMasterKey(t *testing.T) {
 		panic(err)
 	}
 
-	masterKey, err := bip32.NewMasterKey(seed)
+	masterKey, err := bip32.NewMaster(seed, &chaincfg.MainNetParams)
 	if err != nil {
 		panic(err)
 	}

@@ -17,7 +17,7 @@ type Secret struct {
 }
 
 func (p Secret) GetEquality() (res string) {
-	res = fmt.Sprintf("%i/%i/%i", p.T1, p.T2, p.T3)
+	res = fmt.Sprintf("%d/%d/%d", p.T1, p.T2, p.T3)
 	return res
 }
 

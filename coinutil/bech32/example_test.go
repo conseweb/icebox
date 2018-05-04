@@ -8,7 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 
-	"github.com/btcsuite/btcutil/bech32"
+	"conseweb.com/wallet/icebox/coinutil/bech32"
 )
 
 // This example demonstrates how to decode a bech32 encoded string.

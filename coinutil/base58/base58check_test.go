@@ -7,7 +7,7 @@ package base58_test
 import (
 	"testing"
 
-	"github.com/btcsuite/btcutil/base58"
+	"conseweb.com/wallet/icebox/coinutil/base58"
 )
 
 var checkEncodingStringTests = []struct {

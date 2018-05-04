@@ -5,10 +5,10 @@
 package mocks
 
 import (
-	gomock "github.com/golang/mock/gomock"
-	context "golang.org/x/net/context"
-	grpc "google.golang.org/grpc"
-	reflect "reflect"
+	"github.com/golang/mock/gomock"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
+	"reflect"
 )
 
 // MockIceboxClient is a mock of IceboxClient interface
@@ -35,7 +35,7 @@ func (m *MockIceboxClient) EXPECT() *MockIceboxClientMockRecorder {
 }
 
 // Chat mocks base method
-func (m *MockIceboxClient) Chat(ctx context.Context, in *IceboxMessage, opts ...grpc.CallOption) (*IceboxMessage, error) {
+func (m *MockIceboxClient) Chat(ctx context.Context, in *pb.IceboxMessage, opts ...grpc.CallOption) (*pb.IceboxMessage, error) {
 	varargs := []interface{}{ctx, in}
 	for _, a := range opts {
 		varargs = append(varargs, a)

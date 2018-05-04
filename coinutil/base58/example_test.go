@@ -7,7 +7,7 @@ package base58_test
 import (
 	"fmt"
 
-	"github.com/btcsuite/btcutil/base58"
+	"conseweb.com/wallet/icebox/coinutil/base58"
 )
 
 // This example demonstrates how to decode modified base58 encoded data.
