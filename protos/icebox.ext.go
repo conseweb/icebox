@@ -46,6 +46,20 @@ func NewIceboxMessage(t IceboxMessage_Type, p []byte) *IceboxMessage  {
 	return m
 }
 
+func NewIceboxMessageWithSID(t IceboxMessage_Type, sid uint32, p []byte) *IceboxMessage  {
+	m := new(IceboxMessage)
+	v := NewUInt32(Version)
+	m.Version = v
+	m.SessionId = &sid
+	m.Type = &t
+	if p != nil {
+		m.Payload = p
+	}
+	m.Signature = []byte{'g', 'o', 'l', 'a', 'n', 'g'}
+
+	return m
+}
+
 func AddSignature(msg *IceboxMessage) []byte {
 	bs := fmt.Sprintf("%d%d", msg.GetVersion(), msg.GetSessionId())
 
@@ -97,6 +111,11 @@ func NewNegotiateRequest(key, hash string) *NegotiateRequest {
 	req.Hash = &hash
 	//req.Header = NewHeader()
 	req.KeyA = &key
+	return req
+}
+
+func NewStartRequest() *StartRequest {
+	req := new(StartRequest)
 	return req
 }
 
@@ -213,6 +232,11 @@ func NewPingReply() *PingReply {
 	//reply.Header = CloneHeader(req.Header)
 	ts := makeTimestamp()
 	reply.Timestamp = &ts
+	return reply
+}
+
+func NewStartReply() *StartReply {
+	reply := new(StartReply)
 	return reply
 }
 

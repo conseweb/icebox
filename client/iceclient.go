@@ -71,7 +71,13 @@ func main() {
 	}
 	handler.FSM.Event("NEGOTIATE")
 
+	_, err = handler.Start()
+	if err != nil {
+		logger.Fatal().Err(err)
+	}
+
 	handler.FSM.Event("START")
+	//handler.session.id
 
 	rep, err := handler.CheckDevice()
 	if err != nil {

@@ -126,29 +126,24 @@ message HiReply {
 }
 
 message NegotiateRequest {
-//    required Header header = 1;
-    // pubKeyA: client(requester)'s public key
     required string keyA = 2;
     required string hash = 3;
 }
 
 message NegotiateReply {
-//    required ReplyHeader header = 1;
     required string keyB = 2;
     required string hash = 3;
 }
 
 message StartRequest {
-//    required Header header = 1;
     // session id
-    required uint32 sessionID = 2;
+//    required uint32 sessionID = 2;
     // 会话有效时长，单位：秒
-    required uint32 duration = 3;
+//    required uint32 duration = 3;
 }
 
 message StartReply {
-//    required ReplyHeader header = 1;
-//    required uint32 session_id = 2;
+
 }
 
 message ConversationRequest {
@@ -210,9 +205,7 @@ message InitReply {
 }
 
 // The request message containing the user's name.
-message PingRequest {
-//    required Header header = 1;
-}
+message PingRequest {}
 
 // The response message containing the greetings
 message PingReply {

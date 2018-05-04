@@ -42,6 +42,7 @@ type Session struct {
 	key string			// private key
 	peerKey []byte		// peer's public key
 	sharedKey []byte	// shared public key
+	shortKey string     // aes key
 }
 
 type IcebergHandler struct {
@@ -120,8 +121,9 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 	switch t {
 	case pb.IceboxMessage_ERROR:
 		return nil, errors.New("Some errors happend, should never be here!")
+
 	case pb.IceboxMessage_HELLO:
-		// unmarshal message
+		// 1. unmarshal message
 		x := &pb.HiRequest{}
 		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
 		if unmarshalErr != nil {
@@ -129,37 +131,61 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 			msg := handleError(unmarshalErr)
 			return msg, nil
 		}
+		// 2. execute command
 		reply, err := s.helper.Hello(ctx, x)
 		if err != nil {
 			msg := handleError(err)
 			return msg, nil
 		}
-
+		// 3. marshal and send response
 		payload, _ := proto.Marshal(reply)
 		ret := pb.NewIceboxMessage(pb.IceboxMessage_HELLO, payload)
 		return ret, nil
+
 	case pb.IceboxMessage_NEGOTIATE:
+		// 1. unmarshal request
 		x := &pb.NegotiateRequest{}
 		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
 		if unmarshalErr != nil {
-			//logger.Fatal().Err(unmarshalErr).Msgf("Failed to unmarshall. Sending %s", pb.IceboxMessage_ERROR)
 			msg := handleError(unmarshalErr)
 			return msg, nil
 		}
+		// 2. execute request
 		reply, err := s.helper.NegotiateKey(ctx, x)
 		if err != nil {
 			msg := handleError(err)
 			return msg, nil
 		}
+		// 3. marshal and return response
 		payload, _ := proto.Marshal(reply)
 		ret := pb.NewIceboxMessage(pb.IceboxMessage_NEGOTIATE, payload)
 		return ret, nil
-		//return nil, errors.New("Negotiate not implemented!")
+
+	case pb.IceboxMessage_START:
+		// after negotiate
+		// 1. unmarshal request
+		x := &pb.StartRequest{}
+		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
+		if unmarshalErr != nil {
+			msg := handleError(unmarshalErr)
+			return msg, nil
+		}
+		// 2. execute command
+		reply, err := s.helper.StartSession(ctx, x)
+		if err != nil {
+			msg := handleError(err)
+			return msg, nil
+		}
+		// 3. marshal and return reply
+		payload, _ := proto.Marshal(reply)
+		// set as new session id
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_START,sid,payload)
+		return ret, nil
+
 	case pb.IceboxMessage_CHECK:
 		x := &pb.CheckRequest{}
 		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
 		if unmarshalErr != nil {
-			//logger.Fatal().Err(unmarshalErr).Msgf("Failed to unmarshall . Sending %s", pb.IceboxMessage_ERROR)
 			msg := handleError(unmarshalErr)
 			return msg, nil
 		}
@@ -169,8 +195,10 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 			return msg, nil
 		}
 		payload, _ := proto.Marshal(reply)
-		ret := pb.NewIceboxMessage(pb.IceboxMessage_CHECK, payload)
+		// set as new session id
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_CHECK,sid,payload)
 		return ret, nil
+
 	case pb.IceboxMessage_INIT:
 		x := &pb.InitRequest{}
 		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
@@ -185,8 +213,10 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 			return msg, nil
 		}
 		payload, _ := proto.Marshal(reply)
-		ret := pb.NewIceboxMessage(pb.IceboxMessage_INIT, payload)
+		// set as new session id
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_INIT,sid,payload)
 		return ret, nil
+
 	case pb.IceboxMessage_CREATE_ADDRESS:
 		x := &pb.CreateAddressRequest{}
 		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
@@ -201,8 +231,11 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 			return msg, nil
 		}
 		payload, _ := proto.Marshal(reply)
-		ret := pb.NewIceboxMessage(pb.IceboxMessage_CREATE_ADDRESS, payload)
+		sid := s.helper.session.id
+		// set as new session id
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_CREATE_ADDRESS,sid,payload)
 		return ret, nil
+
 	case pb.IceboxMessage_LIST_ADDRESS:
 		x := &pb.ListAddressRequest{}
 		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
@@ -217,8 +250,11 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 			return msg, nil
 		}
 		payload, _ := proto.Marshal(reply)
-		ret := pb.NewIceboxMessage(pb.IceboxMessage_LIST_ADDRESS, payload)
+		sid := s.helper.session.id
+		// set as new session id
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_LIST_ADDRESS,sid,payload)
 		return ret, nil
+
 	case pb.IceboxMessage_SIGN_TX:
 		x := &pb.SignTxRequest{}
 		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
@@ -233,7 +269,9 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 			return msg, nil
 		}
 		payload, _ := proto.Marshal(reply)
-		ret := pb.NewIceboxMessage(pb.IceboxMessage_SIGN_TX, payload)
+		sid := s.helper.session.id
+		// set as new session id
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_SIGN_TX,sid,payload)
 		return ret, nil
 	}
 	//return s.HandleIceboxStream(stream.Context(), stream)

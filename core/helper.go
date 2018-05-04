@@ -89,46 +89,30 @@ func (s *iceHelper) NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) 
 	if err != nil {
 		return nil, err
 	}
-	//pk, _ := ek.ECPubKey2()
-	//reply := pb.NewNegotiateReply(req, pk.Compress())
-	// generate session shared key
-	// sk * KeyA
 
 	var pkA = new(address.PublicKey)
 	pkA.Curve = kelliptic.S256()
 	cp := base58.Decode(keyA)
-	//cp, err := address.FromBase58(keyA)
-	//if err != nil {
-	//	logger.Fatal().Err(err).Msg("")
-	//	return nil, err
-	//}
-	var curve = btcec.S256()
-	pk, err := btcec.ParsePubKey(cp, curve)
+
+	pk, err := btcec.ParsePubKey(cp, btcec.S256())
 	if err != nil {
-		logger.Fatal().Err(err).Msg("")
 		return nil, err
 	}
-	//logger.Info().Msgf("Received pkA: %s", pk)
 
 	spk := pk.SerializeCompressed()
 	bpk := base58.Encode(spk)
 	if bpk == keyA {
 		logger.Debug().Msgf("Encode ok!")
 	}
-	//var curve = kelliptic.S256()
-	//pkA.Curve = curve
-	//pkA.X, pkA.Y, err = pkA.Curve.DecompressPoint(cp)
-	//err = address.DeCompress(keyA, pkA)
-	//if err != nil {
-	//	return nil, err
-	//}
 
 	shared := address.NewPublickKey("256")
 	shared.X, shared.Y = shared.ScalarMult(pk.X, pk.Y, sk.Serialize())
 	s.session.sharedKey = shared.Bytes()
 
+	s.session.id = binary.LittleEndian.Uint32(s.session.sharedKey)
 	// generate aes key
-	aesKey := s.session.sharedKey[:16]
+	aesKey := s.session.sharedKey[:common.SharedKey_Len]
+	s.session.shortKey = base58.Encode(aesKey)
 
 	logger.Debug().Msgf("Got shared key: %s", base58.Encode(aesKey))
 	pkB := sk.PubKey()
@@ -141,9 +125,10 @@ func (s *iceHelper) NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) 
 	return reply, nil
 }
 
-func (s *IcebergHandler) StartSession(ctx context.Context, req *pb.StartRequest) (*pb.StartReply, error) {
+func (s *iceHelper) StartSession(ctx context.Context, req *pb.StartRequest) (*pb.StartReply, error) {
 
-	return nil, errors.New("Not implemented!")
+	reply := pb.NewStartReply()
+	return reply, nil
 }
 
 func handleError(err error) *pb.IceboxMessage {
