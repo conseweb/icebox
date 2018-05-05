@@ -80,8 +80,9 @@ func (s *iceHelper) Hello(ctx context.Context, req *pb.HiRequest) (*pb.HiReply, 
 func (s *iceHelper) NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) (*pb.NegotiateReply, error) {
 
 	// should be base58 compressed
-	keyA := *req.KeyA
-	logger.Debug().Msgf("Received keyA: %s", keyA)
+	keyA := req.GetKeyA()
+	hashA := req.GetHash()
+	logger.Debug().Msgf("Received keyA: %s, hash is: %s", keyA, hashA)
 
 	r := fmt.Sprintf("%d", makeTimestamp())
 	ek := s.generateSessionKey(r)
@@ -99,19 +100,24 @@ func (s *iceHelper) NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) 
 		return nil, err
 	}
 
+	s.session.peerKey = pk
+
 	spk := pk.SerializeCompressed()
 	bpk := base58.Encode(spk)
 	if bpk == keyA {
 		logger.Debug().Msgf("Encode ok!")
 	}
 
-	shared := address.NewPublickKey("256")
+	//shared := address.NewPublickKey("256")
+	sk2, err := btcec.NewPrivateKey(btcec.S256())
+	shared := sk2.PubKey()
 	shared.X, shared.Y = shared.ScalarMult(pk.X, pk.Y, sk.Serialize())
-	s.session.sharedKey = shared.Bytes()
+	s.session.sharedKey = shared
 
-	s.session.id = binary.LittleEndian.Uint32(s.session.sharedKey)
+	ssk := shared.SerializeCompressed()
+	s.session.id = binary.LittleEndian.Uint32(ssk)
 	// generate aes key
-	s.session.shortKey = base58.Encode(s.session.sharedKey)[:common.SharedKey_Len]
+	s.session.shortKey = base58.Encode(ssk)[:common.SharedKey_Len]
 
 	logger.Debug().Msgf("Got shared key: %s", s.session.shortKey)
 	pkB := sk.PubKey()
@@ -261,20 +267,27 @@ func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest)
 	tp := req.GetType()
 	idx := req.GetIdx()
 	pass := req.GetPassword()
+	db := s.openDb()
 
 	var cnt int
-	s.openDb().Model(&models.Address{}).Where("t2 = ? AND t5 = ?", tp, idx).Count(&cnt)
+	db.Model(&models.Address{}).Where("t2 = ? AND t5 = ?", tp, idx).Count(&cnt)
 	if cnt <= 0 {
 		return nil, errors.New(fmt.Sprintf("Address %d not exists for coin type: %d", idx, tp))
 	}
 
-	x := &pb.Address{Type: pb.NewUInt32(tp), Idx: pb.NewUInt32(idx)}
-	//a.SAddr
-	x.SAddr, _ = s.generateAddress(tp, idx, pass)
+	addrs2 := make([]*pb.Address, cnt)
 
-	addrs := make([]*pb.Address, cnt)
-	addrs = append(addrs, x)
-	reply := pb.NewListAddressReply(uint32(cnt), addrs)
+	addrs := []models.Address{}
+	db.Where("t2 = ?", tp).Find(&addrs)
+	for i, _ := range addrs {
+		db.Model(addrs[i])
+		x := &pb.Address{Type: pb.NewUInt32(tp), Idx: pb.NewUInt32(addrs[i].T5)}
+		//a.SAddr
+		x.SAddr, _ = s.generateAddress(tp, idx, pass)
+		addrs2 = append(addrs2, x)
+	}
+
+	reply := pb.NewListAddressReply(uint32(cnt), addrs2)
 	return reply, nil
 }
 
@@ -355,7 +368,7 @@ func (s *iceHelper) generateSessionKey(r string) *bip32.ExtendedKey {
 
 	pk, _ := masterKey.ECPubKey()
 	pkHash := coinutil.Hash160(pk.SerializeCompressed())
-	s.session.key = masterKey.String()
+	s.session.key, _ = masterKey.ECPrivKey()
 	s.session.id = binary.BigEndian.Uint32(pkHash[:4])
 	return masterKey
 }
@@ -564,3 +577,19 @@ func BIP32Decrypt(data string, passphrase string) (*bip32.ExtendedKey, error) {
 	return ks, err
 }
 
+func Hash256(b []byte) []byte {
+	h := sha256.New()
+	h.Write([]byte(b))
+	return h.Sum(nil)
+}
+
+
+func DoubleHash256(b []byte) []byte {
+	h1 := sha256.New()
+	h1.Write([]byte(b))
+
+	h2 := sha256.New()
+	h2.Write(h1.Sum(nil))
+
+	return h2.Sum(nil)
+}

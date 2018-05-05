@@ -3,9 +3,15 @@ package protos
 import (
 
 	"time"
-	"math/rand"
+	mrand "math/rand"
 	"bytes"
-	"fmt"
+	"encoding/binary"
+
+	"crypto/sha256"
+	"math/big"
+	"crypto/ecdsa"
+	"github.com/btcsuite/btcd/btcec"
+	"crypto/rand"
 )
 
 const (
@@ -35,7 +41,7 @@ func NewIceboxMessage(t IceboxMessage_Type, p []byte) *IceboxMessage  {
 	m := new(IceboxMessage)
 	v := NewUInt32(Version)
 	m.Version = v
-	var sid = rand.Uint32()
+	var sid = mrand.Uint32()
 	m.SessionId = &sid
 	m.Type = &t
 	if p != nil {
@@ -44,6 +50,12 @@ func NewIceboxMessage(t IceboxMessage_Type, p []byte) *IceboxMessage  {
 	m.Signature = []byte{'g', 'o', 'l', 'a', 'n', 'g'}
 
 	return m
+}
+
+func Hash256(b []byte) []byte {
+	h := sha256.New()
+	h.Write([]byte(b))
+	return h.Sum(nil)
 }
 
 func NewIceboxMessageWithSID(t IceboxMessage_Type, sid uint32, p []byte) *IceboxMessage  {
@@ -55,19 +67,54 @@ func NewIceboxMessageWithSID(t IceboxMessage_Type, sid uint32, p []byte) *Icebox
 	if p != nil {
 		m.Payload = p
 	}
-	m.Signature = []byte{'g', 'o', 'l', 'a', 'n', 'g'}
+
+	// just for remember message's hash
+	m.Signature = GetMessageHash(*v, t, sid, p)
 
 	return m
 }
 
-func AddSignature(msg *IceboxMessage) []byte {
-	bs := fmt.Sprintf("%d%d", msg.GetVersion(), msg.GetSessionId())
-
+func GetMessageHash(v uint32, t IceboxMessage_Type, sid uint32, p []byte) []byte {
 	buf := new(bytes.Buffer)
-	buf.WriteString(bs)
-	buf.Write(msg.Payload)
+	b := make([]byte, 4)
+	// version: 4 byte
+	binary.LittleEndian.PutUint32(b, v)
+	buf.Write(b)
+	// type: 4 byte
+	binary.LittleEndian.PutUint32(b, uint32(t))
+	buf.Write(b)
+	// sessionid: 4 byte
+	binary.LittleEndian.PutUint32(b, sid)
+	buf.Write(b)
+	// payload
+	buf.Write(p)
+	// calc hash
+	return Hash256(buf.Bytes())
+}
 
-	return buf.Bytes()
+func VerifySig(req *IceboxMessage, k *btcec.PublicKey) bool {
+	sig := req.GetSignature()
+	r, g := new(big.Int), new(big.Int)
+	l := len(sig) // should be 64
+	r.SetBytes(sig[:l/2])
+	g.SetBytes(sig[l/2:])
+	xpk := ecdsa.PublicKey(*k)
+	h := GetMessageHash(req.GetVersion(), req.GetType(), req.GetSessionId(), req.GetPayload())
+	ok := ecdsa.Verify(&xpk, h, r, g)
+	return ok
+}
+
+func AddSignatureToMsg(msg *IceboxMessage, privKey *btcec.PrivateKey) error {
+	pk := ecdsa.PrivateKey(*privKey)
+	r, s, err := ecdsa.Sign(rand.Reader, &pk, msg.Signature)
+	if err != nil {
+		return err
+	}
+	signature := r.Bytes()
+	signature = append(signature, s.Bytes()...)
+	msg.Signature = signature
+
+	return nil
 }
 
 
@@ -255,7 +302,8 @@ func NewCreateAddressReply(addr string) *CreateAddressReply {
 
 func NewListAddressReply(cnt uint32, addrs []*Address) *ListAddressReply {
 	reply := new(ListAddressReply)
-	reply.Addr = addrs
+	reply.Addr = make([]*Address, len(addrs))
+	copy(reply.Addr, addrs)
 	reply.Max = &cnt
 	return reply
 }

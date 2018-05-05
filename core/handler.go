@@ -14,6 +14,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"  // must exists, or will cause -- sql: unknown driver "sqlite3"
 	"github.com/golang/protobuf/proto"
 	"conseweb.com/wallet/icebox/common/crypto"
+	"github.com/btcsuite/btcd/btcec"
+	"conseweb.com/wallet/icebox/coinutil/base58"
 )
 
 var (
@@ -39,11 +41,11 @@ func exists(fn string) bool {
 }
 
 type Session struct {
-	id 	uint32 		// session id
-	key string			// private key
-	peerKey []byte		// peer's public key
-	sharedKey []byte	// shared public key
-	shortKey string     // aes key
+	id 			uint32 				// session id
+	key 		*btcec.PrivateKey	// private key
+	peerKey 	*btcec.PublicKey	// peer's public key
+	sharedKey 	*btcec.PublicKey	// shared public key
+	shortKey 	string     			// aes key
 }
 
 type IcebergHandler struct {
@@ -118,6 +120,8 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 	v := req.GetVersion()
 	sid := req.GetSessionId()
 	t := req.GetType()
+	payload := req.GetPayload()
+	sig := req.GetSignature()
 	logger.Debug().Msgf("Header version: %d, session id: %d, type: %s", v, sid, t)
 	switch t {
 	case pb.IceboxMessage_ERROR:
@@ -126,7 +130,7 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 	case pb.IceboxMessage_HELLO:
 		// 1. unmarshal message
 		x := &pb.HiRequest{}
-		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
+		unmarshalErr := proto.Unmarshal(payload, x)
 		if unmarshalErr != nil {
 			logger.Fatal().Err(unmarshalErr).Msgf("Failed to unmarshall . Sending %s", pb.IceboxMessage_ERROR)
 			msg := handleError(unmarshalErr)
@@ -146,7 +150,7 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 	case pb.IceboxMessage_NEGOTIATE:
 		// 1. unmarshal request
 		x := &pb.NegotiateRequest{}
-		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
+		unmarshalErr := proto.Unmarshal(payload, x)
 		if unmarshalErr != nil {
 			msg := handleError(unmarshalErr)
 			return msg, nil
@@ -164,6 +168,15 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 
 	case pb.IceboxMessage_START:
 		// after negotiate
+		logger.Debug().Msgf("Request: version:%d type:%s session_id:%d payload:(%s,len:%d) signature:(%s,len:%d)",
+			req.GetVersion(), req.GetType().String(), req.GetSessionId(),
+			base58.Encode(payload), len(payload), base58.Encode(sig), len(sig))
+
+		ok := pb.VerifySig(req, s.helper.session.peerKey)
+		if !ok {
+			msg := handleError(errors.New("Invalid signature."))
+			return msg, nil
+		}
 		// 0.5 decrypt payload
 		dt, err := crypto.DecryptAsByte([]byte(s.helper.session.shortKey), req.GetPayload())
 		if err != nil {
@@ -192,24 +205,50 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 			return msg, nil
 		}
 		// set as new session id
-		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_START,sid,ed)
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_START, sid, ed)
+		pb.AddSignatureToMsg(ret, s.helper.session.key)
 		return ret, nil
 
 	case pb.IceboxMessage_CHECK:
+		logger.Debug().Msgf("Request: version:%d type:%s session_id:%d payload:(%s,len:%d) signature:(%s,len:%d)",
+			req.GetVersion(), req.GetType().String(), req.GetSessionId(),
+			base58.Encode(payload), len(payload), base58.Encode(sig), len(sig))
+
+		ok := pb.VerifySig(req, s.helper.session.peerKey)
+		if !ok {
+			msg := handleError(errors.New("CHECK: Invalid signature."))
+			return msg, nil
+		}
+		// 0.5 decrypt payload
+		dt, err := crypto.DecryptAsByte([]byte(s.helper.session.shortKey), payload)
+		if err != nil {
+			msg := handleError(err)
+			return msg, nil
+		}
+		// 1. unmarshal request
 		x := &pb.CheckRequest{}
-		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
+		unmarshalErr := proto.Unmarshal(dt, x)
 		if unmarshalErr != nil {
 			msg := handleError(unmarshalErr)
 			return msg, nil
 		}
+		// 2. execute command
 		reply, err := s.helper.CheckDevice(ctx, x)
 		if err != nil {
 			msg := handleError(err)
 			return msg, nil
 		}
+		// 3. marshal
 		payload, _ := proto.Marshal(reply)
+		// 4. encrypt payload
+		ed, err := crypto.EncryptAsByte([]byte(s.helper.session.shortKey), payload)
+		if err != nil {
+			msg := handleError(err)
+			return msg, nil
+		}
 		// set as new session id
-		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_CHECK,sid,payload)
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_CHECK, sid, ed)
+		pb.AddSignatureToMsg(ret, s.helper.session.key)
 		return ret, nil
 
 	case pb.IceboxMessage_INIT:
@@ -227,7 +266,7 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 		}
 		payload, _ := proto.Marshal(reply)
 		// set as new session id
-		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_INIT,sid,payload)
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_INIT, sid, payload)
 		return ret, nil
 
 	case pb.IceboxMessage_CREATE_ADDRESS:
@@ -246,7 +285,7 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 		payload, _ := proto.Marshal(reply)
 		sid := s.helper.session.id
 		// set as new session id
-		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_CREATE_ADDRESS,sid,payload)
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_CREATE_ADDRESS, sid, payload)
 		return ret, nil
 
 	case pb.IceboxMessage_LIST_ADDRESS:
@@ -265,7 +304,7 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 		payload, _ := proto.Marshal(reply)
 		sid := s.helper.session.id
 		// set as new session id
-		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_LIST_ADDRESS,sid,payload)
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_LIST_ADDRESS, sid, payload)
 		return ret, nil
 
 	case pb.IceboxMessage_SIGN_TX:
@@ -284,12 +323,14 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 		payload, _ := proto.Marshal(reply)
 		sid := s.helper.session.id
 		// set as new session id
-		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_SIGN_TX,sid,payload)
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_SIGN_TX, sid, payload)
 		return ret, nil
 	}
 	//return s.HandleIceboxStream(stream.Context(), stream)
 	return nil, errors.New("Not implemented!")
 }
+
+
 
 
 

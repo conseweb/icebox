@@ -19,6 +19,7 @@ import (
 	"errors"
 	"math/big"
 	"sync"
+
 )
 
 // A Curve represents a Koblitz Curve with a=0.
@@ -513,3 +514,4 @@ func LegendreSymbol(a, p *big.Int) int {
 
 	return 1 // 1 if a is a quadratic residue modulo p and a ≢ 0 (mod p)
 }
+

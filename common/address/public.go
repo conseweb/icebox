@@ -1,11 +1,11 @@
 package address
 
 import (
-	"crypto/elliptic"
 	"encoding/hex"
 	"conseweb.com/wallet/icebox/common/crypto/koblitz/kelliptic"
 	"math/big"
 	"conseweb.com/wallet/icebox/coinutil/base58"
+	"crypto/elliptic"
 )
 
 type PublicKey struct {
@@ -40,6 +40,17 @@ func (p *PublicKey) Bytes() []byte {
 	}
 
 	return elliptic.Marshal(p.Curve, p.X, p.Y)
+}
+
+func FromBytes(curve kelliptic.Curve, b []byte) *PublicKey {
+	if b == nil {
+		return nil
+	}
+
+	pk := new(PublicKey)
+	pk.Curve = &curve
+	pk.X, pk.Y = Unmarshal(curve, b)
+	return pk
 }
 
 func (p *PublicKey) Address() string {
@@ -85,4 +96,41 @@ func DeCompress(bs string, pk *PublicKey) (err error) {
 	pk.Curve.DecompressPoint(cp)
 
 	return nil
+}
+
+// Marshal converts a point into the uncompressed form specified in section 4.3.6 of ANSI X9.62.
+//func Marshal(curve kelliptic.Curve, x, y *big.Int) []byte {
+//	byteLen := (curve.Params().BitSize + 7) >> 3
+//
+//	ret := make([]byte, 1+2*byteLen)
+//	ret[0] = 4 // uncompressed point
+//
+//	xBytes := x.Bytes()
+//	copy(ret[1+byteLen-len(xBytes):], xBytes)
+//	yBytes := y.Bytes()
+//	copy(ret[1+2*byteLen-len(yBytes):], yBytes)
+//	return ret
+//}
+
+// Unmarshal converts a point, serialized by Marshal, into an x, y pair.
+// It is an error if the point is not in uncompressed form or is not on the curve.
+// On error, x = nil.
+func Unmarshal(curve kelliptic.Curve, data []byte) (x, y *big.Int) {
+	byteLen := (curve.Params().BitSize + 7) >> 3
+	if len(data) != 1+2*byteLen {
+		return
+	}
+	if data[0] != 4 { // uncompressed form
+		return
+	}
+	p := curve.Params().P
+	x = new(big.Int).SetBytes(data[1 : 1+byteLen])
+	y = new(big.Int).SetBytes(data[1+byteLen:])
+	if x.Cmp(p) >= 0 || y.Cmp(p) >= 0 {
+		return nil, nil
+	}
+	if !curve.IsOnCurve(x, y) {
+		return nil, nil
+	}
+	return
 }

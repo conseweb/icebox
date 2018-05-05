@@ -16,9 +16,10 @@ import (
 	"conseweb.com/wallet/icebox/coinutil/bip39"
 	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/gogo/protobuf/proto"
-	"crypto/sha256"
 	"encoding/binary"
 	"conseweb.com/wallet/icebox/common/crypto"
+	"conseweb.com/wallet/icebox/client/util"
+	"errors"
 )
 
 const (
@@ -26,11 +27,11 @@ const (
 )
 
 type Session struct {
-	id 	uint32 			// session id
-	key string			// private key
-	peerKey []byte		// peer's public key
-	sharedKey []byte	// shared public key
-	shortKey string
+	id 			uint32 				// session id
+	key 		*btcec.PrivateKey	// private key
+	peerKey 	*btcec.PublicKey	// peer's public key
+	sharedKey 	*btcec.PublicKey	// shared public key
+	shortKey 	string
 }
 
 // example FSM for demonstration purposes.
@@ -169,7 +170,7 @@ func (d *Handler) generateSessionKey(r string) *bip32.ExtendedKey {
 
 	//secret := masterKey.String()
 	//_ = ioutil.WriteFile(sessionKeyFn, []byte(secret), 0644)
-	d.session.key = masterKey.String()
+	//d.session.key, _ = masterKey.ECPrivKey()
 	return masterKey
 }
 
@@ -204,7 +205,7 @@ func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
 	// generate public key
 	r := fmt.Sprintf("%d", makeTimestamp())
 	mk := d.generateSessionKey(r)
-	sk, _ := mk.ECPrivKey()
+	d.session.key, _ = mk.ECPrivKey()
 	pk, err := mk.ECPubKey()
 	if err != nil {
 		logger.Fatal().Err(err).Msg("")
@@ -214,15 +215,13 @@ func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
 	//bs := address.ToBase58(b, len(b))
 	bs := base58.Encode(b)
 	logger.Debug().Msgf("Base58 raw public string: '%s'", bs)
-	h := sha256.New()
-	h.Write([]byte(b))
-	hb := h.Sum(nil)
+	hb := util.Hash256(b)
 	req := pb.NewNegotiateRequest(bs, base58.Encode(hb))
 	payload, _ := proto.Marshal(req)
 	x := pb.NewIceboxMessage(pb.IceboxMessage_NEGOTIATE, payload)
 	res, err := d.Client.Chat(context.Background(), x)
 	if err != nil {
-		grpclog.Fatalf("%v.Negotiate(_) = _, %v: ", d.Client, err)
+		grpclog.Fatalf("Negotiate(_) = _, %v: ", err)
 		return nil, err
 	}
 
@@ -244,12 +243,21 @@ func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
 		logger.Fatal().Err(err).Msg("")
 		return nil, err
 	}
+	// remember peer's public key
+	d.session.peerKey = pkB
 
-	shared := address.NewPublickKey("256")
-	shared.X, shared.Y = shared.ScalarMult(pkB.X, pkB.Y, sk.Serialize())
-	skb := shared.Bytes()
-	d.session.sharedKey = skb
-	d.session.id = binary.LittleEndian.Uint32(d.session.sharedKey)
+	//shared := address.NewPublickKey("256")
+	privk, err := btcec.NewPrivateKey(btcec.S256())
+	if err != nil {
+		return nil, err
+	}
+	//d.session.key = privk
+	shared := privk.PubKey()
+	shared.X, shared.Y = shared.ScalarMult(pkB.X, pkB.Y, d.session.key.Serialize())
+	//skb := shared.Bytes()
+	d.session.sharedKey = shared
+	skb := d.session.sharedKey.SerializeCompressed()
+	d.session.id = binary.LittleEndian.Uint32(skb)
 	aesKey := base58.Encode(skb)[:common.SharedKey_Len]
 	d.session.shortKey = aesKey
 
@@ -269,10 +277,15 @@ func (d *Handler) Start() (*pb.StartReply, error) {
 	}
 	sid := d.session.id
 	ct := pb.NewIceboxMessageWithSID(pb.IceboxMessage_START, sid, ed)
+	// calc signature
+	err = pb.AddSignatureToMsg(ct, d.session.key)
+	if err != nil {
+		grpclog.Fatalf("%v: ", err)
+	}
 
 	res, err := d.Client.Chat(context.Background(), ct)
 	if err != nil {
-		grpclog.Fatalf("%v.Chat(_) = _, %v: ", d.Client, err)
+		grpclog.Fatalf("%v: ", err)
 	}
 	grpclog.Infoln("StartReply: ", res)
 
@@ -280,6 +293,11 @@ func (d *Handler) Start() (*pb.StartReply, error) {
 		logger.Debug().Msgf("Device error: %s", res.GetPayload())
 	}
 
+	// verify signature
+	ok := pb.VerifySig(res, d.session.peerKey)
+	if !ok {
+		return nil, errors.New("Invalid signature.")
+	}
 	var result = &pb.StartReply{}
 	// decrypt payload first
 	ds, err := crypto.DecryptAsByte([]byte(d.session.shortKey), res.GetPayload())
@@ -291,6 +309,7 @@ func (d *Handler) Start() (*pb.StartReply, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	return result, nil
 }
 
@@ -299,20 +318,40 @@ func (d *Handler) CheckDevice() (*pb.CheckReply, error) {
 	var err error
 	req := pb.NewCheckRequest()
 	payload, _ := proto.Marshal(req)
+	// encrypt payload
+	ed, err := crypto.EncryptAsByte([]byte(d.session.shortKey), payload)
+	if err != nil {
+		return nil, err
+	}
 	sid := d.session.id
-	ct := pb.NewIceboxMessageWithSID(pb.IceboxMessage_CHECK, sid, payload)
+	ct := pb.NewIceboxMessageWithSID(pb.IceboxMessage_CHECK, sid, ed)
+	// calc signature
+	err = pb.AddSignatureToMsg(ct, d.session.key)
+	if err != nil {
+		grpclog.Fatalf("%v: ", err)
+	}
 
 	res, err := d.Client.Chat(context.Background(), ct)
 	if err != nil {
-		grpclog.Fatalf("%v.Chat(_) = _, %v: ", d.Client, err)
+		grpclog.Fatalf("%v: ", err)
 	}
 
 	if res.GetType() == pb.IceboxMessage_ERROR {
 		logger.Debug().Msgf("Device error: %s", res.GetPayload())
 	}
-
+	// verify sig
+	ok := pb.VerifySig(res, d.session.peerKey)
+	if !ok {
+		return nil, errors.New("Invalid signature.")
+	}
 	var result = &pb.CheckReply{}
-	err = proto.Unmarshal(res.GetPayload(), result)
+	// decrypt payload first
+	ds, err := crypto.DecryptAsByte([]byte(d.session.shortKey), res.GetPayload())
+	if err != nil {
+		return nil, err
+	}
+	// then unmarshal
+	err = proto.Unmarshal(ds, result)
 	if err != nil {
 		return nil, err
 	}
@@ -444,6 +483,7 @@ func (d *Handler) ListAddress(tp, idx uint32, pwd string) (*pb.ListAddressReply,
 	}
 
 	grpclog.Infoln("ListAddressReply: ", caRep)
+	grpclog.Infoln("addresses: ", caRep.GetAddr())
 	return caRep, nil
 
 }
