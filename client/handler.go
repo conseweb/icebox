@@ -18,6 +18,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"crypto/sha256"
 	"encoding/binary"
+	"conseweb.com/wallet/icebox/common/crypto"
 )
 
 const (
@@ -249,7 +250,7 @@ func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
 	skb := shared.Bytes()
 	d.session.sharedKey = skb
 	d.session.id = binary.LittleEndian.Uint32(d.session.sharedKey)
-	aesKey := base58.Encode(skb[:common.SharedKey_Len])
+	aesKey := base58.Encode(skb)[:common.SharedKey_Len]
 	d.session.shortKey = aesKey
 
 	logger.Debug().Msgf("Shared key: %s", aesKey)
@@ -261,8 +262,13 @@ func (d *Handler) Start() (*pb.StartReply, error) {
 	var err error
 	req := pb.NewStartRequest()
 	payload, _ := proto.Marshal(req)
+	// encrypt payload
+	ed, err := crypto.EncryptAsByte([]byte(d.session.shortKey), payload)
+	if err != nil {
+		return nil, err
+	}
 	sid := d.session.id
-	ct := pb.NewIceboxMessageWithSID(pb.IceboxMessage_START, sid, payload)
+	ct := pb.NewIceboxMessageWithSID(pb.IceboxMessage_START, sid, ed)
 
 	res, err := d.Client.Chat(context.Background(), ct)
 	if err != nil {
@@ -275,7 +281,13 @@ func (d *Handler) Start() (*pb.StartReply, error) {
 	}
 
 	var result = &pb.StartReply{}
-	err = proto.Unmarshal(res.GetPayload(), result)
+	// decrypt payload first
+	ds, err := crypto.DecryptAsByte([]byte(d.session.shortKey), res.GetPayload())
+	if err != nil {
+		return nil, err
+	}
+	// then unmarshal
+	err = proto.Unmarshal(ds, result)
 	if err != nil {
 		return nil, err
 	}

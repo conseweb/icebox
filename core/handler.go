@@ -13,6 +13,7 @@ import (
 	"conseweb.com/wallet/icebox/common/fsm"
 	_ "github.com/mattn/go-sqlite3"  // must exists, or will cause -- sql: unknown driver "sqlite3"
 	"github.com/golang/protobuf/proto"
+	"conseweb.com/wallet/icebox/common/crypto"
 )
 
 var (
@@ -163,9 +164,15 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 
 	case pb.IceboxMessage_START:
 		// after negotiate
+		// 0.5 decrypt payload
+		dt, err := crypto.DecryptAsByte([]byte(s.helper.session.shortKey), req.GetPayload())
+		if err != nil {
+			msg := handleError(err)
+			return msg, nil
+		}
 		// 1. unmarshal request
 		x := &pb.StartRequest{}
-		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
+		unmarshalErr := proto.Unmarshal(dt, x)
 		if unmarshalErr != nil {
 			msg := handleError(unmarshalErr)
 			return msg, nil
@@ -178,8 +185,14 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 		}
 		// 3. marshal and return reply
 		payload, _ := proto.Marshal(reply)
+		// 4. encrypt payload
+		ed, err := crypto.EncryptAsByte([]byte(s.helper.session.shortKey), payload)
+		if err != nil {
+			msg := handleError(err)
+			return msg, nil
+		}
 		// set as new session id
-		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_START,sid,payload)
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_START,sid,ed)
 		return ret, nil
 
 	case pb.IceboxMessage_CHECK:

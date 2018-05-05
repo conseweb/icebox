@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"conseweb.com/wallet/icebox/common/flogging"
 	"conseweb.com/wallet/icebox/common"
+	"math/rand"
 )
 
 var (
@@ -73,7 +74,7 @@ func main() {
 
 	_, err = handler.Start()
 	if err != nil {
-		logger.Fatal().Err(err)
+		logger.Fatal().Err(err).Msgf("Start command failed !!!")
 	}
 
 	handler.FSM.Event("START")
@@ -81,7 +82,7 @@ func main() {
 
 	rep, err := handler.CheckDevice()
 	if err != nil {
-		logger.Fatal().Err(err)
+		logger.Fatal().Err(err).Msgf("")
 	}
 	switch rep.GetState() {
 	case 1:
@@ -90,7 +91,7 @@ func main() {
 		handler.FSM.Event("CK_UNINITED")
 		irep, err := handler.InitDevice("Secret")
 		if err != nil {
-			logger.Fatal().Err(err)
+			logger.Fatal().Err(err).Msgf("")
 		}
 		logger.Info().Msgf("Inited, DevID: %s", *irep.DevId)
 		handler.FSM.Event("INIT")
@@ -98,11 +99,12 @@ func main() {
 		logger.Fatal().Msgf("Something wrong!!")
 	}
 
-	rex, _ := handler.CreateAddress(0, 3, "default", common.Test_password)
-	rex, _ = handler.CreateAddress(60, 21, "eth default", common.Test_password)
+	var idx = rand.Uint32()
+	rex, _ := handler.CreateAddress(1, idx, "default", common.Test_password)
+	//rex, _ = handler.CreateAddress(60, 21, "eth default", common.Test_password)
 	logger.Debug().Msgf("Created address: %s", rex.GetAddress())
 
-	handler.ListAddress(0, 3, common.Test_password)
+	handler.ListAddress(1, idx, common.Test_password)
 
 	handler.SignTx(0, 3, 91234, "1KKKK6N21XKo48zWKuQKXdvSsCf95ibHFa", "81b4c832d70cb56ff957589752eb4125a4cab78a25a8fc52d6a09e5bd4404d48", common.Test_password)
 

@@ -62,6 +62,24 @@ func Encrypt(key []byte, text string) (string, error) {
 	return finalMsg, nil
 }
 
+func EncryptAsByte(key []byte, text []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	msg := Pad(text)
+	ciphertext := make([]byte, aes.BlockSize+len(msg))
+	iv := ciphertext[:aes.BlockSize]
+	if _, err := io.ReadFull(rand.Reader, iv); err != nil {
+		return nil, err
+	}
+
+	cfb := cipher.NewCFBEncrypter(block, iv)
+	cfb.XORKeyStream(ciphertext[aes.BlockSize:], []byte(msg))
+	return ciphertext, nil
+}
+
 func Decrypt(key []byte, text string) (string, error) {
 	block, err := aes.NewCipher(key)
 	if err != nil {
@@ -89,6 +107,35 @@ func Decrypt(key []byte, text string) (string, error) {
 	}
 
 	return string(unpadMsg), nil
+}
+
+func DecryptAsByte(key []byte, msgs []byte) ([]byte, error) {
+	block, err := aes.NewCipher(key)
+	if err != nil {
+		return nil, err
+	}
+
+	//msgs, err := base64.URLEncoding.DecodeString(addBase64Padding(text))
+	//if err != nil {
+	//	return nil, err
+	//}
+
+	if (len(msgs) % aes.BlockSize) != 0 {
+		return nil, errors.New("Blocksize must be multipe of decoded message length")
+	}
+
+	iv := msgs[:aes.BlockSize]
+	msg := msgs[aes.BlockSize:]
+
+	cfb := cipher.NewCFBDecrypter(block, iv)
+	cfb.XORKeyStream(msg, msg)
+
+	unpadMsg, err := Unpad(msg)
+	if err != nil {
+		return nil, err
+	}
+
+	return unpadMsg, nil
 }
 
 func test() {

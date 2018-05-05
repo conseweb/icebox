@@ -111,10 +111,9 @@ func (s *iceHelper) NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) 
 
 	s.session.id = binary.LittleEndian.Uint32(s.session.sharedKey)
 	// generate aes key
-	aesKey := s.session.sharedKey[:common.SharedKey_Len]
-	s.session.shortKey = base58.Encode(aesKey)
+	s.session.shortKey = base58.Encode(s.session.sharedKey)[:common.SharedKey_Len]
 
-	logger.Debug().Msgf("Got shared key: %s", base58.Encode(aesKey))
+	logger.Debug().Msgf("Got shared key: %s", s.session.shortKey)
 	pkB := sk.PubKey()
 	bpkB := base58.Encode(pkB.SerializeCompressed())
 	logger.Debug().Msgf("Iceberg's public session key: %s", bpkB)
@@ -273,7 +272,7 @@ func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest)
 	//a.SAddr
 	x.SAddr, _ = s.generateAddress(tp, idx, pass)
 
-	addrs := make([]*pb.Address, 1)
+	addrs := make([]*pb.Address, cnt)
 	addrs = append(addrs, x)
 	reply := pb.NewListAddressReply(uint32(cnt), addrs)
 	return reply, nil
