@@ -39,11 +39,17 @@ func NewInt32(v int32) *int32 {
 
 func NewIceboxMessage(t IceboxMessage_Type, p []byte) *IceboxMessage  {
 	m := new(IceboxMessage)
-	v := NewUInt32(Version)
-	m.Version = v
+	m.Header = new(IceboxMessage_Header)
+	m.Header.Version = NewUInt32(Version)
 	var sid = mrand.Uint32()
-	m.SessionId = &sid
-	m.Type = &t
+	m.Header.SessionId = &sid
+	m.Header.Type = &t
+
+	now := time.Now()
+	s := int64(now.Second()) // from 'int'
+	n := int32(now.Nanosecond()) // from 'int'
+	m.Header.Timestamp = &Timestamp{Seconds:&s, Nanos:&n}
+
 	if p != nil {
 		m.Payload = p
 	}
@@ -60,32 +66,46 @@ func Hash256(b []byte) []byte {
 
 func NewIceboxMessageWithSID(t IceboxMessage_Type, sid uint32, p []byte) *IceboxMessage  {
 	m := new(IceboxMessage)
+	m.Header = new(IceboxMessage_Header)
 	v := NewUInt32(Version)
-	m.Version = v
-	m.SessionId = &sid
-	m.Type = &t
+	m.Header.Version = v
+	m.Header.SessionId = &sid
+	m.Header.Type = &t
+	now := time.Now()
+	s := int64(now.Second()) // from 'int'
+	n := int32(now.Nanosecond()) // from 'int'
+	ts := Timestamp{Seconds:&s, Nanos:&n}
+	m.Header.Timestamp = &ts
 	if p != nil {
 		m.Payload = p
 	}
 
 	// just for remember message's hash
-	m.Signature = GetMessageHash(*v, t, sid, p)
+	m.Signature = GetMessageHash(m.Header, p)
 
 	return m
 }
 
-func GetMessageHash(v uint32, t IceboxMessage_Type, sid uint32, p []byte) []byte {
+func GetMessageHash(h *IceboxMessage_Header, p []byte) []byte {
 	buf := new(bytes.Buffer)
-	b := make([]byte, 4)
-	// version: 4 byte
-	binary.LittleEndian.PutUint32(b, v)
-	buf.Write(b)
+	// version: 4 byte, type: 4 byte, timestamp: 8 + 4 bytes, sessionid: 4 byte
+	//size := 4 + 4 + 8 + 4 + 4 = 24
+	b4 := make([]byte, 4)
+	b8 := make([]byte, 8)
+
+	binary.LittleEndian.PutUint32(b4, h.GetVersion())
+	buf.Write(b4)
 	// type: 4 byte
-	binary.LittleEndian.PutUint32(b, uint32(t))
-	buf.Write(b)
+	binary.LittleEndian.PutUint32(b4, uint32(h.GetType()))
+	buf.Write(b4)
+	// timestamp: 8 + 4 bytes
+	binary.LittleEndian.PutUint64(b8, uint64(h.GetTimestamp().GetSeconds()))
+	buf.Write(b8)
+	binary.LittleEndian.PutUint32(b4, uint32(h.GetTimestamp().GetNanos()))
+	buf.Write(b4)
 	// sessionid: 4 byte
-	binary.LittleEndian.PutUint32(b, sid)
-	buf.Write(b)
+	binary.LittleEndian.PutUint32(b4, h.GetSessionId())
+	buf.Write(b4)
 	// payload
 	buf.Write(p)
 	// calc hash
@@ -99,7 +119,7 @@ func VerifySig(req *IceboxMessage, k *btcec.PublicKey) bool {
 	r.SetBytes(sig[:l/2])
 	g.SetBytes(sig[l/2:])
 	xpk := ecdsa.PublicKey(*k)
-	h := GetMessageHash(req.GetVersion(), req.GetType(), req.GetSessionId(), req.GetPayload())
+	h := GetMessageHash(req.GetHeader(), req.GetPayload())
 	ok := ecdsa.Verify(&xpk, h, r, g)
 	return ok
 }
@@ -194,19 +214,19 @@ func NewAddCoinRequest(tp, idx uint32, symbol, name string) *AddCoinRequest {
 	return req
 }
 
-func NewCreateAddressRequest(tp, idx uint32, name, pass string) *CreateAddressRequest {
+func NewCreateAddressRequest(tp uint32, name, pass string) *CreateAddressRequest {
 	req := new(CreateAddressRequest)
 	req.Type = &tp
-	req.Idx = &idx
+	//req.Idx = &idx
 	req.Password = &pass
 	req.Name = &name
 	return req
 }
 
-func NewListAddressRequest(tp, idx uint32, pass string) *ListAddressRequest {
+func NewListAddressRequest(tp uint32, pass string) *ListAddressRequest {
 	req := new(ListAddressRequest)
 	req.Type = &tp
-	req.Idx = &idx
+	//req.Idx = &idx
 	req.Password = &pass
 	return req
 }
@@ -294,8 +314,10 @@ func NewAddCoinReply() *AddCoinReply {
 	return reply
 }
 
-func NewCreateAddressReply(addr string) *CreateAddressReply {
+func NewCreateAddressReply(tp, idx uint32, addr string) *CreateAddressReply {
 	reply := new(CreateAddressReply)
+	reply.Type = &tp
+	reply.Idx = &idx
 	reply.Address = &addr
 	return reply
 }

@@ -117,9 +117,10 @@ func (d *IcebergHandler) beforePingEvent(e *fsm.Event, state string) {
 }
 
 func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.IceboxMessage, error)  {
-	v := req.GetVersion()
-	sid := req.GetSessionId()
-	t := req.GetType()
+	hdr := req.GetHeader()
+	v := hdr.GetVersion()
+	sid := hdr.GetSessionId()
+	t := hdr.GetType()
 	payload := req.GetPayload()
 	sig := req.GetSignature()
 	logger.Debug().Msgf("Header version: %d, session id: %d, type: %s", v, sid, t)
@@ -169,7 +170,7 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 	case pb.IceboxMessage_START:
 		// after negotiate
 		logger.Debug().Msgf("Request: version:%d type:%s session_id:%d payload:(%s,len:%d) signature:(%s,len:%d)",
-			req.GetVersion(), req.GetType().String(), req.GetSessionId(),
+			v, t, sid,
 			base58.Encode(payload), len(payload), base58.Encode(sig), len(sig))
 
 		ok := pb.VerifySig(req, s.helper.session.peerKey)
@@ -211,7 +212,7 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 
 	case pb.IceboxMessage_CHECK:
 		logger.Debug().Msgf("Request: version:%d type:%s session_id:%d payload:(%s,len:%d) signature:(%s,len:%d)",
-			req.GetVersion(), req.GetType().String(), req.GetSessionId(),
+			v, t, sid,
 			base58.Encode(payload), len(payload), base58.Encode(sig), len(sig))
 
 		ok := pb.VerifySig(req, s.helper.session.peerKey)

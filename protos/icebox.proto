@@ -7,6 +7,22 @@ option go_package = "protos";
 
 import "nanopb.proto";
 
+
+message Timestamp {
+
+    // Represents seconds of UTC time since Unix epoch
+    // 1970-01-01T00:00:00Z. Must be from 0001-01-01T00:00:00Z to
+    // 9999-12-31T23:59:59Z inclusive.
+    required int64 seconds = 1;
+
+    // Non-negative fractions of a second at nanosecond resolution. Negative
+    // second values with fractions must still have non-negative nanos values
+    // that count forward in time. Must be from 0 to 999,999,999
+    // inclusive.
+    required int32 nanos = 2;
+}
+
+
 message IceboxMessage {
 
     enum Type {
@@ -33,11 +49,19 @@ message IceboxMessage {
         DELETE_SECRET = 19;
     }
 
-    required uint32 version = 1[default = 1];  // 消息版本号
-    required Type type = 2;
-    required uint32 session_id = 3;
-    required bytes payload = 4;
-    required bytes signature = 5;
+    message Header {
+        required uint32 version = 1[default = 1];  // 消息版本号
+        required Type type = 2;
+        required Timestamp  timestamp = 3;
+        required uint32 session_id = 4;
+    }
+
+//    required uint32 version = 1[default = 1];  // 消息版本号
+//    required Type type = 2;
+//    required uint32 session_id = 3;
+    required Header header = 1;
+    required bytes payload = 2;
+    required bytes signature = 3;
 }
 
 // rpc只是用于演示相关接口，不用作实现
@@ -229,16 +253,17 @@ message AddCoinReply {
 message CreateAddressRequest {
 //    required Header header = 1;
     required uint32 type = 2;
-    required uint32 idx = 3;
-    required string password = 4[(nanopb).max_size = 64];
+//    required uint32 idx = 3;
+    required string password = 3[(nanopb).max_size = 64];
     // TODO: 该最大值未经验证
-    optional string name = 5[(nanopb).max_size = 32];
+    optional string name = 4[(nanopb).max_size = 32];
 }
 
 message CreateAddressReply {
-//    required ReplyHeader header = 1;
+    required uint32 type = 1;
+    required uint32 idx = 2;
     // TODO: 该最大值未经验证
-    required string address = 2[(nanopb).max_size = 64]; // address or password
+    required string address = 3[(nanopb).max_size = 64]; // address
 }
 
 message CreateSecretRequest {
@@ -303,7 +328,13 @@ message ListSecretReply {
 message ListAddressRequest {
     required string password = 1;
     required uint32 type = 2;
-    optional uint32 idx = 3;
+//    optional uint32 idx = 3;
+}
+
+message QueryAddressRequest {
+    required string password = 1;
+    required uint32 type = 2;
+    required uint32 idx = 3;
 }
 
 message Address {

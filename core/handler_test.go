@@ -36,7 +36,7 @@ func TestHelloWithErrorMsgType(t *testing.T) {
 		handler := NewIcebergHandler()
 		res, err := handler.Chat(context.Background(), ct)
 		So(err, ShouldEqual, nil)
-		So(res.GetType(), ShouldEqual, pb.IceboxMessage_ERROR)
+		So(res.GetHeader().GetType(), ShouldEqual, pb.IceboxMessage_ERROR)
 	})
 
 	//mockCtrl := gomock.NewController(t)
@@ -60,7 +60,7 @@ func TestHelloWithErrorMagicNumber(t *testing.T) {
 		handler := NewIcebergHandler()
 		res, err := handler.Chat(context.Background(), ct)
 		So(err, ShouldEqual, nil)
-		So(res.GetType(), ShouldEqual, pb.IceboxMessage_ERROR)
+		So(res.GetHeader().GetType(), ShouldEqual, pb.IceboxMessage_ERROR)
 
 		var result = &pb.Error{}
 		err = proto.Unmarshal(res.GetPayload(), result)
@@ -77,8 +77,8 @@ func TestHelloSuccess(t *testing.T) {
 		handler := NewIcebergHandler()
 		res, err := handler.Chat(context.Background(), ct)
 		So(err, ShouldEqual, nil)
-		So(res.GetType(), ShouldNotEqual, pb.IceboxMessage_ERROR)
-		So(res.GetType(), ShouldEqual, pb.IceboxMessage_HELLO)
+		So(res.GetHeader().GetType(), ShouldNotEqual, pb.IceboxMessage_ERROR)
+		So(res.GetHeader().GetType(), ShouldEqual, pb.IceboxMessage_HELLO)
 
 		var result = &pb.HiReply{}
 		err = proto.Unmarshal(res.GetPayload(), result)

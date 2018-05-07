@@ -32,6 +32,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"  // must exists, or will cause -- sql: unknown driver "sqlite3"
 
 	"github.com/gogo/protobuf/proto"
+	"math/rand"
+	"time"
 )
 
 //go:generate mockgen -source=helper.go -destination=../mocks/mock_Iceberg.go -package=mocks conseweb.com/wallet/icebox/core Iceberg
@@ -211,24 +213,32 @@ func (s *iceHelper) AddCoin(ctx context.Context, req *pb.AddCoinRequest) (*pb.Ad
 func (s *iceHelper) CreateAddress(ctx context.Context, req *pb.CreateAddressRequest) (*pb.CreateAddressReply, error)  {
 
 	tp := req.GetType()
-	idx := req.GetIdx()
+	//idx := req.GetIdx()
 	name := req.GetName()
 	pwd := req.GetPassword()
 	// 需要首先判断是否支持该币种
 	var cnt int
 	s.openDb().Model(&models.Coin{}).Where("t2 = ?", tp).Count(&cnt)
 	if cnt <= 0 {
-		return nil, errors.New("Unsupported coin type: " + string(tp))
+		return nil, errors.New("Unknew coin type: " + string(tp))
 	}
 
-	s.db.Create(&models.Address{T2: tp, T5: idx, Name: name})
-	//p := models.GetPath(s.db, tp, idx)
-	addr, err := s.generateAddress(tp, idx, pwd)
-	if err != nil {
-		return nil, err
+	rand.Seed(time.Now().UnixNano())
+	var idx int32
+	for {
+		idx = rand.Int31()
+		if !s.dbAddrExists(tp, idx) {
+			s.db.Create(&models.Address{T2: tp, T5: uint32(idx), Name: name})
+			//p := models.GetPath(s.db, tp, idx)
+			addr, err := s.generateAddress(tp, uint32(idx), pwd)
+			if err != nil {
+				return nil, err
+			}
+			reply := pb.NewCreateAddressReply(tp, uint32(idx), *addr)
+			return reply, nil
+		}
 	}
-	reply := pb.NewCreateAddressReply(*addr)
-	return reply, nil
+
 }
 
 func (s *iceHelper) CreateSecret(ctx context.Context, req *pb.CreateSecretRequest) (*pb.CreateSecretReply, error)  {
@@ -265,14 +275,17 @@ func (s *iceHelper) ListSecret(context.Context, *pb.ListSecretRequest) (*pb.List
 
 func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest) (*pb.ListAddressReply, error)  {
 	tp := req.GetType()
-	idx := req.GetIdx()
+	//idx := req.GetIdx()
 	pass := req.GetPassword()
 	db := s.openDb()
 
 	var cnt int
-	db.Model(&models.Address{}).Where("t2 = ? AND t5 = ?", tp, idx).Count(&cnt)
-	if cnt <= 0 {
-		return nil, errors.New(fmt.Sprintf("Address %d not exists for coin type: %d", idx, tp))
+	if s.dbAddrExists(tp, -1) {
+
+		db.Model(&models.Address{}).Where("t2 = ?", tp).Count(&cnt)
+		if cnt <= 0 {
+			return nil, errors.New(fmt.Sprintf("Not address exists for coin type: %d", tp))
+		}
 	}
 
 	addrs2 := make([]*pb.Address, cnt)
@@ -280,11 +293,12 @@ func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest)
 	addrs := []models.Address{}
 	db.Where("t2 = ?", tp).Find(&addrs)
 	for i, _ := range addrs {
-		db.Model(addrs[i])
-		x := &pb.Address{Type: pb.NewUInt32(tp), Idx: pb.NewUInt32(addrs[i].T5)}
-		//a.SAddr
-		x.SAddr, _ = s.generateAddress(tp, idx, pass)
-		addrs2 = append(addrs2, x)
+		//db.Model(addrs[i])
+		x := new(pb.Address)
+		x.Type = pb.NewUInt32(addrs[i].T2)
+		x.Idx = pb.NewUInt32(addrs[i].T5)
+		x.SAddr, _ = s.generateAddress(addrs[i].T2, addrs[i].T5, pass)
+		addrs2[i] = x
 	}
 
 	reply := pb.NewListAddressReply(uint32(cnt), addrs2)
@@ -298,11 +312,14 @@ func (s *iceHelper) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb.Sign
 	dest := req.GetDest()
 	txid := req.GetTxid()
 	pass := req.GetPassword()
+	db := s.openDb()
 
 	var cnt int
-	s.openDb().Model(&models.Address{}).Where("t2 = ? AND t5 = ?", tp, idx).Count(&cnt)
-	if cnt <= 0 {
-		return nil, errors.New(fmt.Sprintf("Address %d not exists for coin type: %d", idx, tp))
+	if s.dbAddrExists(tp, -1) {
+		db.Model(&models.Address{}).Where("t2 = ?", tp).Count(&cnt)
+		if cnt <= 0 {
+			return nil, errors.New(fmt.Sprintf("Address %d not exists for coin type: %d", idx, tp))
+		}
 	}
 
 	subKey, _ := s.generateSubPrivKey(tp, idx, pass)
@@ -535,6 +552,31 @@ func (s *iceHelper) isInitialized() bool {
 		return false
 	}
 
+	return true
+}
+
+func (s *iceHelper) dbCoinExists(tp uint32) bool  {
+	var cnt int
+	s.openDb().Model(&models.Coin{}).Where("t2 = ?", tp).Count(&cnt)
+	if cnt <= 0 {
+		return false
+	}
+	return true
+}
+
+func (s *iceHelper) dbAddrExists(tp uint32, idx int32) bool  {
+	var cnt int
+	if idx < 0 {
+		s.openDb().Model(&models.Address{}).Where("t2 = ?", tp).Count(&cnt)
+		if cnt <= 0 {
+			return false
+		}
+		return true
+	}
+	s.openDb().Model(&models.Address{}).Where("t2 = ? AND t5 = ?", tp, idx).Count(&cnt)
+	if cnt <= 0 {
+		return false
+	}
 	return true
 }
 
