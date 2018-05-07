@@ -328,10 +328,22 @@ message ListSecretReply {
 message ListAddressRequest {
     required string password = 1;
     required uint32 type = 2;
+    required uint32 offset = 3;
+    required uint32 limit = 4; // 隐含的条件
 //    optional uint32 idx = 3;
 }
 
-message QueryAddressRequest {
+message BatchQueryRequest {
+    required string password = 1;
+    repeated uint32 type = 2;
+//    required uint32 offset = 3;
+//    required uint32 limit = 4; // 隐含的条件
+    //    optional uint32 idx = 3;
+}
+
+
+// 查询单条记录
+message GetAddressRequest {
     required string password = 1;
     required uint32 type = 2;
     required uint32 idx = 3;
@@ -340,13 +352,17 @@ message QueryAddressRequest {
 message Address {
     required uint32 type = 1;
     required uint32 idx = 2;
+    required string name = 3;
     // TODO: 该最大值未经验证
-    required string s_addr = 3[(nanopb).max_size = 64];
+    required string s_addr = 4[(nanopb).max_size = 64];
 }
 
 message ListAddressReply {
-    required uint32 max = 2;
-    repeated Address addr = 3[(nanopb).max_count = 8];
+    required uint32 total = 2;      // 总共有多少数据
+    required uint32 total_page = 3; // 总共有多少页
+    required uint32 limit = 4;      // 每页几条数据
+    required uint32 offset = 5;     // 起始偏移量，相当于current
+    repeated Address addr = 6[(nanopb).max_count = 25];
 }
 
 message RemoveCoinRequest {

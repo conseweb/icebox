@@ -3,3 +3,4 @@ iceserver
 session_key.dat
 .idea
 go_build_iceserver_go
+vendor

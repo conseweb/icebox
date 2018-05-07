@@ -21,10 +21,10 @@ import (
 	"github.com/btcsuite/btcd/chaincfg"
 	"errors"
 	"conseweb.com/wallet/icebox/coinutil"
-
 	"golang.org/x/net/context"
-
 	pb "conseweb.com/wallet/icebox/protos"
+	"math/rand"
+	"time"
 
 	"conseweb.com/wallet/icebox/common/crypto/koblitz/kelliptic"
 	"github.com/btcsuite/btcd/btcec"
@@ -32,8 +32,6 @@ import (
 	_ "github.com/mattn/go-sqlite3"  // must exists, or will cause -- sql: unknown driver "sqlite3"
 
 	"github.com/gogo/protobuf/proto"
-	"math/rand"
-	"time"
 )
 
 //go:generate mockgen -source=helper.go -destination=../mocks/mock_Iceberg.go -package=mocks conseweb.com/wallet/icebox/core Iceberg
@@ -291,6 +289,10 @@ func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest)
 	addrs2 := make([]*pb.Address, cnt)
 
 	addrs := []models.Address{}
+	//order_by := []string{"ID asc"}
+	//paginator := p.Paginator{DB: db, OrderBy: order_by, Page: "1", PerPage: "10"}
+	//data := paginator.Paginate(&addrs)
+
 	db.Where("t2 = ?", tp).Find(&addrs)
 	for i, _ := range addrs {
 		//db.Model(addrs[i])

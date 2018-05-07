@@ -176,7 +176,7 @@ func (d *Handler) generateSessionKey(r string) *bip32.ExtendedKey {
 }
 
 
-func (d *Handler) Hello() *pb.HiReply {
+func (d *Handler) Hello() (*pb.HiReply, error) {
 	var err error
 	req := pb.NewHiRequest(common.App_magic)
 
@@ -196,15 +196,15 @@ func (d *Handler) Hello() *pb.HiReply {
 	hdr := res.GetHeader()
 	if hdr.GetType() == pb.IceboxMessage_ERROR {
 		logger.Debug().Msgf("Device error: %s", res.GetPayload())
-		return nil
+		return nil, fmt.Errorf("Device error: %s", res.GetPayload())
 	}
 
 	var result = &pb.HiReply{}
 	err = proto.Unmarshal(res.GetPayload(), result)
 	if err != nil {
-		return nil
+		return nil, err
 	}
-	return result
+	return result, nil
 }
 
 func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
@@ -379,6 +379,7 @@ func (d *Handler) CheckDevice() (*pb.CheckReply, error) {
 
 	if res.GetHeader().GetType() == pb.IceboxMessage_ERROR {
 		logger.Debug().Msgf("Device error: %s", res.GetPayload())
+		return nil, fmt.Errorf("Device error: %s", res.GetPayload())
 	}
 
 	var reply = &pb.CheckReply{}
@@ -419,9 +420,7 @@ func (d *Handler) InitDevice(pas string) (*pb.InitReply, error) {
 	sid := d.session.id
 	ct := pb.NewIceboxMessageWithSID(pb.IceboxMessage_INIT,sid, payload)
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-	res, xe := d.Client.Chat(ctx, ct)
+	res, xe := d.Client.Chat(context.Background(), ct)
 	if xe != nil {
 		grpclog.Fatalln(xe)
 		return nil, xe
@@ -429,6 +428,7 @@ func (d *Handler) InitDevice(pas string) (*pb.InitReply, error) {
 
 	if res.GetHeader().GetType() == pb.IceboxMessage_ERROR {
 		logger.Debug().Msgf("Device error: %s", res.GetPayload())
+		return nil, fmt.Errorf("Device error: %s", res.GetPayload())
 	}
 
 	var intRep = &pb.InitReply{}
@@ -441,22 +441,20 @@ func (d *Handler) InitDevice(pas string) (*pb.InitReply, error) {
 	return intRep, nil
 }
 
-func (d *Handler) PingDevice() {
+func (d *Handler) PingDevice() error {
 	req := pb.NewPingRequest()
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
 	ct := pb.NewIceboxMessageWithSID(pb.IceboxMessage_PING,sid, payload)
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	res, err := d.Client.Chat(ctx, ct)
+	res, err := d.Client.Chat(context.Background(), ct)
 	if err != nil {
 		grpclog.Fatalln(err)
 	}
 
 	if res.GetHeader().GetType() == pb.IceboxMessage_ERROR {
 		logger.Debug().Msgf("Device error: %s", res.GetPayload())
+		return fmt.Errorf("Device error: %s", res.GetPayload())
 	}
 
 	var pr = &pb.PingReply{}
@@ -466,25 +464,24 @@ func (d *Handler) PingDevice() {
 	}
 
 	grpclog.Infoln("PingReply: ", pr)
+	return nil
 }
 
-func (d *Handler) ResetDevice() {
+func (d *Handler) ResetDevice() error {
 	var err error
 	resetReq := pb.NewResetRequest()
 	payload, _ := proto.Marshal(resetReq)
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_RESET,sid, payload)
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	res, err := d.Client.Chat(ctx, msg)
+	res, err := d.Client.Chat(context.Background(), msg)
 	if err != nil {
 		grpclog.Fatalln(err)
 	}
 
 	if res.GetHeader().GetType() == pb.IceboxMessage_ERROR {
 		logger.Debug().Msgf("Device error: %s", res.GetPayload())
+		return fmt.Errorf("Device error: %s", res.GetPayload())
 	}
 
 	var reply = &pb.ResetReply{}
@@ -493,6 +490,7 @@ func (d *Handler) ResetDevice() {
 		grpclog.Fatalln(err)
 	}
 	grpclog.Infoln("ResetReply: ", reply)
+	return nil
 }
 
 func (d *Handler) CreateAddress(tp uint32, name, pwd string) (*pb.CreateAddressReply, error) {
@@ -513,6 +511,7 @@ func (d *Handler) CreateAddress(tp uint32, name, pwd string) (*pb.CreateAddressR
 
 	if irep.GetHeader().GetType() == pb.IceboxMessage_ERROR {
 		logger.Debug().Msgf("Device error: %s", irep.GetPayload())
+		return nil, fmt.Errorf("Device error: %s", irep.GetPayload())
 	}
 
 	var caRep = &pb.CreateAddressReply{}
@@ -545,6 +544,7 @@ func (d *Handler) ListAddress(tp uint32, pwd string) (*pb.ListAddressReply, erro
 
 	if irep.GetHeader().GetType() == pb.IceboxMessage_ERROR {
 		logger.Debug().Msgf("Device error: %s", irep.GetPayload())
+		return nil, fmt.Errorf("Device error: %s", irep.GetPayload())
 	}
 
 	var caRep = &pb.ListAddressReply{}
@@ -571,10 +571,7 @@ func (d *Handler) DeleteAddress(tp, idx uint32, pwd string) (*pb.DeleteAddressRe
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_DELETE_ADDRESS,sid, payload)
 
-	ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	defer cancel()
-
-	irep, xe := d.Client.Chat(ctx, msg)
+	irep, xe := d.Client.Chat(context.Background(), msg)
 	if xe != nil {
 		grpclog.Fatalln(xe)
 		return nil, xe
@@ -582,6 +579,7 @@ func (d *Handler) DeleteAddress(tp, idx uint32, pwd string) (*pb.DeleteAddressRe
 
 	if irep.GetHeader().GetType() == pb.IceboxMessage_ERROR {
 		logger.Debug().Msgf("Device error: %s", irep.GetPayload())
+		return nil, fmt.Errorf("Device error: %s", irep.GetPayload())
 	}
 
 	var caRep = &pb.DeleteAddressReply{}

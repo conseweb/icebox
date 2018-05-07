@@ -18,10 +18,11 @@ import (
 	"github.com/btcsuite/btcd/wire"
 	"conseweb.com/wallet/icebox/coinutil"
 
-	"conseweb.com/go-bip44"
+	//"conseweb.com/go-bip44"
 	"github.com/tyler-smith/go-bip32"
 	"github.com/tyler-smith/go-bip39"
 	"conseweb.com/wallet/icebox/core/models"
+	"conseweb.com/wallet/icebox/coinutil/bip44"
 )
 
 const (
