@@ -275,25 +275,30 @@ func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest)
 	tp := req.GetType()
 	//idx := req.GetIdx()
 	pass := req.GetPassword()
+	offset := req.GetOffset()
+	limit := req.GetLimit()
 	db := s.openDb()
 
-	var cnt int
+	var totalRecords int
 	if s.dbAddrExists(tp, -1) {
-
-		db.Model(&models.Address{}).Where("t2 = ?", tp).Count(&cnt)
-		if cnt <= 0 {
+		db.Model(&models.Address{}).Where("t2 = ?", tp).Count(&totalRecords)
+		if totalRecords <= 0 {
 			return nil, errors.New(fmt.Sprintf("Not address exists for coin type: %d", tp))
 		}
 	}
 
-	addrs2 := make([]*pb.Address, cnt)
+	totalPages := uint32(totalRecords) / limit
+	if uint32(totalRecords) % limit > 0 {
+		totalPages += 1
+	}
+
+	addrs2 := make([]*pb.Address, limit)
 
 	addrs := []models.Address{}
 	//order_by := []string{"ID asc"}
-	//paginator := p.Paginator{DB: db, OrderBy: order_by, Page: "1", PerPage: "10"}
-	//data := paginator.Paginate(&addrs)
+	//db = db.Order(order_by)
+	db.Model(&models.Address{}).Where("t2 = ?", tp).Limit(limit).Offset(offset).Find(&addrs)
 
-	db.Where("t2 = ?", tp).Find(&addrs)
 	for i, _ := range addrs {
 		//db.Model(addrs[i])
 		x := new(pb.Address)
@@ -303,7 +308,7 @@ func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest)
 		addrs2[i] = x
 	}
 
-	reply := pb.NewListAddressReply(uint32(cnt), addrs2)
+	reply := pb.NewListAddressReply(uint32(totalRecords), uint32(totalPages), offset+limit, limit, addrs2)
 	return reply, nil
 }
 
@@ -477,8 +482,8 @@ func (s *iceHelper) generateSubPrivKey(tp, idx uint32, password string) (*bip32.
 	if err != nil {
 		return nil, err
 	}
-	privk, _ := masterKey.ECPrivKey2()
-	logger.Debug().Msgf("priv key: %s, address: %s", privk, privk.Address())
+	//privk, _ := masterKey.ECPrivKey2()
+	//logger.Debug().Msgf("priv key: %s, address: %s", privk, privk.Address())
 	// 两种地址不兼容
 	nk, err := bip44.NewKeyFromMasterKey(masterKey, tp, 0, 0, idx)
 	if err != nil {
@@ -494,8 +499,6 @@ func (s *iceHelper) generateAddress(tp, idx uint32, password string) (*string, e
 	if err != nil {
 		return nil, err
 	}
-	privk, _ := masterKey.ECPrivKey2()
-	logger.Debug().Msgf("priv key: %s, address: %s", privk, privk.Address())
 	// 两种地址不兼容
 	nk, err := bip44.NewKeyFromMasterKey(masterKey, tp, 0, 0, idx)
 	if err != nil {
@@ -503,6 +506,7 @@ func (s *iceHelper) generateAddress(tp, idx uint32, password string) (*string, e
 	}
 	addr, _ := nk.Address(&chaincfg.MainNetParams)
 	a := addr.EncodeAddress()
+	logger.Debug().Msgf("Generated address: %s", a)
 	return &a, nil
 }
 

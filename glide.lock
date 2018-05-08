@@ -1,5 +1,5 @@
-hash: cddbc30774eb3e7db462e77d071b242b06e73b9044ea8b7461efcb656fdc25ed
-updated: 2018-05-07T20:47:15.711783+08:00
+hash: 14e42b3099b12dbf639006bb450919f6290cfc1521f4c6ef387e8e49dc99bb9f
+updated: 2018-05-08T16:11:07.42878+08:00
 imports:
 - name: github.com/abice/go-enum
   version: 5d428eed09bc3caadee46f8c232ad724742d35e2

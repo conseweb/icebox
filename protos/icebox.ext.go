@@ -223,9 +223,11 @@ func NewCreateAddressRequest(tp uint32, name, pass string) *CreateAddressRequest
 	return req
 }
 
-func NewListAddressRequest(tp uint32, pass string) *ListAddressRequest {
+func NewListAddressRequest(tp, offset, limit uint32,  pass string) *ListAddressRequest {
 	req := new(ListAddressRequest)
 	req.Type = &tp
+	req.Offset = &offset
+	req.Limit = &limit
 	//req.Idx = &idx
 	req.Password = &pass
 	return req
@@ -322,11 +324,18 @@ func NewCreateAddressReply(tp, idx uint32, addr string) *CreateAddressReply {
 	return reply
 }
 
-func NewListAddressReply(cnt uint32, addrs []*Address) *ListAddressReply {
+func NewListAddressReply(num, page, offset, limit uint32, addrs []*Address) *ListAddressReply {
 	reply := new(ListAddressReply)
+	reply.TotalRecords = &num
+	reply.TotalPages = &page
+	reply.Limit = &limit
+	reply.Offset = &offset
+
 	reply.Addr = make([]*Address, len(addrs))
-	copy(reply.Addr, addrs)
-	reply.Max = &cnt
+	for i, _ := range addrs {
+		reply.Addr[i] = addrs[i]
+	}
+
 	return reply
 }
 

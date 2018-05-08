@@ -352,17 +352,16 @@ message GetAddressRequest {
 message Address {
     required uint32 type = 1;
     required uint32 idx = 2;
-    required string name = 3;
-    // TODO: 该最大值未经验证
+    optional string name = 3;
     required string s_addr = 4[(nanopb).max_size = 64];
 }
 
 message ListAddressReply {
-    required uint32 total = 2;      // 总共有多少数据
-    required uint32 total_page = 3; // 总共有多少页
-    required uint32 limit = 4;      // 每页几条数据
-    required uint32 offset = 5;     // 起始偏移量，相当于current
-    repeated Address addr = 6[(nanopb).max_count = 25];
+    required uint32 total_records = 1;      // 总共有多少数据
+    required uint32 total_pages = 2; // 总共有多少页
+    required uint32 limit = 3;      // 每页几条数据
+    required uint32 offset = 4;     // 起始偏移量，相当于current
+    repeated Address addr = 5[(nanopb).max_count = 25];
 }
 
 message RemoveCoinRequest {

@@ -528,13 +528,10 @@ func (d *Handler) CreateAddress(tp uint32, name, pwd string) (*pb.CreateAddressR
 
 func (d *Handler) ListAddress(tp uint32, pwd string) (*pb.ListAddressReply, error) {
 	var err error
-	req := pb.NewListAddressRequest(tp, pwd)
+	req := pb.NewListAddressRequest(tp,0, 8, pwd)
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_LIST_ADDRESS,sid, payload)
-
-	//ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	//defer cancel()
 
 	irep, xe := d.Client.Chat(context.Background(), msg)
 	if xe != nil {
@@ -550,13 +547,15 @@ func (d *Handler) ListAddress(tp uint32, pwd string) (*pb.ListAddressReply, erro
 	var caRep = &pb.ListAddressReply{}
 	err = proto.Unmarshal(irep.GetPayload(), caRep)
 	if err != nil {
-		grpclog.Fatalln(err)
+		//grpclog.Fatalln(err)
+		logger.Fatal().Err(err).Msgf("reply: %s", caRep)
 		return nil, err
 	}
 
-	cnt := caRep.GetMax()
+	cnt := caRep.GetTotalRecords()
+	page := caRep.GetTotalPages()
 	ary := caRep.GetAddr()
-	logger.Debug().Msgf("There are %d addresses, received %d addresses.", cnt, len(ary))
+	logger.Debug().Msgf("There are %d addresses, %d pages, received %d addresses.", cnt, page, len(ary))
 	for i, _ := range ary {
 		logger.Debug().Msgf("%d, %d, %s", ary[i].GetType(), ary[i].GetIdx(), ary[i].GetSAddr())
 	}

@@ -1,17 +1,5 @@
 package: conseweb.com/wallet/icebox
 import:
-- package: github.com/btcsuite/btcd
-  subpackages:
-  - blockchain
-  - btcec
-  - chaincfg
-  - chaincfg/chainhash
-  - txscript
-  - wire
-- package: github.com/btcsuite/btcutil
-  subpackages:
-  - base58
-  - bech32
 - package: github.com/cmars/basen
 - package: github.com/golang/protobuf
   version: ^1.0.0
@@ -21,7 +9,6 @@ import:
   version: ^1.9.1
   subpackages:
   - dialects/sqlite
-- package: github.com/mndrix/btcutil
 - package: github.com/sour-is/koblitz
   subpackages:
   - kelliptic
@@ -45,6 +32,10 @@ import:
 - package: github.com/Prabandham/paginator
 - package: github.com/abice/go-enum
   version: ~0.1.3
+- package: github.com/btcsuite/btcutil
+- version: master
+- package: github.com/btcsuite/btcd
+- version: master
 testImport:
 - package: github.com/davecgh/go-spew
   version: ^1.1.0
