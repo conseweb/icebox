@@ -302,9 +302,6 @@ func (d *Handler) Start() (*pb.StartReply, error) {
 		msg = pb.NewIceboxMessageWithSID(pb.IceboxMessage_START, sid, payload)
 	}
 
-	//ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	//defer cancel()
-
 	res, err := d.Client.Chat(context.Background(), msg)
 	if err != nil {
 		grpclog.Fatalf("%v: ", err)
@@ -493,9 +490,9 @@ func (d *Handler) ResetDevice() error {
 	return nil
 }
 
-func (d *Handler) CreateAddress(tp uint32, name, pwd string) (*pb.CreateAddressReply, error) {
+func (d *Handler) CreateAddress(tp uint32, pwd string) (*pb.CreateAddressReply, error) {
 	var err error
-	req := pb.NewCreateAddressRequest(tp, name, pwd)
+	req := pb.NewCreateAddressRequest(tp, pwd)
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_CREATE_ADDRESS, sid, payload)
@@ -503,64 +500,64 @@ func (d *Handler) CreateAddress(tp uint32, name, pwd string) (*pb.CreateAddressR
 	//ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	//defer cancel()
 
-	irep, xe := d.Client.Chat(context.Background(), msg)
+	chatRep, xe := d.Client.Chat(context.Background(), msg)
 	if xe != nil {
 		grpclog.Fatalln(xe)
 		return nil, xe
 	}
 
-	if irep.GetHeader().GetType() == pb.IceboxMessage_ERROR {
-		logger.Debug().Msgf("Device error: %s", irep.GetPayload())
-		return nil, fmt.Errorf("Device error: %s", irep.GetPayload())
+	if chatRep.GetHeader().GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", chatRep.GetPayload())
+		return nil, fmt.Errorf("Device error: %s", chatRep.GetPayload())
 	}
 
-	var caRep = &pb.CreateAddressReply{}
-	err = proto.Unmarshal(irep.GetPayload(), caRep)
+	var reply = &pb.CreateAddressReply{}
+	err = proto.Unmarshal(chatRep.GetPayload(), reply)
 	if err != nil {
 		grpclog.Fatalln(err)
 		return nil, err
 	}
 
-	grpclog.Infoln("CreateAddressReply: ", caRep)
-	return caRep, nil
+	grpclog.Infoln("CreateAddressReply: ", reply)
+	return reply, nil
 
 }
 
-func (d *Handler) ListAddress(tp uint32, pwd string) (*pb.ListAddressReply, error) {
+func (d *Handler) ListAddress(tp, offset, limit uint32, pwd string) (*pb.ListAddressReply, error) {
 	var err error
-	req := pb.NewListAddressRequest(tp,0, 8, pwd)
+	req := pb.NewListAddressRequest(tp, offset, limit, pwd)
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_LIST_ADDRESS,sid, payload)
 
-	irep, xe := d.Client.Chat(context.Background(), msg)
+	chatRep, xe := d.Client.Chat(context.Background(), msg)
 	if xe != nil {
 		grpclog.Fatalln(xe)
 		return nil, xe
 	}
 
-	if irep.GetHeader().GetType() == pb.IceboxMessage_ERROR {
-		logger.Debug().Msgf("Device error: %s", irep.GetPayload())
-		return nil, fmt.Errorf("Device error: %s", irep.GetPayload())
+	if chatRep.GetHeader().GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", chatRep.GetPayload())
+		return nil, fmt.Errorf("Device error: %s", chatRep.GetPayload())
 	}
 
-	var caRep = &pb.ListAddressReply{}
-	err = proto.Unmarshal(irep.GetPayload(), caRep)
+	var reply = &pb.ListAddressReply{}
+	err = proto.Unmarshal(chatRep.GetPayload(), reply)
 	if err != nil {
 		//grpclog.Fatalln(err)
-		logger.Fatal().Err(err).Msgf("reply: %s", caRep)
+		logger.Fatal().Err(err).Msgf("reply: %s", reply)
 		return nil, err
 	}
 
-	cnt := caRep.GetTotalRecords()
-	page := caRep.GetTotalPages()
-	ary := caRep.GetAddr()
+	cnt := reply.GetTotalRecords()
+	page := reply.GetTotalPages()
+	ary := reply.GetAddr()
 	logger.Debug().Msgf("There are %d addresses, %d pages, received %d addresses.", cnt, page, len(ary))
 	for i, _ := range ary {
 		logger.Debug().Msgf("%d, %d, %s", ary[i].GetType(), ary[i].GetIdx(), ary[i].GetSAddr())
 	}
 
-	return caRep, nil
+	return reply, nil
 }
 
 func (d *Handler) DeleteAddress(tp, idx uint32, pwd string) (*pb.DeleteAddressReply, error) {
@@ -581,16 +578,83 @@ func (d *Handler) DeleteAddress(tp, idx uint32, pwd string) (*pb.DeleteAddressRe
 		return nil, fmt.Errorf("Device error: %s", irep.GetPayload())
 	}
 
-	var caRep = &pb.DeleteAddressReply{}
-	err = proto.Unmarshal(irep.GetPayload(), caRep)
+	var reply = &pb.DeleteAddressReply{}
+	err = proto.Unmarshal(irep.GetPayload(), reply)
 	if err != nil {
 		grpclog.Fatalln(err)
 		return nil, err
 	}
 
-	grpclog.Infoln("DeleteAddressReply: ", caRep)
-	return caRep, nil
+	grpclog.Infoln("DeleteAddressReply: ", reply)
+	return reply, nil
 
+}
+
+func (d *Handler) CreateSecret(site, account uint32, pwd string) (*pb.CreateSecretReply, error) {
+	var err error
+	req := pb.NewCreateSecretRequest(0, site, account, pwd)
+	payload, _ := proto.Marshal(req)
+	sid := d.session.id
+	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_CREATE_SECRET, sid, payload)
+
+	irep, xe := d.Client.Chat(context.Background(), msg)
+	if xe != nil {
+		grpclog.Fatalln(xe)
+		return nil, xe
+	}
+
+	if irep.GetHeader().GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", irep.GetPayload())
+		return nil, fmt.Errorf("Device error: %s", irep.GetPayload())
+	}
+
+	var reply = &pb.CreateSecretReply{}
+	err = proto.Unmarshal(irep.GetPayload(), reply)
+	if err != nil {
+		grpclog.Fatalln(err)
+		return nil, err
+	}
+
+	grpclog.Infoln("CreateSecretReply: ", reply)
+	return reply, nil
+
+}
+
+func (d *Handler) ListSecret(tp, site, offset, limit uint32, pwd string) (*pb.ListSecretReply, error) {
+	var err error
+	req := pb.NewListSecretRequest(tp, site, offset, limit, pwd)
+	payload, _ := proto.Marshal(req)
+	sid := d.session.id
+	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_LIST_SECRET,sid, payload)
+
+	chatRep, xe := d.Client.Chat(context.Background(), msg)
+	if xe != nil {
+		grpclog.Fatalln(xe)
+		return nil, xe
+	}
+
+	if chatRep.GetHeader().GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", chatRep.GetPayload())
+		return nil, fmt.Errorf("Device error: %s", chatRep.GetPayload())
+	}
+
+	var reply = &pb.ListSecretReply{}
+	err = proto.Unmarshal(chatRep.GetPayload(), reply)
+	if err != nil {
+		//grpclog.Fatalln(err)
+		logger.Fatal().Err(err).Msgf("reply: %s", reply)
+		return nil, err
+	}
+
+	cnt := reply.GetTotalRecords()
+	page := reply.GetTotalPages()
+	ary := reply.GetSecret()
+	logger.Debug().Msgf("There are %d addresses, %d pages, received %d addresses.", cnt, page, len(ary))
+	for i, _ := range ary {
+		logger.Debug().Msgf("%d, %d, %s", ary[i].GetType(), ary[i].GetIdx(), ary[i].GetSSecret())
+	}
+
+	return reply, nil
 }
 
 func (d *Handler) SignTx(tp, idx uint32, amount uint64, dest, txid, pwd string) (*pb.SignTxReply, error) {
@@ -599,9 +663,6 @@ func (d *Handler) SignTx(tp, idx uint32, amount uint64, dest, txid, pwd string) 
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_SIGN_TX,sid, payload)
-
-	//ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	//defer cancel()
 
 	irep, xe := d.Client.Chat(context.Background(), msg)
 	if xe != nil {

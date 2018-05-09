@@ -11,6 +11,7 @@ import (
 	"github.com/rs/zerolog"
 	"conseweb.com/wallet/icebox/common/flogging"
 	"conseweb.com/wallet/icebox/common"
+	"conseweb.com/wallet/icebox/core/paginator"
 )
 
 var (
@@ -101,11 +102,49 @@ func main() {
 
 	//rand.Seed(time.Now().UnixNano())
 	//var idx = rand.Uint32()
-	rex, _ := handler.CreateAddress(1,"default", common.Test_password)
-	//rex, _ = handler.CreateAddress(60, 21, "eth default", common.Test_password)
+	rex, _ := handler.CreateAddress(1, common.Test_password)
 	logger.Debug().Msgf("Created address: %s", rex.GetAddress())
 
-	handler.ListAddress(1, common.Test_password)
+	{
+		reply, _ := handler.ListAddress(1, 0, 8, common.Test_password)
+		offset := reply.GetOffset()
+		limit := reply.GetLimit()
+		total := reply.GetTotalRecords()
+		logger.Debug().Msgf("%d, %d, %d", total, limit, offset)
+		for {
+			if paginator.HaveNext(total, limit, offset) {
+				reply, _ = handler.ListAddress(1, offset, limit, common.Test_password)
+				offset = reply.GetOffset()
+				limit = reply.GetLimit()
+				total = reply.GetTotalRecords()
+				logger.Debug().Msgf("%d, %d, %d", total, limit, offset)
+			} else {
+				break
+			}
+		}
+	}
+
+	handler.CreateSecret(32, 1, common.Test_password)
+
+	{
+		secretReply, _ := handler.ListSecret(1, 32, 0, 3, common.Test_password)
+		offset := secretReply.GetOffset()
+		limit := secretReply.GetLimit()
+		total := secretReply.GetTotalRecords()
+		logger.Debug().Msgf("%d, %d, %d", total, limit, offset)
+		for {
+			if paginator.HaveNext(total, limit, offset) {
+				secretReply, _ = handler.ListSecret(1, 32, offset, limit, common.Test_password)
+				offset = secretReply.GetOffset()
+				limit = secretReply.GetLimit()
+				total = secretReply.GetTotalRecords()
+				logger.Debug().Msgf("%d, %d, %d", total, limit, offset)
+			} else {
+				break
+			}
+		}
+	}
+
 
 	handler.SignTx(0, 115155635, 91234, "1KKKK6N21XKo48zWKuQKXdvSsCf95ibHFa", "81b4c832d70cb56ff957589752eb4125a4cab78a25a8fc52d6a09e5bd4404d48", common.Test_password)
 
@@ -123,3 +162,17 @@ func main() {
 	<-shutdown
 }
 
+func IsLastPage(total, limit, offset uint32) int {
+	if (total == offset) && (offset <= limit) {
+		// page 1
+		return 0
+	}
+	if (offset >= total) && (offset > limit) {
+		// last page
+		return -1
+	}
+	if (total > offset) && (offset > limit) {
+		return 1
+	}
+	return 2
+}

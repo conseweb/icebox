@@ -214,18 +214,38 @@ func NewAddCoinRequest(tp, idx uint32, symbol, name string) *AddCoinRequest {
 	return req
 }
 
-func NewCreateAddressRequest(tp uint32, name, pass string) *CreateAddressRequest {
+func NewCreateAddressRequest(tp uint32, pass string) *CreateAddressRequest {
 	req := new(CreateAddressRequest)
 	req.Type = &tp
 	//req.Idx = &idx
 	req.Password = &pass
-	req.Name = &name
+	//req.Name = &name
+	return req
+}
+
+func NewCreateSecretRequest(tp, site, account uint32, pass string) *CreateSecretRequest {
+	req := new(CreateSecretRequest)
+	req.Type = &tp
+	req.Site = &site
+	req.Account = &account
+	req.Password = &pass
 	return req
 }
 
 func NewListAddressRequest(tp, offset, limit uint32,  pass string) *ListAddressRequest {
 	req := new(ListAddressRequest)
 	req.Type = &tp
+	req.Offset = &offset
+	req.Limit = &limit
+	//req.Idx = &idx
+	req.Password = &pass
+	return req
+}
+
+func NewListSecretRequest(tp, site, offset, limit uint32,  pass string) *ListSecretRequest {
+	req := new(ListSecretRequest)
+	req.Type = &tp
+	req.Site = &site
 	req.Offset = &offset
 	req.Limit = &limit
 	//req.Idx = &idx
@@ -324,6 +344,16 @@ func NewCreateAddressReply(tp, idx uint32, addr string) *CreateAddressReply {
 	return reply
 }
 
+func NewCreateSecretReply(tp, site, account, idx uint32, secret string) *CreateSecretReply {
+	reply := new(CreateSecretReply)
+	reply.Type = &tp
+	reply.Site = &site
+	reply.Account = &account
+	reply.Index = &idx
+	reply.Secret = &secret
+	return reply
+}
+
 func NewListAddressReply(num, page, offset, limit uint32, addrs []*Address) *ListAddressReply {
 	reply := new(ListAddressReply)
 	reply.TotalRecords = &num
@@ -334,6 +364,21 @@ func NewListAddressReply(num, page, offset, limit uint32, addrs []*Address) *Lis
 	reply.Addr = make([]*Address, len(addrs))
 	for i, _ := range addrs {
 		reply.Addr[i] = addrs[i]
+	}
+
+	return reply
+}
+
+func NewListSecretReply(num, page, offset, limit uint32, secrets []*Secret) *ListSecretReply {
+	reply := new(ListSecretReply)
+	reply.TotalRecords = &num
+	reply.TotalPages = &page
+	reply.Limit = &limit
+	reply.Offset = &offset
+
+	reply.Secret = make([]*Secret, len(secrets))
+	for i, _ := range secrets {
+		reply.Secret[i] = secrets[i]
 	}
 
 	return reply

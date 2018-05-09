@@ -22,7 +22,6 @@ import (
 	"github.com/tyler-smith/go-bip32"
 	"github.com/tyler-smith/go-bip39"
 	"conseweb.com/wallet/icebox/core/models"
-	"conseweb.com/wallet/icebox/coinutil/bip44"
 )
 
 const (
@@ -61,6 +60,7 @@ func InitDB(filepath string) *gorm.DB {
 	// Migrate the schema
 	db.AutoMigrate(&models.Coin{})
 	db.AutoMigrate(&models.Address{})
+	db.AutoMigrate(&models.Secret{})
 
 	// Create
 	db.Create(&models.Coin{T2: 0, Symbol: "btc", Name: "bitcoin"})
@@ -214,18 +214,18 @@ func loadMasterPrivKey(fn string) (key *bip32.Key, err error) {
 
 // 创建一个新的
 func CreateFormula(coin, chain, index uint32, name string) (*bip32.Key, error) {
-	db.Create(&models.Address{T2: coin, T4: chain, T5: index, Name: name})
-
-	mkey, err := loadMasterPrivKey(secretFn)
-	if mkey != nil {
-		var key *bip32.Key
-		key, err = bip44.NewKeyFromMasterKey(mkey, coin, 0, chain, index)
-		if err != nil {
-			return nil, err
-		}
-		return key, nil
-	}
-	return nil, err
+	//db.Create(&models.Address{T2: coin, T4: chain, T5: index, Name: name})
+	//
+	//mkey, err := loadMasterPrivKey(secretFn)
+	//if mkey != nil {
+	//	var key *bip32.Key
+	//	key, err = bip44.NewKeyFromMasterKey(mkey, coin, 0, chain, index)
+	//	if err != nil {
+	//		return nil, err
+	//	}
+	//	return key, nil
+	//}
+	return nil, nil
 }
 
 func mainx() {

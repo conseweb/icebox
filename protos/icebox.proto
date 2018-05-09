@@ -251,38 +251,51 @@ message AddCoinReply {
 }
 
 message CreateAddressRequest {
-//    required Header header = 1;
+    required string password = 1[(nanopb).max_size = 64];
     required uint32 type = 2;
-//    required uint32 idx = 3;
-    required string password = 3[(nanopb).max_size = 64];
-    // TODO: 该最大值未经验证
-    optional string name = 4[(nanopb).max_size = 32];
+    optional uint32 idx = 3;
 }
 
 message CreateAddressReply {
     required uint32 type = 1;
     required uint32 idx = 2;
-    // TODO: 该最大值未经验证
     required string address = 3[(nanopb).max_size = 64]; // address
 }
 
 message CreateSecretRequest {
-//    required Header header = 1;
-    required uint32 type = 2;
-    required uint32 idx = 3;
-    required string password = 4[(nanopb).max_size = 64];
-    // TODO: 该最大值未经验证
-    optional string name = 5[(nanopb).max_size = 32];
+    required string password = 1[(nanopb).max_size = 64];
+    required uint32 type = 2;       // T1
+    required uint32 site = 3;       // T2
+    required uint32 account = 4;    // T3
+//    required uint32 index = 4;    // T4
 }
 
 message CreateSecretReply {
-//    required ReplyHeader header = 1;
-    // TODO: 该最大值未经验证
-    required string address = 2[(nanopb).max_size = 64]; // address or password
+    required uint32 type = 1;
+    required uint32 site = 2;       // T2
+    required uint32 account = 3;    // T3
+    required uint32 index = 4;      // T4
+    required string secret = 5[(nanopb).max_size = 64]; // device produced password
+}
+
+// 保存用户自己的秘密
+message AddSecretRequest {
+    required string password = 1[(nanopb).max_size = 64];
+    required uint32 type = 2;       // T1
+    required uint32 site = 3;       // T2
+    required uint32 account = 4;    // T3
+    required string secret = 5[(nanopb).max_size = 64];
+}
+
+message AddSecretReply {
+    required uint32 type = 1;
+    required uint32 site = 2;       // T2
+    required uint32 account = 3;    // T3
+    required uint32 idx = 4;        // T4
+    required string secret = 5[(nanopb).max_size = 64]; // user's password
 }
 
 message SignTxRequest {
-//    required Header header = 1;
     required string password = 1;
     required uint32 type = 2;
     required uint32 idx = 3;
@@ -294,7 +307,6 @@ message SignTxRequest {
 }
 
 message SignTxReply {
-//    required ReplyHeader header = 1;
     // TODO: 该最大值未经验证
     required string signedTx = 2[(nanopb).max_size = 256];
 }
@@ -308,30 +320,6 @@ message ListCoinReply {
     repeated uint32 type = 3[(nanopb).max_count = 8];
 }
 
-message ListSecretRequest {
-    required uint32 type = 2;
-    optional uint32 idx = 3;
-}
-
-message Secret {
-    required uint32 type = 1;
-    required uint32 idx = 2;
-    // TODO: 该最大值未经验证
-    required string s_addr = 3[(nanopb).max_size = 64];
-}
-
-message ListSecretReply {
-    required uint32 max = 2;
-    repeated Secret secret = 3[(nanopb).max_count = 8];
-}
-
-message ListAddressRequest {
-    required string password = 1;
-    required uint32 type = 2;
-    required uint32 offset = 3;
-    required uint32 limit = 4; // 隐含的条件
-//    optional uint32 idx = 3;
-}
 
 message BatchQueryRequest {
     required string password = 1;
@@ -349,6 +337,14 @@ message GetAddressRequest {
     required uint32 idx = 3;
 }
 
+message ListAddressRequest {
+    required string password = 1;
+    required uint32 type = 2;
+    required uint32 offset = 3;
+    required uint32 limit = 4; // 隐含的条件
+    //    optional uint32 idx = 3;
+}
+
 message Address {
     required uint32 type = 1;
     required uint32 idx = 2;
@@ -357,11 +353,37 @@ message Address {
 }
 
 message ListAddressReply {
-    required uint32 total_records = 1;      // 总共有多少数据
-    required uint32 total_pages = 2; // 总共有多少页
-    required uint32 limit = 3;      // 每页几条数据
-    required uint32 offset = 4;     // 起始偏移量，相当于current
+    required uint32 total_records = 1;  // 总共有多少数据
+    required uint32 total_pages = 2;    // 总共有多少页
+    required uint32 limit = 3;          // 每页几条数据
+    required uint32 offset = 4;         // 起始偏移量，相当于current
     repeated Address addr = 5[(nanopb).max_count = 25];
+}
+
+message ListSecretRequest {
+    required string password = 1;
+    required uint32 type = 2;
+    optional uint32 site = 3;
+    optional uint32 account = 4;
+    required uint32 offset = 5;
+    required uint32 limit = 6; // 隐含的条件
+    //    optional uint32 idx = 3;
+}
+
+message Secret {
+    required uint32 type = 1;
+    required uint32 site = 2;
+    required uint32 account = 3;
+    required uint32 idx = 4;
+    required string s_secret = 5[(nanopb).max_size = 64];
+}
+
+message ListSecretReply {
+    required uint32 total_records = 1;  // 总共有多少数据
+    required uint32 total_pages = 2;    // 总共有多少页
+    required uint32 limit = 3;          // 每页几条数据
+    required uint32 offset = 4;         // 起始偏移量，相当于current
+    repeated Secret secret = 5[(nanopb).max_count = 25];
 }
 
 message RemoveCoinRequest {

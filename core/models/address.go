@@ -6,6 +6,7 @@ import (
 	//"conseweb.com/wallet/icebox/models"
 )
 
+// T1: 44, T2: coin type, T3: account=0, T4: change/chain=0, T5: index
 type Address struct {
 	ID      uint32 `gorm:"AUTO_INCREMENT, PRIMARY_KEY"` // set id to auto incrementable
 	T2      uint32 `gorm:"not null"`                    // for bip44: coin_type
