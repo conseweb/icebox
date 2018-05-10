@@ -364,7 +364,8 @@ func (s *iceHelper) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb.Sign
 	idx := req.GetIdx()
 	amount := req.GetAmount()
 	dest := req.GetDest()
-	txid := req.GetTxid()
+	txhash := req.GetTxHash()
+	txidx := req.GetTxIdx()
 	pass := req.GetPassword()
 	db := s.openDb()
 
@@ -383,7 +384,8 @@ func (s *iceHelper) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb.Sign
 	if err != nil {
 		return nil, err
 	}
-	tx, err := CreateTransaction(wif.String(), dest, int64(amount), txid)
+	// TODO: txhash should be generated from transaction
+	tx, err := CreateTransaction(wif.String(), dest, int64(amount), txhash, txidx)
 	if err != nil {
 		return nil, err
 	}
@@ -560,12 +562,23 @@ func (s *iceHelper) generateSubPrivKey(tp, idx uint32, password string) (*bip32.
 		return nil, err
 	}
 	//privk, _ := masterKey.ECPrivKey2()
-	//logger.Debug().Msgf("priv key: %s, address: %s", privk, privk.Address())
+	//privk, _ := masterKey.ECPrivKey()
+	//net := env.RTEnv.GetNet()
+	//apkh, _ := masterKey.Address(net)
+
 	// 两种地址不兼容
 	nk, err := bip44.NewKeyFromMasterKey(masterKey, tp, 0, 0, idx)
 	if err != nil {
 		return nil, err
 	}
+
+	var aph *coinutil.AddressPubKeyHash
+	privk, _ := nk.ECPrivKey()
+	net := env.RTEnv.GetNet()
+	aph, _ = nk.Address(net)
+	a := aph.EncodeAddress()
+	logger.Debug().Msgf("Generated address: %s", a)
+	logger.Debug().Msgf("SubprivKey: %s, address: %s, type: %d, idx: %d", base58.Encode(privk.Serialize()), a, tp, idx)
 
 	return nk, nil
 }

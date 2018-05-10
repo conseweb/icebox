@@ -303,7 +303,8 @@ message SignTxRequest {
     // TODO: 该最大值未经验证
     required string dest = 5[(nanopb).max_size = 64];
     // TODO: 该最大值未经验证
-    required string txid = 6[(nanopb).max_size = 64];
+    required string tx_hash = 6[(nanopb).max_size = 64];
+    required uint32 tx_idx = 7;
 }
 
 message SignTxReply {

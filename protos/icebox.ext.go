@@ -261,13 +261,14 @@ func NewDeleteAddressRequest(tp, idx uint32, pass string) *DeleteAddressRequest 
 	return req
 }
 
-func NewSignTxRequest(tp, idx uint32, amount uint64, dest, txid, pass string) *SignTxRequest {
+func NewSignTxRequest(tp, idx uint32, amount uint64, dest, txhash string, txidx uint32, pass string) *SignTxRequest {
 	req := new(SignTxRequest)
 	req.Type = &tp
 	req.Idx = &idx
 	req.Amount = &amount
 	req.Dest = &dest
-	req.Txid = &txid
+	req.TxHash = &txhash
+	req.TxIdx = &txidx
 	req.Password = &pass
 	return req
 }

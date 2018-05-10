@@ -657,25 +657,26 @@ func (d *Handler) ListSecret(tp, site, offset, limit uint32, pwd string) (*pb.Li
 	return reply, nil
 }
 
-func (d *Handler) SignTx(tp, idx uint32, amount uint64, dest, txid, pwd string) (*pb.SignTxReply, error) {
+func (d *Handler) SignTx(tp, idx uint32, amount uint64, dest, txhash string, txidx uint32, pwd string) (*pb.SignTxReply, error) {
 	var err error
-	req := pb.NewSignTxRequest(tp, idx, amount, dest, txid, pwd)
+	req := pb.NewSignTxRequest(tp, idx, amount, dest, txhash, txidx, pwd)
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_SIGN_TX,sid, payload)
 
-	irep, xe := d.Client.Chat(context.Background(), msg)
+	chatRep, xe := d.Client.Chat(context.Background(), msg)
 	if xe != nil {
 		grpclog.Fatalln(xe)
 		return nil, xe
 	}
 
-	if irep.GetHeader().GetType() == pb.IceboxMessage_ERROR {
-		logger.Debug().Msgf("Device error: %s", irep.GetPayload())
+	if chatRep.GetHeader().GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", chatRep.GetPayload())
+		return nil, fmt.Errorf("Device error: %s", chatRep.GetPayload())
 	}
 
 	var caRep = &pb.SignTxReply{}
-	err = proto.Unmarshal(irep.GetPayload(), caRep)
+	err = proto.Unmarshal(chatRep.GetPayload(), caRep)
 	if err != nil {
 		grpclog.Fatalln(err)
 		return nil, err

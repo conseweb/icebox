@@ -19,7 +19,7 @@ type Transaction struct {
 	SignedTx           string `json:"signedtx"`
 }
 
-func CreateTransaction(secret string, destination string, amount int64, txHash string) (Transaction, error) {
+func CreateTransaction(secret string, destination string, amount int64, txHash string, srcIdx uint32) (Transaction, error) {
 	var transaction Transaction
 	wif, err := coinutil.DecodeWIF(secret)
 	if err != nil {
@@ -27,9 +27,11 @@ func CreateTransaction(secret string, destination string, amount int64, txHash s
 	}
 	net := env.RTEnv.GetNet()
 	addresspubkey, _ := coinutil.NewAddressPubKey(wif.PrivKey.PubKey().SerializeUncompressed(), net)
-	sourceTx := wire.NewMsgTx(wire.TxVersion)
+	// create new tx
+	newTx := wire.NewMsgTx(wire.TxVersion)
 	sourceUtxoHash, _ := chainhash.NewHashFromStr(txHash)
-	sourceUtxo := wire.NewOutPoint(sourceUtxoHash, 0)
+	sourceUtxo := wire.NewOutPoint(sourceUtxoHash, srcIdx)
+	// create txin for new tx
 	sourceTxIn := wire.NewTxIn(sourceUtxo, nil, nil)
 	destinationAddress, err := coinutil.DecodeAddress(destination, net)
 	sourceAddress, err := coinutil.DecodeAddress(addresspubkey.EncodeAddress(), net)
@@ -38,23 +40,25 @@ func CreateTransaction(secret string, destination string, amount int64, txHash s
 	}
 	destinationPkScript, _ := txscript.PayToAddrScript(destinationAddress)
 	sourcePkScript, _ := txscript.PayToAddrScript(sourceAddress)
+	// create txout for new tx
 	sourceTxOut := wire.NewTxOut(amount, sourcePkScript)
-	sourceTx.AddTxIn(sourceTxIn)
-	sourceTx.AddTxOut(sourceTxOut)
-	sourceTxHash := sourceTx.TxHash()
+	newTx.AddTxIn(sourceTxIn)
+	newTx.AddTxOut(sourceTxOut)
+	newTxHash := newTx.TxHash()
+	// create redeem Tx
 	redeemTx := wire.NewMsgTx(wire.TxVersion)
-	prevOut := wire.NewOutPoint(&sourceTxHash, 0)
+	prevOut := wire.NewOutPoint(&newTxHash, 0)
 	redeemTxIn := wire.NewTxIn(prevOut, nil, nil)
 	redeemTx.AddTxIn(redeemTxIn)
 	redeemTxOut := wire.NewTxOut(amount, destinationPkScript)
 	redeemTx.AddTxOut(redeemTxOut)
-	sigScript, err := txscript.SignatureScript(redeemTx, 0, sourceTx.TxOut[0].PkScript, txscript.SigHashAll, wif.PrivKey, false)
+	sigScript, err := txscript.SignatureScript(redeemTx, 0, newTx.TxOut[0].PkScript, txscript.SigHashAll, wif.PrivKey, false)
 	if err != nil {
 		return Transaction{}, err
 	}
 	redeemTx.TxIn[0].SignatureScript = sigScript
 	flags := txscript.StandardVerifyFlags
-	vm, err := txscript.NewEngine(sourceTx.TxOut[0].PkScript, redeemTx, 0, flags, nil, nil, amount)
+	vm, err := txscript.NewEngine(newTx.TxOut[0].PkScript, redeemTx, 0, flags, nil, nil, amount)
 	if err != nil {
 		return Transaction{}, err
 	}
@@ -63,9 +67,9 @@ func CreateTransaction(secret string, destination string, amount int64, txHash s
 	}
 	var unsignedTx bytes.Buffer
 	var signedTx bytes.Buffer
-	sourceTx.Serialize(&unsignedTx)
+	newTx.Serialize(&unsignedTx)
 	redeemTx.Serialize(&signedTx)
-	transaction.TxId = sourceTxHash.String()
+	transaction.TxId = newTxHash.String()
 	transaction.UnsignedTx = hex.EncodeToString(unsignedTx.Bytes())
 	transaction.Amount = amount
 	transaction.SignedTx = hex.EncodeToString(signedTx.Bytes())

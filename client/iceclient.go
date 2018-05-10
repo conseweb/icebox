@@ -127,7 +127,7 @@ func main() {
 	handler.CreateSecret(32, 1, common.Test_password)
 
 	{
-		secretReply, _ := handler.ListSecret(1, 32, 0, 3, common.Test_password)
+		secretReply, _ := handler.ListSecret(1, 32, 0, 4, common.Test_password)
 		offset := secretReply.GetOffset()
 		limit := secretReply.GetLimit()
 		total := secretReply.GetTotalRecords()
@@ -145,8 +145,15 @@ func main() {
 		}
 	}
 
+	// src: "1, 1671493468, mx8hhz3tWjbKkeeTXUyCPUuaJmY9U6SZse"
+	// dest: "1, 807294064, msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb"
+	if RTEnv.isTestNet {
+		handler.SignTx(1, 1671493468, 15000000, "msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb", "3ef58f2581ed01ab1ba231aeb77846d3340367e651fa6bb1022cdc2790e0698f", 0, common.Test_password)
+	} else {
+		// TODO: address should change to mainnet address
+		handler.SignTx(0, 1671493468, 15000000, "msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb", "3ef58f2581ed01ab1ba231aeb77846d3340367e651fa6bb1022cdc2790e0698f", 0, common.Test_password)
+	}
 
-	handler.SignTx(0, 115155635, 91234, "1KKKK6N21XKo48zWKuQKXdvSsCf95ibHFa", "81b4c832d70cb56ff957589752eb4125a4cab78a25a8fc52d6a09e5bd4404d48", common.Test_password)
 
 	// send reset request
 	//resetDevice(common)
