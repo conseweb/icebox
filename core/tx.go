@@ -6,8 +6,8 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"github.com/btcsuite/btcd/chaincfg"
 	"conseweb.com/wallet/icebox/coinutil"
+	"conseweb.com/wallet/icebox/core/env"
 )
 
 type Transaction struct {
@@ -25,13 +25,14 @@ func CreateTransaction(secret string, destination string, amount int64, txHash s
 	if err != nil {
 		return Transaction{}, err
 	}
-	addresspubkey, _ := coinutil.NewAddressPubKey(wif.PrivKey.PubKey().SerializeUncompressed(), &chaincfg.MainNetParams)
+	net := env.RTEnv.GetNet()
+	addresspubkey, _ := coinutil.NewAddressPubKey(wif.PrivKey.PubKey().SerializeUncompressed(), net)
 	sourceTx := wire.NewMsgTx(wire.TxVersion)
 	sourceUtxoHash, _ := chainhash.NewHashFromStr(txHash)
 	sourceUtxo := wire.NewOutPoint(sourceUtxoHash, 0)
 	sourceTxIn := wire.NewTxIn(sourceUtxo, nil, nil)
-	destinationAddress, err := coinutil.DecodeAddress(destination, &chaincfg.MainNetParams)
-	sourceAddress, err := coinutil.DecodeAddress(addresspubkey.EncodeAddress(), &chaincfg.MainNetParams)
+	destinationAddress, err := coinutil.DecodeAddress(destination, net)
+	sourceAddress, err := coinutil.DecodeAddress(addresspubkey.EncodeAddress(), net)
 	if err != nil {
 		return Transaction{}, err
 	}

@@ -56,8 +56,6 @@ imports:
   version: a72efd674f654961a11ac41aae72c0e43963fe6c
 - name: github.com/mndrix/btcutil
   version: d3a63a5752ecf3fbc06bd97365da752111c263df
-- name: github.com/Prabandham/paginator
-  version: 35018ba1fee3f96d05a7700b16d57cd1df8c71fb
 - name: github.com/rs/zerolog
   version: 57da509ee1873ad420b56633989c17bebc94e321
   subpackages:

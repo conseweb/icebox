@@ -18,7 +18,6 @@ import (
 	"os"
 	"golang.org/x/crypto/scrypt"
 	"io/ioutil"
-	"github.com/btcsuite/btcd/chaincfg"
 	"errors"
 	"conseweb.com/wallet/icebox/coinutil"
 	"golang.org/x/net/context"
@@ -32,6 +31,8 @@ import (
 	_ "github.com/mattn/go-sqlite3"  // must exists, or will cause -- sql: unknown driver "sqlite3"
 
 	"github.com/gogo/protobuf/proto"
+	"conseweb.com/wallet/icebox/core/paginator"
+	"conseweb.com/wallet/icebox/core/env"
 )
 
 //go:generate mockgen -source=helper.go -destination=../mocks/mock_Iceberg.go -package=mocks conseweb.com/wallet/icebox/core Iceberg
@@ -331,10 +332,7 @@ func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest)
 		}
 	}
 
-	totalPages := uint32(totalRecords) / limit
-	if uint32(totalRecords) % limit > 0 {
-		totalPages += 1
-	}
+	totalPages := paginator.GetTotalPages(uint32(totalRecords), limit)
 
 	addrs2 := make([]*pb.Address, limit)
 
@@ -380,7 +378,8 @@ func (s *iceHelper) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb.Sign
 
 	subKey, _ := s.generateSubPrivKey(tp, idx, pass)
 	xk, _ := subKey.ECPrivKey()
-	wif, err := coinutil.NewWIF(xk, &chaincfg.MainNetParams, true)
+	net := env.RTEnv.GetNet()
+	wif, err := coinutil.NewWIF(xk, net, true)
 	if err != nil {
 		return nil, err
 	}
@@ -437,7 +436,8 @@ func (s *iceHelper) generateSessionKey(r string) *bip32.ExtendedKey {
 	// 此处password只是需要外部提供一个不确定的输入，以增强安全性，并不用做加密
 	seed := bip39.NewSeed(mnemonic, r)
 
-	masterKey, _ := bip32.NewMaster(seed, &chaincfg.MainNetParams)
+	net := env.RTEnv.GetNet()
+	masterKey, _ := bip32.NewMaster(seed, net)
 
 	pk, _ := masterKey.ECPubKey()
 	pkHash := coinutil.Hash160(pk.SerializeCompressed())
@@ -462,6 +462,12 @@ func (s *iceHelper) resetDevice() (err error) {
 	}
 	if exists(common.Db_path) {
 		err = os.Remove(common.Db_path)
+		if err != nil {
+			return err
+		}
+	}
+	if exists(common.Debug_path) {
+		err = os.Remove(common.Debug_path)
 		if err != nil {
 			return err
 		}
@@ -498,7 +504,20 @@ func (s *iceHelper) newPrivKey(sfn, password string) (key *address.PrivateKey, e
 	// 此处password只是需要外部提供一个不确定的输入，以增强安全性，并不用做加密
 	seed := bip39.NewSeed(mnemonic, password)
 
-	masterKey, _ := bip32.NewMaster(seed, &chaincfg.MainNetParams)
+	net := env.RTEnv.GetNet()
+	masterKey, err := bip32.NewMaster(seed, net)
+	if err != nil {
+		for {
+			if err == bip32.ErrUnusableSeed {
+				masterKey, err = bip32.NewMaster(seed, net)
+				if err == nil {
+					break
+				}
+			} else {
+				return nil, err
+			}
+		}
+	}
 	publicKey, _ := masterKey.ECPubKey()
 
 	// Display mnemonic and keys
@@ -520,6 +539,15 @@ func (s *iceHelper) newPrivKey(sfn, password string) (key *address.PrivateKey, e
 		if err != nil {
 			return nil, err
 		}
+
+		if env.RTEnv.IsDebug() && env.RTEnv.IsTestNet() {
+			out := fmt.Sprintln("Mnemonic: ", mnemonic)
+			out += fmt.Sprintln("Master private key: ", masterKey)
+			out += fmt.Sprintln("Master public key: ", publicKey)
+
+			ioutil.WriteFile(common.Debug_path, []byte(out), 0644)
+		}
+
 		return key, nil
 	}
 
@@ -553,8 +581,10 @@ func (s *iceHelper) generateAddress(tp, idx uint32, password string) (*string, e
 	if err != nil {
 		return nil, err
 	}
-	addr, _ := nk.Address(&chaincfg.MainNetParams)
-	a := addr.EncodeAddress()
+	var aph *coinutil.AddressPubKeyHash
+	net := env.RTEnv.GetNet()
+	aph, _ = nk.Address(net)
+	a := aph.EncodeAddress()
 	logger.Debug().Msgf("Generated address: %s", a)
 	return &a, nil
 }

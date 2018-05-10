@@ -40,8 +40,5 @@ func HaveNext(total, limit, offset uint32) bool {
 		// last page
 		return false
 	}
-	//if (total > offset) && (offset > limit) {
-	//	return 1
-	//}
 	return true
 }

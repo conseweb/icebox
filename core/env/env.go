@@ -1,11 +1,6 @@
-package main
+package env
 
 import "github.com/btcsuite/btcd/chaincfg"
-
-//const (
-//	isDebug = true;
-//	isEncrypt = true;
-//)
 
 type Env struct {
 	isDebug bool

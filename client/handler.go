@@ -14,7 +14,6 @@ import (
 	"conseweb.com/wallet/icebox/coinutil/base58"
 	"github.com/btcsuite/btcd/btcec"
 	"conseweb.com/wallet/icebox/coinutil/bip39"
-	"github.com/btcsuite/btcd/chaincfg"
 	"github.com/gogo/protobuf/proto"
 	"encoding/binary"
 	"conseweb.com/wallet/icebox/common/crypto"
@@ -158,7 +157,8 @@ func (d *Handler) generateSessionKey(r string) *bip32.ExtendedKey {
 	// 此处password只是需要外部提供一个不确定的输入，以增强安全性，并不用做加密
 	seed := bip39.NewSeed(mnemonic, r)
 
-	masterKey, _ := bip32.NewMaster(seed, &chaincfg.MainNetParams)
+	net := RTEnv.GetNet()
+	masterKey, _ := bip32.NewMaster(seed, net)
 	publicKey, _ := masterKey.ECPubKey()
 
 	// Display mnemonic and keys
