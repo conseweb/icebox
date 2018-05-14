@@ -126,6 +126,7 @@ func VerifySig(req *IceboxMessage, k *btcec.PublicKey) bool {
 
 func AddSignatureToMsg(msg *IceboxMessage, privKey *btcec.PrivateKey) error {
 	pk := ecdsa.PrivateKey(*privKey)
+	// now msg.Signature stores msg's hash
 	r, s, err := ecdsa.Sign(rand.Reader, &pk, msg.Signature)
 	if err != nil {
 		return err

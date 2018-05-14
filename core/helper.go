@@ -379,13 +379,14 @@ func (s *iceHelper) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb.Sign
 
 	subKey, _ := s.generateSubPrivKey(tp, idx, pass)
 	xk, _ := subKey.ECPrivKey()
+	logger.Debug().Msgf("generateSubPrivKey: %d, %d, %s, %s", tp, idx, hex.EncodeToString(xk.Serialize()), base58.Encode(xk.PubKey().SerializeCompressed()))
 	net := env.RTEnv.GetNet()
 	wif, err := coinutil.NewWIF(xk, net, true)
 	if err != nil {
 		return nil, err
 	}
 	// TODO: txhash should be generated from transaction
-	tx, err := CreateTransaction(wif.String(), dest, int64(amount), txhash, txidx)
+	tx, err := CreateSignedTx(wif.String(), dest, amount, txhash, txidx)
 	if err != nil {
 		return nil, err
 	}
@@ -577,8 +578,8 @@ func (s *iceHelper) generateSubPrivKey(tp, idx uint32, password string) (*bip32.
 	net := env.RTEnv.GetNet()
 	aph, _ = nk.Address(net)
 	a := aph.EncodeAddress()
-	logger.Debug().Msgf("Generated address: %s", a)
-	logger.Debug().Msgf("SubprivKey: %s, address: %s, type: %d, idx: %d", base58.Encode(privk.Serialize()), a, tp, idx)
+	//logger.Debug().Msgf("Generated address: %s", a)
+	logger.Debug().Msgf("SubprivKey: %s, address: %s, type: %d, idx: %d", hex.EncodeToString(privk.Serialize()), a, tp, idx)
 
 	return nk, nil
 }

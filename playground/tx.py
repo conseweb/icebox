@@ -1,5 +1,50 @@
 
-import pycoin
+#!/usr/bin/env python3
+
+import os
+import argparse
+from binascii import hexlify, unhexlify
+import sys
+
+from urllib.error import HTTPError
+
+from pycoin.key import Key
+from pycoin.tx.tx_utils import create_tx, sign_tx
+from pycoin.services import spendables_for_address, get_tx_db
+from pycoin.services.blockchain_info import send_tx
+
+parser = argparse.ArgumentParser()
+parser.add_argument(
+    '--privkey-bytes', help='provide hexlified raw privkey bytes', default='', type=str)
+parser.add_argument('--send-all-to', help='where to send all the money at this address',
+                    default='1MaxKayeQg4YhFkzFz4x6NDeeNv1bwKKVA', type=str)
+args = parser.parse_args()
+
+key_bytes = unhexlify(args.privkey_bytes.encode()
+                      ) if args.privkey_bytes != '' else os.urandom(32)
+private_key = Key(secret_exponent=int.from_bytes(key_bytes, 'big'))
+address = private_key.address()
+
+print('Your Bitcoin address is...', address)
+print('Your --privkey-bytes', hexlify(key_bytes).decode())
+
+try:
+    spendables = spendables_for_address(address, None)
+    print('Spending', spendables)
+except HTTPError as e:
+    print('Blockchain throws a 500 error if there are no spendables. Try sending some coins to',
+          address, 'and try again. Remeber to copy privkey-bytes.')
+    sys.exit()
+
+tx = create_tx(spendables, [args.send_all_to])
+print('TX created:', repr(tx))
+
+sign_tx(tx, [private_key.wif(False), private_key.wif(True)])
+print('Final TX:', tx)
+
+# print('TX Send Attempt:', send_tx(tx))
+
+
 
 '''
 tx_in = TxIn("<utxo hash in binary here>", <utxo position, usually between 0 and 5>)
@@ -9,7 +54,7 @@ tx = Tx(1, [tx_in], [tx_out])
 lookup = <this part you have to figure out>
 tx.sign(lookup)
 print tx.as_hex()
-'''
+
 
 
 def privateKeyToWif(key_hex):
@@ -72,7 +117,7 @@ def makeSignedTransaction(privateKey, outputTransactionHash, sourceIndex, script
     verifyTxnSignature(signed_txn)
     return signed_txn
 
-    
+
 # Warning: this random function is not cryptographically strong and is just for example
 private_key = ''.join(['%x' % random.randrange(16) for x in range(0, 64)])
 print keyUtils.privateKeyToWif(private_key)
@@ -88,3 +133,4 @@ tx = Tx(1, [tx_in], [tx_out])
 lookup = <this part you have to figure out>
 tx.sign(lookup)
 print tx.as_hex()
+'''
