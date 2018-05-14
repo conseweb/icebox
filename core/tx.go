@@ -18,6 +18,15 @@ import (
 	"github.com/btcsuite/btcutil"
 )
 
+type utxo struct {
+	Address     string
+	TxID        string
+	OutputIndex uint32
+	Script      string
+	Satoshis    int64
+	Height      int64
+}
+
 type Transaction struct {
 	TxId               string `json:"txid"`
 	SourceAddress      string `json:"source_address"`
@@ -52,7 +61,7 @@ func createScriptSig(rawTransaction []byte, privateKey btcec.PrivateKey) (script
 
 	shaHash2 := sha256.New()
 	shaHash2.Write(hash)
-	txHash = shaHash2.Sum(nil)[:32]
+	txHash = shaHash2.Sum(nil)
 
 	//Sign the raw transaction
 	privK := ecdsa.PrivateKey(privateKey)
@@ -187,8 +196,8 @@ func CreateSignedTx(wifPrivKey string, destination string, amount uint64, txHash
 	//In order to construct the raw transaction we need the input transaction hash,
 	//the destination address, the number of satoshis to send, and the scriptSig
 	//which is temporarily (prior to signing) the ScriptPubKey of the input transaction.
-	base58PubAddr := addresspubkey.EncodeAddress()
-	tempScriptSig := createScriptPubKey(base58PubAddr)
+	base58FromAddr := addresspubkey.EncodeAddress()
+	tempScriptSig := createScriptPubKey(base58FromAddr)
 
 	rawTransaction := createRawTransaction(txHash, srcIdx, destination, amount, tempScriptSig)
 
@@ -207,6 +216,7 @@ func CreateSignedTx(wifPrivKey string, destination string, amount uint64, txHash
 
 	//Sign the raw transaction, and output it to the console.
 	scriptSig, txID, err := createScriptSig(rawTransactionWithHashCodeType, *wif.PrivKey)
+	logger.Debug().Msgf("RawTx: %s, TxID: %s", hex.EncodeToString(rawTransaction), hex.EncodeToString(txID))
 	// create signed tx with scriptsig
 	finalTransaction := createRawTransaction(txHash, srcIdx, destination, amount, scriptSig)
 
@@ -215,7 +225,7 @@ func CreateSignedTx(wifPrivKey string, destination string, amount uint64, txHash
 	finalTransactionHex := hex.EncodeToString(finalTransaction)
 	transaction.SignedTx = finalTransactionHex
 	transaction.Amount = int64(amount)
-	transaction.SourceAddress = base58PubAddr
+	transaction.SourceAddress = base58FromAddr
 	transaction.DestinationAddress = destination
 
 	return &transaction,nil
@@ -226,13 +236,13 @@ func CreateSignedTx(wifPrivKey string, destination string, amount uint64, txHash
 // to: address, amount
 // change: address
 // sign: private key
-func CreateTransaction(secret string, destination string, amount uint64, txHash string, srcIdx uint32) (Transaction, error) {
+func CreateTransaction(secret string, destination string, amount uint64, txHash string, srcIdx uint32) (*Transaction, error) {
 	logger.Debug().Msgf("CreateTransaction: %s, %s, %d, %s, %d", secret, destination, amount, txHash, srcIdx)
 	var transaction Transaction
 	// get source private key
 	wif, err := coinutil.DecodeWIF(secret)
 	if err != nil {
-		return Transaction{}, err
+		return nil, err
 	}
 
 	net := env.RTEnv.GetNet()
@@ -242,31 +252,31 @@ func CreateTransaction(secret string, destination string, amount uint64, txHash 
 	addresspubkey, err := coinutil.NewAddressPubKey(wif.PrivKey.PubKey().SerializeUncompressed(), net)
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("coinutil.NewAddressPubKey")
-		return Transaction{}, err
+		return nil, err
 	}
 	// create new tx == unsigned Tx
 	newTx := wire.NewMsgTx(wire.TxVersion)
 	sourceUtxoHash, _ := chainhash.NewHashFromStr(txHash)
 	sourceUtxo := wire.NewOutPoint(sourceUtxoHash, srcIdx)
-	toAddr, err := coinutil.DecodeAddress(destination, net)
+	toAddr, err := btcutil.DecodeAddress(destination, net)
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("coinutil.DecodeAddress")
-		return Transaction{}, err
+		return nil, err
 	}
-	fromAddr, err := coinutil.DecodeAddress(addresspubkey.String(), net)
+	fromAddr, err := btcutil.DecodeAddress(addresspubkey.String(), net)
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("coinutil.DecodeAddress")
-		return Transaction{}, err
+		return nil, err
 	}
-	sourcePkScript, err := txscript.PayToAddrScript(btcutil.Address(fromAddr))
+	sourcePkScript, err := txscript.PayToAddrScript(fromAddr)
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("txscript.PayToAddrScript. fromAddr: %s", fromAddr.EncodeAddress())
-		return Transaction{}, err
+		return nil, err
 	}
 	destinationPkScript, err := txscript.PayToAddrScript(toAddr)
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("txscript.PayToAddrScript. toAddr: %s", toAddr.EncodeAddress())
-		return Transaction{}, err
+		return nil, err
 	}
 	// create txin for new tx
 	sourceTxIn := wire.NewTxIn(sourceUtxo, sourcePkScript, nil)
@@ -279,7 +289,7 @@ func CreateTransaction(secret string, destination string, amount uint64, txHash 
 
 	// create redeem Tx == signed Tx
 	redeemTx := wire.NewMsgTx(wire.TxVersion)
-	prevOut := wire.NewOutPoint(&newTxHash, 0)
+	prevOut := wire.NewOutPoint(sourceUtxoHash, 0)
 	redeemTxIn := wire.NewTxIn(prevOut, nil, nil)
 	redeemTx.AddTxIn(redeemTxIn)
 	redeemTxOut := wire.NewTxOut(int64(amount), destinationPkScript)
@@ -287,7 +297,7 @@ func CreateTransaction(secret string, destination string, amount uint64, txHash 
 	sigScript, err := txscript.SignatureScript(redeemTx, 0, newTx.TxOut[0].PkScript, txscript.SigHashAll, wif.PrivKey, false)
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("txscript.SignatureScript")
-		return Transaction{}, err
+		return nil, err
 	}
 	redeemTx.TxIn[0].SignatureScript = sigScript
 
@@ -308,6 +318,7 @@ func CreateTransaction(secret string, destination string, amount uint64, txHash 
 
 	logger.Debug().Msgf("Unsigned Tx: %s", hex.EncodeToString(unsignedTx.Bytes()))
 	logger.Debug().Msgf("Signed Tx: %s", hex.EncodeToString(signedTx.Bytes()))
+	logger.Debug().Msgf("Tx Hash: %s", newTxHash.String())
 
 	transaction.TxId = newTxHash.String()
 	transaction.UnsignedTx = hex.EncodeToString(unsignedTx.Bytes())
@@ -315,7 +326,7 @@ func CreateTransaction(secret string, destination string, amount uint64, txHash 
 	transaction.SignedTx = hex.EncodeToString(signedTx.Bytes())
 	transaction.SourceAddress = fromAddr.EncodeAddress()
 	transaction.DestinationAddress = toAddr.EncodeAddress()
-	return transaction, nil
+	return &transaction, nil
 }
 
 // unsigned tx:
@@ -329,16 +340,174 @@ func CreateTransaction(secret string, destination string, amount uint64, txHash 
 // 01
 // c0e1e400000000000000000000
 
+// CreateTransaction: unsigned tx:
+// 01000000018f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e0000000043410459c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c0b8424f2fa6398404927fcf6b5b492e7fc508b7950ed8e84ce6c01ecff71828cacffffffff01c0e1e400000000001976a91482e81438d7fa15ce205a9683dc786c241bc820f288ac00000000
+//
 // 01000000
 // 01
 // 8f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e
 // 00000000
-// 00
+// 43
+// 41 dec=65
+// 0459c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c0b8424f2fa6398404927fcf6b5b492e7fc508b7950ed8e84ce6c01ecff71828c
+// ac
 // ffffffff
 // 01
 // c0e1e40000000000
-// 0000000000
+// 19 76 a9 14 82e81438d7fa15ce205a9683dc786c241bc820f2 88 ac
+// 00000000
+
+// CreateTransaction - signed tx:
+// 0100000001db840a8aefe7bda5b1f02c949ae6607758b2951299a1814e4afa24e06acd4ccc000000008b483045022100ad3650264e19b398d1636f476180ac189371015896384b5873d0cb907ab75f9402201d4a4db1727b4fe085e722ab05431ba8998f118135b09cc13e807e9a33d99b1601410459c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c0b8424f2fa6398404927fcf6b5b492e7fc508b7950ed8e84ce6c01ecff71828cffffffff01c0e1e400000000001976a91482e81438d7fa15ce205a9683dc786c241bc820f288ac00000000
+//
+// 01000000
+// 01
+// db840a8aefe7bda5b1f02c949ae6607758b2951299a1814e4afa24e06acd4ccc
+// 00000000
+// 8b
+// 48
+// 3045022100ad3650264e19b398d1636f476180ac189371015896384b5873d0cb907ab75f9402201d4a4db1727b4fe085e722ab05431ba8998f118135b09cc13e807e9a33d99b16 01
+// 41
+// 0459c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c0b8424f2fa6398404927fcf6b5b492e7fc508b7950ed8e84ce6c01ecff71828c
+// ffffffff
+// 01
+// c0e1e40000000000
+// 19 76 a9 14 82e81438d7fa15ce205a9683dc786c241bc820f2 88 ac
+// 00000000
+
+
+// CreateSignedTx - raw tx:
+// 01000000018f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e000000001976a914e20b2d724ff385e3172b07bad14187c682f8b22e88acffffffff01c0e1e400000000001976a91482e81438d7fa15ce205a9683dc786c241bc820f288ac00000000
+//
+//  |||
+//	|||
+//   V
+//
+// CreateSignedTx - signed tx:
+//
+// 01000000
+// 01
+// 8f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e
+// 00000000
+// 84
+// 41
+// a41ea0ae1ef15ba31c98f40d46a76c836af740dfef6ac82bf78e42904bebe74b2ec2f68846bd1f40f240d09f441884160ec8700f6d8cd99677eac04ca8ce2cf1 01
+// 41
+// 0459c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c0b8424f2fa6398404927fcf6b5b492e7fc508b7950ed8e84ce6c01ecff71828c
+// ffffffff
+// 01
+// c0e1e40000000000
+// 19 76 a9 14 82e81438d7fa15ce205a9683dc786c241bc820f2 88 ac
+// 00000000
+//
+//  |||
+//	|||
+//   V
+//
+// Decoded Transaction (https://live.blockcypher.com/btc/decodetx/)
+//{
+//	"addresses": [
+//		"mx8hhz3tWjbKkeeTXUyCPUuaJmY9U6SZse",
+//		"msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb"
+//	],
+//	"block_height": -1,
+//	"block_index": -1,
+//	"confirmations": 0,
+//	"double_spend": false,
+//	"fees": 50000000,
+//	"hash": "fd6b4f470aa65f9b4713637ffaecb21fcf6df0f1fa3f79e72a0fd6331eb709d2",
+//	"inputs": [
+//		{
+//			"addresses": [
+//				"mx8hhz3tWjbKkeeTXUyCPUuaJmY9U6SZse"
+//			],
+//			"age": 1297102,
+//			"output_index": 0,
+//			"output_value": 65000000,
+//			"prev_hash": "3ef58f2581ed01ab1ba231aeb77846d3340367e651fa6bb1022cdc2790e0698f",
+//			"script": "41083368e1bfbf29987dfec4645285c7dcd7950b866cc1b52fcd639628e73c562add8dcb03d62ee76473074bedc4a962ff8284a714a5977a9d56400c1538c1a4f001410459c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c0b8424f2fa6398404927fcf6b5b492e7fc508b7950ed8e84ce6c01ecff71828c",
+//			"script_type": "pay-to-pubkey-hash",
+//			"sequence": 4294967295
+//		}
+//	],
+//	"outputs": [
+//		{
+//			"addresses": [
+//				"msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb"
+//			],
+//			"script": "76a91482e81438d7fa15ce205a9683dc786c241bc820f288ac",
+//			"script_type": "pay-to-pubkey-hash",
+//			"value": 15000000
+//		}
+//	],
+//	"preference": "high",
+//	"received": "2018-05-14T09:14:12.899437518Z",
+//	"relayed_by": "54.224.71.237",
+//	"size": 217,
+//	"total": 15000000,
+//	"ver": 1,
+//	"vin_sz": 1,
+//	"vout_sz": 1
+//}
 
 // signed tx:
 //
 // 0100000001ec14e766975d7ec991c313a6f9670924adbcd79b8c38859dfb7e69608016b30a000000008a47304402204af3ee6e1e6443cb5b84ad4964e4f7bc360c4742b41a01f163d90b2d11f690fc02206ba61fc16acb2355adb9bc30e457f22cd3fab6eb782e808bff7a448d888381ce01410459c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c0b8424f2fa6398404927fcf6b5b492e7fc508b7950ed8e84ce6c01ecff71828cffffffff01c0e1e400000000000000000000
+
+// raw tx:
+// 01000000018f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e000000001976a914e20b2d724ff385e3172b07bad14187c682f8b22e88acffffffff0130abdf03000000001976a91482e81438d7fa15ce205a9683dc786c241bc820f288ac00000000
+//
+// 01000000
+// 01
+// 8f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e
+// 00000000
+// 19 76 a9 14 e20b2d724ff385e3172b07bad14187c682f8b22e 88 ac
+// ffffffff
+// 01
+// 30abdf0300000000
+// 19 76 a9 14 82e81438d7fa15ce205a9683dc786c241bc820f2 88 ac
+// 00000000
+
+// signed tx:
+// 01000000018f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e000000008441f5cf829daaf35775f688a43ecf17de3387089420657c5dbc6a994ea82076bbe9e1b80ca08e9e24ecc98ee9c684dbf506fc55e9801f76d289b6b001fb0d25b85d01410459c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c0b8424f2fa6398404927fcf6b5b492e7fc508b7950ed8e84ce6c01ecff71828cffffffff0130abdf03000000001976a91482e81438d7fa15ce205a9683dc786c241bc820f288ac00000000
+//
+// 01000000
+// 01
+// 8f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e
+// 00000000
+// 84
+// 41 	dec=65
+// f5cf829daaf35775f688a43ecf17de3387089420657c5dbc6a994ea82076bbe9e1b80ca08e9e24ecc98ee9c684dbf506fc55e9801f76d289b6b001fb0d25b85d 01
+// 41	dec=65
+// 0459c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c0b8424f2fa6398404927fcf6b5b492e7fc508b7950ed8e84ce6c01ecff71828c
+// ffffffff
+// 01
+// 30abdf0300000000
+// 19 76 a9 14 82e81438d7fa15ce205a9683dc786c241bc820f2 88 ac
+// 00000000
+
+// 01000000
+// 01
+// 8f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e
+// 00000000
+// 84
+// 41
+// 0e01210b77c264ff000a152a6a2359d815ce2b97fdd98468a91a281b37dc5819798e907adb5b8be40fd7258a16248a257afcf7f7860031e3de1a831030bba1de 01
+// 41
+// 0459c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c0b8424f2fa6398404927fcf6b5b492e7fc508b7950ed8e84ce6c01ecff71828c
+// ffffffff
+// 01
+// 30abdf0300000000
+// 19 76 a9 14 82e81438d7fa15ce205a9683dc786c241bc820f2 88 ac
+// 00000000
+
+// 01000000
+// 01
+// 8f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e
+// 00000000
+// 0376a914
+// ffffffff
+// 01
+// 30abdf0300000000
+// 19 76 a9 14 82e81438d7fa15ce205a9683dc786c241bc820f2 88 ac
+// 00000000

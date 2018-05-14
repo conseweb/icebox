@@ -146,13 +146,16 @@ func main() {
 	}
 
 
-	// src: "1, 1671493468, mx8hhz3tWjbKkeeTXUyCPUuaJmY9U6SZse", priv: hex:68855a72a1e728d332025f5813ef35e8a6c1a8f5fb43e610c149b782ee290538
+	// src: "1, 1671493468,
+	// addr: base58: mx8hhz3tWjbKkeeTXUyCPUuaJmY9U6SZse",
+	// priv: hex: 68855a72a1e728d332025f5813ef35e8a6c1a8f5fb43e610c149b782ee290538
+	// pub key: hex: 0259c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c
 	// dest: "1, 807294064, msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb"
 	if RTEnv.isTestNet {
-		handler.SignTx(1, 1671493468, 15000000, "msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb", "3ef58f2581ed01ab1ba231aeb77846d3340367e651fa6bb1022cdc2790e0698f", 0, common.Test_password)
+		handler.SignTx(1, 1671493468, 64990000, "msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb", "3ef58f2581ed01ab1ba231aeb77846d3340367e651fa6bb1022cdc2790e0698f", 0, common.Test_password)
 	} else {
 		// TODO: address should change to mainnet address
-		handler.SignTx(0, 1671493468, 15000000, "msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb", "3ef58f2581ed01ab1ba231aeb77846d3340367e651fa6bb1022cdc2790e0698f", 0, common.Test_password)
+		handler.SignTx(0, 1671493468, 64990000, "msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb", "3ef58f2581ed01ab1ba231aeb77846d3340367e651fa6bb1022cdc2790e0698f", 0, common.Test_password)
 	}
 
 
