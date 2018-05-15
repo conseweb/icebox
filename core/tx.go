@@ -9,11 +9,8 @@ import (
 	"conseweb.com/wallet/icebox/coinutil"
 	"conseweb.com/wallet/icebox/core/env"
 	"github.com/prettymuchbryce/hellobitcoin/base58check"
-	"crypto/sha256"
 	"log"
-	"crypto/rand"
 	"encoding/binary"
-	"crypto/ecdsa"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil"
 )
@@ -49,30 +46,34 @@ func createScriptPubKey(publicKeyBase58 string) []byte {
 	return scriptPubKey.Bytes()
 }
 
+func sign(private, data []byte) ([]byte, error) {
+	privkey, _ := btcec.PrivKeyFromBytes(btcec.S256(), private)
+	sig, err := privkey.Sign(data)
+	if err != nil {
+		return nil, err
+	}
+	return sig.Serialize(), nil
+}
+
 // createScriptSig
 // createUnlockScript
 // createScriptSig
-func createScriptSig(rawTransaction []byte, privateKey btcec.PrivateKey) (scriptSig, txHash []byte, err error) {
+func createScriptSig(rawTransaction []byte, privateKey btcec.PrivateKey, compressed bool) (scriptSig, txHash []byte, err error) {
 	//Here we start the process of signing the raw transaction.
 	//Hash the raw transaction twice before the signing
-	shaHash := sha256.New()
-	shaHash.Write(rawTransaction)
-	var hash []byte = shaHash.Sum(nil)
-
-	shaHash2 := sha256.New()
-	shaHash2.Write(hash)
-	txHash = shaHash2.Sum(nil)
+	txHash = DoubleHash256(rawTransaction)
 
 	//Sign the raw transaction
-	privK := ecdsa.PrivateKey(privateKey)
+	//privK := ecdsa.PrivateKey(privateKey)
 
-	r, s, err := ecdsa.Sign(rand.Reader, &privK, txHash)
+	//r, s, err := ecdsa.Sign(rand.Reader, &privK, txHash)
+	signedTx, err := sign(privateKey.Serialize(), txHash)
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("ecdsa.Sign")
 		return nil, nil, err
 	}
-	signedTx := r.Bytes()
-	signedTx = append(signedTx, s.Bytes()...)
+	//signedTx := r.Bytes()
+	//signedTx = append(signedTx, s.Bytes()...)
 
 	hashCodeType, err := hex.DecodeString("01")
 	if err != nil {
@@ -84,8 +85,13 @@ func createScriptSig(rawTransaction []byte, privateKey btcec.PrivateKey) (script
 	signedTxLength := byte(len(signedTx) + 1)
 
 	pubK := privateKey.PubKey()
-	// TODO: use compressed public key
-	publicKeyBytes := pubK.SerializeUncompressed()
+	var publicKeyBytes []byte
+	if compressed {
+		publicKeyBytes = pubK.SerializeCompressed()
+	} else {
+		publicKeyBytes = pubK.SerializeUncompressed()
+	}
+
 	var publicKeyBuffer bytes.Buffer
 	publicKeyBuffer.Write(publicKeyBytes)
 	pubKeyLength := byte(len(publicKeyBuffer.Bytes()))
@@ -180,7 +186,7 @@ func createRawTransaction(inputTxHash string, inputTxIdx uint32, base58DestAddr 
 	return buffer.Bytes()
 }
 
-func CreateSignedTx(wifPrivKey string, destination string, amount uint64, txHash string, srcIdx uint32) (*Transaction, error) {
+func CreateSignedTx(wifPrivKey string, destination string, amount uint64, txHash string, srcIdx uint32, compressed bool) (*Transaction, error) {
 	var transaction Transaction
 	// get source private key
 	wif, err := coinutil.DecodeWIF(wifPrivKey)
@@ -190,7 +196,12 @@ func CreateSignedTx(wifPrivKey string, destination string, amount uint64, txHash
 
 	net := env.RTEnv.GetNet()
 	// decode source public key
-	addresspubkey, _ := coinutil.NewAddressPubKey(wif.PrivKey.PubKey().SerializeUncompressed(), net)
+	var addresspubkey *coinutil.AddressPubKey
+	if compressed {
+		addresspubkey, _ = coinutil.NewAddressPubKey(wif.PrivKey.PubKey().SerializeCompressed(), net)
+	} else {
+		addresspubkey, _ = coinutil.NewAddressPubKey(wif.PrivKey.PubKey().SerializeUncompressed(), net)
+	}
 
 	//First we create the raw transaction.
 	//In order to construct the raw transaction we need the input transaction hash,
@@ -198,6 +209,8 @@ func CreateSignedTx(wifPrivKey string, destination string, amount uint64, txHash
 	//which is temporarily (prior to signing) the ScriptPubKey of the input transaction.
 	base58FromAddr := addresspubkey.EncodeAddress()
 	tempScriptSig := createScriptPubKey(base58FromAddr)
+
+	logger.Debug().Msgf("temp scriptSig: %s, fromAddr: %s", hex.EncodeToString(tempScriptSig), base58FromAddr)
 
 	rawTransaction := createRawTransaction(txHash, srcIdx, destination, amount, tempScriptSig)
 
@@ -215,7 +228,7 @@ func CreateSignedTx(wifPrivKey string, destination string, amount uint64, txHash
 	rawTransactionWithHashCodeType := rawTransactionBuffer.Bytes()
 
 	//Sign the raw transaction, and output it to the console.
-	scriptSig, txID, err := createScriptSig(rawTransactionWithHashCodeType, *wif.PrivKey)
+	scriptSig, txID, err := createScriptSig(rawTransactionWithHashCodeType, *wif.PrivKey, true)
 	logger.Debug().Msgf("RawTx: %s, TxID: %s", hex.EncodeToString(rawTransaction), hex.EncodeToString(txID))
 	// create signed tx with scriptsig
 	finalTransaction := createRawTransaction(txHash, srcIdx, destination, amount, scriptSig)

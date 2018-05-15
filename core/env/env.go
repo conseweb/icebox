@@ -35,6 +35,10 @@ func (e *Env) GetNet() *chaincfg.Params {
 	return net
 }
 
+func (e *Env) SetNet(enable bool) {
+	e.isTestNet = enable
+}
+
 func init() {
 	RTEnv.isDebug = true
 	RTEnv.isEncrypt = true

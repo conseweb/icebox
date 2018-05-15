@@ -384,8 +384,9 @@ func (s *iceHelper) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb.Sign
 	if err != nil {
 		return nil, err
 	}
+	logger.Debug().Msgf("PrivKey: %s, WIF: %s", hex.EncodeToString(xk.Serialize()), wif.String())
 	// TODO: txhash should be generated from transaction
-	tx, err := CreateSignedTx(wif.String(), dest, amount, txhash, txidx)
+	tx, err := CreateSignedTx(wif.String(), dest, amount, txhash, txidx, true)
 	if err != nil {
 		return nil, err
 	}
@@ -580,7 +581,6 @@ func (s *iceHelper) generateSubPrivKey(tp, idx uint32, password string) (*bip32.
 	net := env.RTEnv.GetNet()
 	aph, _ = nk.Address(net)
 	a := aph.EncodeAddress()
-	//logger.Debug().Msgf("Generated address: %s", a)
 	logger.Debug().Msgf("SubprivKey: %s, pubKey: %s, address: %s, type: %d, idx: %d", hexPrivK, hexPubK, a, tp, idx)
 
 	return nk, nil
