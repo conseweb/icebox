@@ -5,7 +5,7 @@ import (
 	"crypto/sha256"
 )
 
-func Hash256(in []byte) []byte {
+func DHash256(in []byte) []byte {
 	s1 := sha256.New()
 	s2 := sha256.New()
 

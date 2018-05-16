@@ -233,6 +233,14 @@ func NewCreateSecretRequest(tp, site, account uint32, pass string) *CreateSecret
 	return req
 }
 
+func NewGetAddressRequest(tp, idx uint32,  pass string) *GetAddressRequest {
+	req := new(GetAddressRequest)
+	req.Type = &tp
+	req.Idx = &idx
+	req.Password = &pass
+	return req
+}
+
 func NewListAddressRequest(tp, offset, limit uint32,  pass string) *ListAddressRequest {
 	req := new(ListAddressRequest)
 	req.Type = &tp
@@ -270,6 +278,15 @@ func NewSignTxRequest(tp, idx uint32, amount uint64, dest, txhash string, txidx 
 	req.Dest = &dest
 	req.TxHash = &txhash
 	req.TxIdx = &txidx
+	req.Password = &pass
+	return req
+}
+
+func NewSignMsgRequest(tp, idx uint32, msg []byte, pass string) *SignMsgRequest {
+	req := new(SignMsgRequest)
+	req.Type = &tp
+	req.Idx = &idx
+	req.Message = msg
 	req.Password = &pass
 	return req
 }
@@ -356,6 +373,13 @@ func NewCreateSecretReply(tp, site, account, idx uint32, secret string) *CreateS
 	return reply
 }
 
+func NewGetAddressReply(addr Address) *GetAddressReply {
+	reply := new(GetAddressReply)
+	reply.Addr = &addr
+
+	return reply
+}
+
 func NewListAddressReply(num, page, offset, limit uint32, addrs []*Address) *ListAddressReply {
 	reply := new(ListAddressReply)
 	reply.TotalRecords = &num
@@ -391,9 +415,15 @@ func NewDeleteAddressReply(addr string) *DeleteAddressReply {
 	return reply
 }
 
-func NewSignTxReply(tx string) *SignTxReply {
+func NewSignTxReply(tx []byte) *SignTxReply {
 	reply := new(SignTxReply)
-	reply.SignedTx = &tx
+	reply.SignedTx = tx
+	return reply
+}
+
+func NewSignMsgReply(msg []byte) *SignMsgReply {
+	reply := new(SignMsgReply)
+	reply.Signed = msg
 	return reply
 }
 

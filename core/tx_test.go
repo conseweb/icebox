@@ -25,6 +25,7 @@ type tx_test struct {
 	hexScriptSig   string
 	rawTx          string
 	signedTx	   string
+	resultTxHash   string
 }
 
 const (
@@ -47,6 +48,7 @@ var tx_tests = []tx_test{
 		scriptTemplate,
 		"01000000018f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e000000001976a914b644cf69fcc76fef6db694e671316e55a1a2e0b288acffffffff0130abdf03000000001976a91482e81438d7fa15ce205a9683dc786c241bc820f288ac00000000",
 		"01000000018f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e000000006a47304402202230eb38890dbde121b4c0deee44a53adac32f891792bdb46f27fac437d15fa5022045250ef5cf5a8d62135b5995903c8a1c19fa270ce42b17c13cfe884f2a1d52ea01210259c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8cffffffff0130abdf03000000001976a91482e81438d7fa15ce205a9683dc786c241bc820f288ac00000000",
+		"c5a08c595b47c0be165aeb297505c82c7cb6c4a6293eb4c9c99c7e7cca86de7f", // 中间结果的hash: "9d5f89bd7855e6dcfb0fb7aef8b4748d7b3082f313e88eb7936b19c95de454d9", 使用中间结果(rawTx)的hash计算的sig
 	},
 	// amount changed
 	{
@@ -61,6 +63,7 @@ var tx_tests = []tx_test{
 		scriptTemplate,
 		"01000000018f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e000000001976a914e20b2d724ff385e3172b07bad14187c682f8b22e88acffffffff0130abdf03000000001976a91482e81438d7fa15ce205a9683dc786c241bc820f288ac00000000",
 		"",
+		"",
 	},
 	{
 		"6400191867352c57123318dc15875fc0bf8b3104ba9b28a2018a35f6366af71f",
@@ -73,7 +76,8 @@ var tx_tests = []tx_test{
 		650000,
 		scriptTemplate,
 		"",
-		"01000000018f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e000000006a47304402202230eb38890dbde121b4c0deee44a53adac32f891792bdb46f27fac437d15fa5022045250ef5cf5a8d62135b5995903c8a1c19fa270ce42b17c13cfe884f2a1d52ea01210259c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8cffffffff0130abdf03000000001976a91482e81438d7fa15ce205a9683dc786c241bc820f288ac00000000",
+		"010000000158467395b8ce5365df91968b9dbe52b1449ceca4b9ad4edc490ad6b8ecc4c332010000006b483045022100fc8c31f256b0cbb757e5c661d94cde5e2bfe4603d7d9474bd1bf21ffa198c59c022018e5fb2d3f7ae220bf9e83f6b4885fc9469ba2e50bf2555dbad98bb86dc3cf9601210259c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8cffffffff02c0e1e400000000001976a914af741895ba6bd639c1656dfca4f345fb6a25dce188ac0191a805000000001976a914b644cf69fcc76fef6db694e671316e55a1a2e0b288ac00000000",
+		"",
 	},
 }
 
@@ -188,7 +192,7 @@ func TestDecoceWif(t *testing.T) {
 	})
 }
 
-func TestCreateDoubleHash(t *testing.T) {
+func TestSignedTxHash(t *testing.T) {
 	Convey(`Create double hash should working.`, t, func() {
 
 		inputTxHash := tx_tests[0].inputTxHash
@@ -204,28 +208,22 @@ func TestCreateDoubleHash(t *testing.T) {
 	})
 }
 
-//func TestSignature(t *testing.T) {
-//	Convey(`Ecc signature should working.`, t, func() {
-//		wif, err := coinutil.DecodeWIF(tx_tests[0].wif)
-//		So(err, ShouldBeEmpty)
-//		So(hex.EncodeToString(wif.PrivKey.Serialize()), ShouldEqual, tx_tests[0].private)
-//		pubK := wif.PrivKey.PubKey()
-//		So(hex.EncodeToString(pubK.SerializeCompressed()), ShouldEqual, tx_tests[0].public)
-//		net := env.RTEnv.GetNet()
-//		// decode source public key
-//		addresspubkey, err := btcutil.NewAddressPubKey(pubK.SerializeCompressed(), net)
-//		So(err, ShouldBeEmpty)
-//		address := addresspubkey.EncodeAddress()
-//		So(address, ShouldEqual, tx_tests[0].address)
-//
-//		privK := ecdsa.PrivateKey(*wif.PrivKey)
-//
-//		r, s, err := ecdsa.Sign(rand.Reader, &privK, txHash)
-//		So(err, ShouldBeEmpty)
-//		signedTx := r.Bytes()
-//		signedTx = append(signedTx, s.Bytes()...)
-//	})
-//}
+func TestSignature(t *testing.T) {
+	Convey(`Ecc signature should working.`, t, func() {
+		wif, err := coinutil.DecodeWIF(tx_tests[0].wif)
+		So(err, ShouldBeEmpty)
+		So(hex.EncodeToString(wif.PrivKey.Serialize()), ShouldEqual, tx_tests[0].private)
+		pubK := wif.PrivKey.PubKey()
+		So(hex.EncodeToString(pubK.SerializeCompressed()), ShouldEqual, tx_tests[0].public)
+		net := env.RTEnv.GetNet()
+		// decode source public key
+		addresspubkey, err := btcutil.NewAddressPubKey(pubK.SerializeCompressed(), net)
+		So(err, ShouldBeEmpty)
+		address := addresspubkey.EncodeAddress()
+		So(address, ShouldEqual, tx_tests[0].address)
+
+	})
+}
 
 //func TestCreateScriptSig(t *testing.T) {
 //	Convey(`createScriptSig should working.`, t, func() {
@@ -368,3 +366,24 @@ func TestCreateDoubleHash(t *testing.T) {
 //		"version": "1"
 //	}
 //}
+
+// 01000000
+// 01
+// 58467395b8ce5365df91968b9dbe52b1449ceca4b9ad4edc490ad6b8ecc4c332
+// 01000000
+// 6b
+// 48
+// 3045022100fc8c31f256b0cbb757e5c661d94cde5e2bfe4603d7d9474bd1bf21ffa198c59c022018e5fb2d3f7ae220bf9e83f6b4885fc9469ba2e50bf2555dbad98bb86dc3cf9601
+// 21
+// 0259c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c
+// ffffffff
+// 02
+// c0e1e40000000000
+// 19 76 a9 14 af741895ba6bd639c1656dfca4f345fb6a25dce1 88 ac
+// 0191a80500000000
+// 19 76 a9 14 b644cf69fcc76fef6db694e671316e55a1a2e0b2 88 ac
+// 00000000
+
+//signture test
+// ./signer 9d5f89bd7855e6dcfb0fb7aef8b4748d7b3082f313e88eb7936b19c95de454d9 68855a72a1e728d332025f5813ef35e8a6c1a8f5fb43e610c149b782ee290538
+// 304402202230eb38890dbde121b4c0deee44a53adac32f891792bdb46f27fac437d15fa5022045250ef5cf5a8d62135b5995903c8a1c19fa270ce42b17c13cfe884f2a1d52ea

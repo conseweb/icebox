@@ -1,9 +1,10 @@
-package address
+package address_test
 
 import (
 	"encoding/hex"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
+	"conseweb.com/wallet/icebox/common/address"
 )
 
 var base58_plaintext string = "806A1B4E9EAD05B31AEA30FA22FFB6D07AA4EBFB6088832E1860F7B43A448DF288"
@@ -16,7 +17,7 @@ var base58bip38_plaintext string = "01430060accafae8e75b19b13afcd2043dcc33fa62b5
 func TestBase58Encode(t *testing.T) {
 	p, _ := hex.DecodeString(base58_plaintext)
 	Convey(`Testing Base58 Encoding`, t, func() {
-		b := ToBase58(p, 51)
+		b := address.ToBase58(p, 51)
 		So(b, ShouldResemble, base58_encoded)
 	})
 }
@@ -24,12 +25,12 @@ func TestBase58Encode(t *testing.T) {
 func TestBase58Decode(t *testing.T) {
 	p, _ := hex.DecodeString(base58_plaintext)
 	Convey(`Testing Base58 Decoding`, t, func() {
-		b, err := FromBase58(base58_encoded)
+		b, err := address.FromBase58(base58_encoded)
 		So(err, ShouldBeNil)
 		So(b, ShouldResemble, p)
 	})
 	Convey(`Testing Base58 Decoding Failure`, t, func() {
-		_, err := FromBase58(base58_malformed)
+		_, err := address.FromBase58(base58_malformed)
 		So(err, ShouldNotBeNil)
 	})
 }
@@ -37,7 +38,7 @@ func TestBase58Decode(t *testing.T) {
 func TestBase58DecodeBIP38(t *testing.T) {
 	p, _ := hex.DecodeString(base58bip38_plaintext)
     Convey(`Test Base58 BIP38 Decode`, t,func(){
-        b58, err := FromBase58(base58bip38_encoded)
+        b58, err := address.FromBase58(base58bip38_encoded)
         if err != nil {
             panic(err)
         }

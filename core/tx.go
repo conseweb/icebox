@@ -55,25 +55,28 @@ func sign(private, data []byte) ([]byte, error) {
 	return sig.Serialize(), nil
 }
 
+func reverseByteOrder(inputBytes []byte) []byte {
+	inputBytesReversed := make([]byte, len(inputBytes))
+	for i := 0; i < len(inputBytes); i++ {
+		inputBytesReversed[i] = inputBytes[len(inputBytes)-i-1]
+	}
+	return inputBytesReversed
+}
+
 // createScriptSig
 // createUnlockScript
 // createScriptSig
-func createScriptSig(rawTransaction []byte, privateKey btcec.PrivateKey, compressed bool) (scriptSig, txHash []byte, err error) {
+func createScriptSig(rawTransaction []byte, privateKey *btcec.PrivateKey, compressed bool) (rawTxHash, rawTxSig []byte, err error) {
 	//Here we start the process of signing the raw transaction.
 	//Hash the raw transaction twice before the signing
-	txHash = DoubleHash256(rawTransaction)
+	rawTxHash = DoubleHash256(rawTransaction)
 
 	//Sign the raw transaction
-	//privK := ecdsa.PrivateKey(privateKey)
-
-	//r, s, err := ecdsa.Sign(rand.Reader, &privK, txHash)
-	signedTx, err := sign(privateKey.Serialize(), txHash)
+	signedTx, err := sign(privateKey.Serialize(), rawTxHash)
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("ecdsa.Sign")
 		return nil, nil, err
 	}
-	//signedTx := r.Bytes()
-	//signedTx = append(signedTx, s.Bytes()...)
 
 	hashCodeType, err := hex.DecodeString("01")
 	if err != nil {
@@ -103,9 +106,9 @@ func createScriptSig(rawTransaction []byte, privateKey btcec.PrivateKey, compres
 	buffer.WriteByte(pubKeyLength)
 	buffer.Write(publicKeyBuffer.Bytes())
 
-	scriptSig = buffer.Bytes()
+	rawTxSig = buffer.Bytes()
 
-	return scriptSig, txHash, nil
+	return rawTxHash, rawTxSig, nil
 }
 
 func createRawTransaction(inputTxHash string, inputTxIdx uint32, base58DestAddr string, satoshis uint64, scriptSig []byte) []byte {
@@ -130,10 +133,7 @@ func createRawTransaction(inputTxHash string, inputTxIdx uint32, base58DestAddr 
 	}
 
 	//Convert input transaction hash to little-endian form
-	inputTxBytesReversed := make([]byte, len(inputTxBytes))
-	for i := 0; i < len(inputTxBytes); i++ {
-		inputTxBytesReversed[i] = inputTxBytes[len(inputTxBytes)-i-1]
-	}
+	inputTxBytesReversed := reverseByteOrder(inputTxBytes)
 
 	//Output index of input transaction
 	outputIndexBytes := make([]byte, 4)
@@ -186,31 +186,40 @@ func createRawTransaction(inputTxHash string, inputTxIdx uint32, base58DestAddr 
 	return buffer.Bytes()
 }
 
-func CreateSignedTx(wifPrivKey string, destination string, amount uint64, txHash string, srcIdx uint32, compressed bool) (*Transaction, error) {
-	var transaction Transaction
-	// get source private key
-	wif, err := coinutil.DecodeWIF(wifPrivKey)
+func CreateSignedMessage(privKey *btcec.PrivateKey, msg []byte) ([]byte, error) {
+
+	priv := privKey.Serialize()
+	signedTx, err := sign(priv, msg)
 	if err != nil {
-		logger.Fatal().Err(err).Msgf("coinutil.DecodeWIF")
+		logger.Fatal().Err(err).Msgf("CreateSignedMessage")
+		return nil, err
 	}
 
+	return signedTx, nil
+}
+
+// FIXME: default should have change output
+func CreateSignedTx(privKey *btcec.PrivateKey, destination string, amount uint64, txHash string, srcIdx uint32, compressed bool) (*Transaction, error) {
+	var transaction Transaction
+	// get source private key
 	net := env.RTEnv.GetNet()
+
 	// decode source public key
 	var addresspubkey *coinutil.AddressPubKey
 	if compressed {
-		addresspubkey, _ = coinutil.NewAddressPubKey(wif.PrivKey.PubKey().SerializeCompressed(), net)
+		addresspubkey, _ = coinutil.NewAddressPubKey(privKey.PubKey().SerializeCompressed(), net)
 	} else {
-		addresspubkey, _ = coinutil.NewAddressPubKey(wif.PrivKey.PubKey().SerializeUncompressed(), net)
+		addresspubkey, _ = coinutil.NewAddressPubKey(privKey.PubKey().SerializeUncompressed(), net)
 	}
 
 	//First we create the raw transaction.
 	//In order to construct the raw transaction we need the input transaction hash,
-	//the destination address, the number of satoshis to send, and the scriptSig
+	//the destination address, the number of satoshis to send, and the rawTxSig
 	//which is temporarily (prior to signing) the ScriptPubKey of the input transaction.
 	base58FromAddr := addresspubkey.EncodeAddress()
 	tempScriptSig := createScriptPubKey(base58FromAddr)
 
-	logger.Debug().Msgf("temp scriptSig: %s, fromAddr: %s", hex.EncodeToString(tempScriptSig), base58FromAddr)
+	logger.Debug().Msgf("temp rawTxSig: %s, fromAddr: %s", hex.EncodeToString(tempScriptSig), base58FromAddr)
 
 	rawTransaction := createRawTransaction(txHash, srcIdx, destination, amount, tempScriptSig)
 
@@ -228,12 +237,12 @@ func CreateSignedTx(wifPrivKey string, destination string, amount uint64, txHash
 	rawTransactionWithHashCodeType := rawTransactionBuffer.Bytes()
 
 	//Sign the raw transaction, and output it to the console.
-	scriptSig, txID, err := createScriptSig(rawTransactionWithHashCodeType, *wif.PrivKey, true)
-	logger.Debug().Msgf("RawTx: %s, TxID: %s", hex.EncodeToString(rawTransaction), hex.EncodeToString(txID))
+	rawTxHash, rawTxSig, err := createScriptSig(rawTransactionWithHashCodeType, privKey, true)
+	logger.Debug().Msgf("RawTx: %s, TxID: %s", hex.EncodeToString(rawTransaction), hex.EncodeToString(rawTxHash))
 	// create signed tx with scriptsig
-	finalTransaction := createRawTransaction(txHash, srcIdx, destination, amount, scriptSig)
+	finalTransaction := createRawTransaction(txHash, srcIdx, destination, amount, rawTxSig)
 
-	transaction.TxId = hex.EncodeToString(txID)
+	transaction.TxId = hex.EncodeToString(rawTxHash)
 	transaction.UnsignedTx = hex.EncodeToString(rawTransaction)
 	finalTransactionHex := hex.EncodeToString(finalTransaction)
 	transaction.SignedTx = finalTransactionHex
@@ -243,7 +252,6 @@ func CreateSignedTx(wifPrivKey string, destination string, amount uint64, txHash
 
 	return &transaction,nil
 }
-
 
 // from: utxo
 // to: address, amount

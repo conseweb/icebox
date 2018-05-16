@@ -12,6 +12,14 @@ import (
 	"conseweb.com/wallet/icebox/common/flogging"
 	"conseweb.com/wallet/icebox/common"
 	"conseweb.com/wallet/icebox/core/paginator"
+	"conseweb.com/wallet/icebox/protos"
+	"conseweb.com/wallet/icebox/client/util"
+	"encoding/hex"
+	"github.com/blockcypher/gobcy"
+)
+
+const (
+	blockcypher_api_token = "3732964492194d02a0b76e84149aa669"
 )
 
 var (
@@ -102,27 +110,27 @@ func main() {
 
 	//rand.Seed(time.Now().UnixNano())
 	//var idx = rand.Uint32()
-	rex, _ := handler.CreateAddress(1, common.Test_password)
-	logger.Debug().Msgf("Created address: %s", rex.GetAddress())
-
-	{
-		reply, _ := handler.ListAddress(1, 0, 8, common.Test_password)
-		offset := reply.GetOffset()
-		limit := reply.GetLimit()
-		total := reply.GetTotalRecords()
-		logger.Debug().Msgf("%d, %d, %d", total, limit, offset)
-		for {
-			if paginator.HaveNext(total, limit, offset) {
-				reply, _ = handler.ListAddress(1, offset, limit, common.Test_password)
-				offset = reply.GetOffset()
-				limit = reply.GetLimit()
-				total = reply.GetTotalRecords()
-				logger.Debug().Msgf("%d, %d, %d", total, limit, offset)
-			} else {
-				break
-			}
-		}
-	}
+	//rex, _ := handler.CreateAddress(1, common.Test_password)
+	//logger.Debug().Msgf("Created address: %s", rex.GetAddressByIdx())
+	//
+	//{
+	//	reply, _ := handler.ListAddress(1, 0, 8, common.Test_password)
+	//	offset := reply.GetOffset()
+	//	limit := reply.GetLimit()
+	//	total := reply.GetTotalRecords()
+	//	logger.Debug().Msgf("%d, %d, %d", total, limit, offset)
+	//	for {
+	//		if paginator.HaveNext(total, limit, offset) {
+	//			reply, _ = handler.ListAddress(1, offset, limit, common.Test_password)
+	//			offset = reply.GetOffset()
+	//			limit = reply.GetLimit()
+	//			total = reply.GetTotalRecords()
+	//			logger.Debug().Msgf("%d, %d, %d", total, limit, offset)
+	//		} else {
+	//			break
+	//		}
+	//	}
+	//}
 
 	handler.CreateSecret(32, 1, common.Test_password)
 
@@ -145,18 +153,91 @@ func main() {
 		}
 	}
 
+	tp := 1	// testnet
+	idx := 1671493468
+	gap, err := handler.GetAddressByIdx(uint32(tp), uint32(idx), common.Test_password)
+	if err != nil {
+		logger.Fatal().Err(err).Msgf("GetAddressByIdx error encountered.")
+	}
+	fromAddr := gap.GetAddr().GetSAddr()
+	logger.Debug().Msgf("from addr: %s", fromAddr)
+
+	bcy := gobcy.API{blockcypher_api_token, "btc", "test3"}
+	// get address balance
+	addrBal, err := bcy.GetAddrBal(fromAddr, nil)
+	if err != nil {
+		logger.Fatal().Err(err).Msgf("GetAddrBal error encountered.")
+	}
+	logger.Debug().Msgf("Balance: %d", addrBal.Balance)
+
+	var params = map[string]string{"unspentOnly": "true"}
+	addr, err := bcy.GetAddr(fromAddr, params)
+	if err != nil {
+		logger.Fatal().Err(err).Msgf("GetAddr error encountered.")
+	}
+	for i, _ := range addr.TXRefs {
+		txref := addr.TXRefs[i]
+		logger.Debug().
+			Str("tx_hash", txref.TXHash).
+			Int("value", txref.Value).
+			Int("ref_balance", txref.RefBalance).
+			Msgf("")
+	}
+
+	amount := int(15000000)
+  	goodTxId, outn, err := util.FindFirstSuitableUTXO(bcy, fromAddr, amount)
+	if goodTxId == nil && outn == -1 && err == nil {
+		logger.Fatal().Msgf("Not enough balance.")
+		os.Exit(-1)
+	}
+  	if goodTxId != nil {
+  		logger.Debug().Msgf("Got suitable utxo: %s, %d", *goodTxId, outn)
+	}
 
 	// src: "1, 1671493468,
 	// addr: base58: mx8hhz3tWjbKkeeTXUyCPUuaJmY9U6SZse",
 	// priv: hex: 68855a72a1e728d332025f5813ef35e8a6c1a8f5fb43e610c149b782ee290538
 	// pub key: hex: 0259c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c
 	// dest: "1, 807294064, msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb"
+	var signTxReply *protos.SignTxReply
 	if RTEnv.isTestNet {
-		handler.SignTx(1, 1671493468, 64990000, "msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb", "3ef58f2581ed01ab1ba231aeb77846d3340367e651fa6bb1022cdc2790e0698f", 0, common.Test_password)
+		signTxReply, err = handler.SignTx(uint32(tp), uint32(idx), uint64(amount), "msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb", *goodTxId, uint32(outn), common.Test_password)
 	} else {
 		// TODO: address should change to mainnet address
-		handler.SignTx(0, 1671493468, 64990000, "msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb", "3ef58f2581ed01ab1ba231aeb77846d3340367e651fa6bb1022cdc2790e0698f", 0, common.Test_password)
+		signTxReply, err = handler.SignTx(0, uint32(idx), uint64(amount), "msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb", *goodTxId, uint32(outn), common.Test_password)
 	}
+	if err != nil {
+		logger.Fatal().Err(err).Msgf("")
+	} else {
+		hexTxSig := hex.EncodeToString(signTxReply.GetSignedTx())
+		logger.Debug().Msgf("SignTx reply: %s", hexTxSig)
+
+		txHash := util.DoubleHash256(signTxReply.GetSignedTx())
+		txHashReversed := util.ReverseByteOrder(txHash)
+		logger.Debug().Msgf("Tx hash: %s", hex.EncodeToString(txHashReversed))
+	}
+
+	{
+		var reply *protos.SignMsgReply
+		msg := "9d5f89bd7855e6dcfb0fb7aef8b4748d7b3082f313e88eb7936b19c95de454d9"
+		wantToSign, _ := hex.DecodeString(msg)
+		if RTEnv.isTestNet {
+			reply, err = handler.SignMsg(uint32(tp), uint32(idx), wantToSign, common.Test_password)
+		} else {
+			// TODO: address should change to mainnet address
+			reply, err = handler.SignMsg(0, uint32(idx), wantToSign, common.Test_password)
+		}
+		if err != nil {
+			logger.Fatal().Err(err).Msgf("")
+		} else {
+			signed := reply.GetSigned()
+			//msgReversed := util.ReverseByteOrder(signed)
+			logger.Debug().Msgf("Msg hash: %s", hex.EncodeToString(signed))
+		}
+	}
+
+
+	// TODO: broadcast it
 
 
 	// send reset request

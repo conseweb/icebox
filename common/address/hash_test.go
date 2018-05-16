@@ -13,7 +13,7 @@ var hash_h160 string = "d29c6773ea54787a9b5b256b3e1092a4a6452f30"
 func TestHash256(t *testing.T) {
 	h, _ := hex.DecodeString(hash_h256)
 	Convey(`Testing Double SHA 256 Hash`, t, func() {
-		v := Hash256([]byte(hash_text))
+		v := DHash256([]byte(hash_text))
 		So(v, ShouldResemble, h)
 	})
 }

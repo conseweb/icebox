@@ -47,6 +47,9 @@ message IceboxMessage {
         REMOVE_COIN = 17;
         DELETE_ADDRESS = 18;
         DELETE_SECRET = 19;
+        GET_ADDRESS = 20;
+        GET_SECRET = 21;
+        SIGN_MSG = 22;
     }
 
     message Header {
@@ -309,7 +312,18 @@ message SignTxRequest {
 
 message SignTxReply {
     // TODO: 该最大值未经验证
-    required string signedTx = 2[(nanopb).max_size = 256];
+    required bytes signedTx = 2[(nanopb).max_size = 512];
+}
+
+message SignMsgRequest {
+    required string password = 1;
+    required uint32 type = 2;
+    required uint32 idx = 3;
+    required bytes message = 4;
+}
+
+message SignMsgReply {
+    required bytes signed = 1[(nanopb).max_size = 512];
 }
 
 // list all of wallets
@@ -322,20 +336,15 @@ message ListCoinReply {
 }
 
 
-message BatchQueryRequest {
-    required string password = 1;
-    repeated uint32 type = 2;
-//    required uint32 offset = 3;
-//    required uint32 limit = 4; // 隐含的条件
-    //    optional uint32 idx = 3;
-}
-
-
 // 查询单条记录
 message GetAddressRequest {
     required string password = 1;
     required uint32 type = 2;
     required uint32 idx = 3;
+}
+
+message GetAddressReply {
+    required Address addr = 1;
 }
 
 message ListAddressRequest {

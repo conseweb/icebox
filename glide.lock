@@ -4,7 +4,7 @@ imports:
 - name: github.com/abice/go-enum
   version: 5d428eed09bc3caadee46f8c232ad724742d35e2
 - name: github.com/btcsuite/btcd
-  version: 53f55a46349aa8f44b90895047e843666991cf24
+  version: master
   subpackages:
   - blockchain
   - btcec

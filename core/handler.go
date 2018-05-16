@@ -308,6 +308,25 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_LIST_ADDRESS, sid, payload)
 		return ret, nil
 
+	case pb.IceboxMessage_GET_ADDRESS:
+		x := &pb.GetAddressRequest{}
+		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
+		if unmarshalErr != nil {
+			logger.Fatal().Err(unmarshalErr).Msgf("Failed to unmarshall. Sending %s", pb.IceboxMessage_ERROR)
+			msg := handleError(unmarshalErr)
+			return msg, nil
+		}
+		reply, err := s.helper.GetAddress(ctx, x)
+		if err != nil {
+			msg := handleError(err)
+			return msg, nil
+		}
+		payload, _ := proto.Marshal(reply)
+		sid := s.helper.session.id
+		// set as new session id
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_GET_ADDRESS, sid, payload)
+		return ret, nil
+
 	case pb.IceboxMessage_CREATE_SECRET:
 		createSecretRequest := &pb.CreateSecretRequest{}
 		unmarshalErr := proto.Unmarshal(req.GetPayload(), createSecretRequest)
@@ -344,6 +363,25 @@ func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.I
 		sid := s.helper.session.id
 		// set as new session id
 		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_LIST_SECRET, sid, payload)
+		return ret, nil
+
+	case pb.IceboxMessage_SIGN_MSG:
+		x := &pb.SignMsgRequest{}
+		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
+		if unmarshalErr != nil {
+			logger.Fatal().Err(unmarshalErr).Msgf("Failed to unmarshall. Sending %s", pb.IceboxMessage_ERROR)
+			msg := handleError(unmarshalErr)
+			return msg, nil
+		}
+		reply, err := s.helper.SignMsg(ctx, x)
+		if err != nil {
+			msg := handleError(err)
+			return msg, nil
+		}
+		payload, _ := proto.Marshal(reply)
+		sid := s.helper.session.id
+		// set as new session id
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_SIGN_MSG, sid, payload)
 		return ret, nil
 
 	case pb.IceboxMessage_SIGN_TX:

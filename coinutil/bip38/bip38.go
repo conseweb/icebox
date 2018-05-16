@@ -17,7 +17,7 @@ type BIP38Key struct {
 func Encrypt(p *address.PrivateKey, passphrase string) string {
 	bip38 := new(BIP38Key)
 
-	ah := address.Hash256(p.AddressBytes())[:4]
+	ah := address.DHash256(p.AddressBytes())[:4]
 	dh, _ := scrypt.Key([]byte(passphrase), ah, 16384, 8, 8, 64)
 
 	bip38.Flag = byte(0xC0)

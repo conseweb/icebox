@@ -38,17 +38,6 @@ func TestHelloWithErrorMsgType(t *testing.T) {
 		So(err, ShouldEqual, nil)
 		So(res.GetHeader().GetType(), ShouldEqual, pb.IceboxMessage_ERROR)
 	})
-
-	//mockCtrl := gomock.NewController(t)
-	//defer mockCtrl.Finish()
-
-	//dummyError := errors.New("dummy error")
-	//mockIce := mocks.NewMockIceboxMessage(mockCtrl)
-	////
-	//////x := pb.NewInt64(1)
-	//mockIce.EXPECT().GetVersion().Return(1)
-	//mockIce.EXPECT().GetSessionId().Return(1234567)
-	//mockIce.EXPECT().GetType().Return(pb.IceboxMessage_UNDEFINED)
 }
 
 func TestHelloWithErrorMagicNumber(t *testing.T) {

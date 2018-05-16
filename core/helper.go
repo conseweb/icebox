@@ -359,6 +359,59 @@ func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest)
 	}
 }
 
+func (s *iceHelper) GetAddress(ctx context.Context, req *pb.GetAddressRequest) (*pb.GetAddressReply, error)  {
+	tp := req.GetType()
+	pass := req.GetPassword()
+	idx := req.GetIdx()
+	db := s.openDb()
+
+	var totalRecords int
+	if s.dbAddrExists(tp, -1) {
+		db.Model(&models.Address{}).Where("t2 = ?", tp).Count(&totalRecords)
+		if totalRecords <= 0 {
+			return nil, errors.New(fmt.Sprintf("Not address exists for coin type: %d", tp))
+		}
+	}
+
+	//addr := models.Address{}
+	//db.Model(&models.Address{}).Where("t2 = ? AND t5 = ?", tp, idx).First(&addr)
+
+	saddr, err := s.generateAddress(tp, idx, pass)
+	if err != nil {
+		return nil, err
+	}
+
+	pbAddr := pb.Address{Type:&tp, Idx:&idx, SAddr:saddr}
+	reply := pb.NewGetAddressReply(pbAddr)
+	return reply, nil
+}
+
+func (s *iceHelper) SignMsg(ctx context.Context, req *pb.SignMsgRequest) (*pb.SignMsgReply, error)  {
+	msg := req.GetMessage()
+	tp := req.GetType()
+	idx := req.GetIdx()
+	pass := req.GetPassword()
+	db := s.openDb()
+
+	var cnt int
+	if s.dbAddrExists(tp, -1) {
+		db.Model(&models.Address{}).Where("t2 = ?", tp).Count(&cnt)
+		if cnt <= 0 {
+			return nil, errors.New(fmt.Sprintf("Address %d not exists for coin type: %d", idx, tp))
+		}
+	}
+
+	subKey, _ := s.generateSubPrivKey(tp, idx, pass)
+	xk, _ := subKey.ECPrivKey()
+	//logger.Debug().Msgf("PrivKey: %s, WIF: %s", hex.EncodeToString(xk.Serialize()), wif.String())
+	signed, err := CreateSignedMessage(xk, msg)
+	if err != nil {
+		return nil, err
+	}
+	reply := pb.NewSignMsgReply(signed)
+	return reply, nil
+}
+
 func (s *iceHelper) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb.SignTxReply, error)  {
 	tp := req.GetType()
 	idx := req.GetIdx()
@@ -379,18 +432,19 @@ func (s *iceHelper) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb.Sign
 
 	subKey, _ := s.generateSubPrivKey(tp, idx, pass)
 	xk, _ := subKey.ECPrivKey()
-	net := env.RTEnv.GetNet()
-	wif, err := coinutil.NewWIF(xk, net, true)
-	if err != nil {
-		return nil, err
-	}
-	logger.Debug().Msgf("PrivKey: %s, WIF: %s", hex.EncodeToString(xk.Serialize()), wif.String())
+	//net := env.RTEnv.GetNet()
+	//wif, err := coinutil.NewWIF(xk, net, true)
+	//if err != nil {
+	//	return nil, err
+	//}
+	//logger.Debug().Msgf("PrivKey: %s, WIF: %s", hex.EncodeToString(xk.Serialize()), wif.String())
 	// TODO: txhash should be generated from transaction
-	tx, err := CreateSignedTx(wif.String(), dest, amount, txhash, txidx, true)
+	tx, err := CreateSignedTx(xk, dest, amount, txhash, txidx, true)
 	if err != nil {
 		return nil, err
 	}
-	reply := pb.NewSignTxReply(tx.SignedTx)
+	stx, _ := hex.DecodeString(tx.SignedTx)
+	reply := pb.NewSignTxReply(stx)
 	return reply, nil
 }
 
@@ -701,7 +755,7 @@ func BIP32Encrypt(p *bip32.ExtendedKey, passphrase string) (*string, error) {
 	//bip38 := new(BIP38Key)
 
 	sp := p.String()
-	ah := address.Hash256([]byte(sp))[:4]
+	ah := address.DHash256([]byte(sp))[:4]
 	dh, _ := scrypt.Key([]byte(passphrase), ah, 16384, 8, 8, 64)
 
 	//bip38.Flag = byte(0xC0)
@@ -724,7 +778,7 @@ func BIP32Decrypt(data string, passphrase string) (*bip32.ExtendedKey, error) {
 	//buf := bytes.NewBuffer(ds)
 	ah := ds[:4]
 	//sp := p.String()
-	//ah := address.Hash256([]byte(sp))[:4]
+	//ah := address.DHash256([]byte(sp))[:4]
 	dh, _ := scrypt.Key([]byte(passphrase), ah, 16384, 8, 8, 64)
 
 	//bip38.Flag = byte(0xC0)

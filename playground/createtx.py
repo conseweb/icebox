@@ -7,11 +7,11 @@ import ecdsa
 
 Bob_addr = "1NWzVg38ggPoVGAG2VWt6ktdWMaV6S1pJK"
 bob_hashed_pubkey = base58.b58decode_check(Bob_addr)[1:].encode("hex")
+print(bob_hashed_pubkey)
+# print(base58.b58decode_check(Bob_addr)[1:])
 
 Bob_private_key = "CF933A6C602069F1CBC85990DF087714D7E86DF0D0E48398B7D8953E1F03534A"
-
 prv_txid = "84d813beb51c3a12cb5d0bb18c6c15062453d476de24cb2f943ca6e20115d85c"
-
 
 Charlie_adr = "17X4s8JdSdLxFyraNUDBzgmnSNeZpjm42g"
 charlie_hashed_pubkey = base58.b58decode_check(Charlie_adr)[1:].encode("hex")
@@ -30,6 +30,7 @@ class raw_tx:
 	tx_out1			= {} #TEMP
 	tx_out2 		= {} #TEMP
 	lock_time 		= struct.pack("<L", 0)
+
 
 def flip_byte_order(string):
 	flipped = "".join(reversed([string[i:i+2] for i in range(0, len(string), 2)]))
@@ -74,9 +75,9 @@ raw_tx_string = (
 	)
 
 hashed_tx_to_sign = hashlib.sha256(hashlib.sha256(raw_tx_string).digest()).digest()
+print("RawTxHash: %s" % hashed_tx_to_sign.encode("hex"))
 
 sk = ecdsa.SigningKey.from_string(Bob_private_key.decode("hex"), curve = ecdsa.SECP256k1)
-
 vk = sk.verifying_key
 
 public_key = ('\04' + vk.to_string()).encode("hex")

@@ -523,6 +523,38 @@ func (d *Handler) CreateAddress(tp uint32, pwd string) (*pb.CreateAddressReply, 
 
 }
 
+func (d *Handler) GetAddressByIdx(tp, idx uint32, pwd string) (*pb.GetAddressReply, error) {
+	var err error
+	req := pb.NewGetAddressRequest(tp, idx, pwd)
+	payload, _ := proto.Marshal(req)
+	sid := d.session.id
+	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_GET_ADDRESS,sid, payload)
+
+	chatRep, xe := d.Client.Chat(context.Background(), msg)
+	if xe != nil {
+		grpclog.Fatalln(xe)
+		return nil, xe
+	}
+
+	if chatRep.GetHeader().GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", chatRep.GetPayload())
+		return nil, fmt.Errorf("Device error: %s", chatRep.GetPayload())
+	}
+
+	var reply = &pb.GetAddressReply{}
+	err = proto.Unmarshal(chatRep.GetPayload(), reply)
+	if err != nil {
+		//grpclog.Fatalln(err)
+		logger.Fatal().Err(err).Msgf("reply: %s", reply)
+		return nil, err
+	}
+
+	ary := reply.GetAddr()
+	logger.Debug().Msgf("Address: %d, %d, %s", ary.GetType(), ary.GetIdx(), ary.GetSAddr())
+
+	return reply, nil
+}
+
 func (d *Handler) ListAddress(tp, offset, limit uint32, pwd string) (*pb.ListAddressReply, error) {
 	var err error
 	req := pb.NewListAddressRequest(tp, offset, limit, pwd)
@@ -682,9 +714,37 @@ func (d *Handler) SignTx(tp, idx uint32, amount uint64, dest, txhash string, txi
 		return nil, err
 	}
 
-	grpclog.Infoln("SignTxReply: ", caRep)
+	//grpclog.Infoln("SignTxReply: ", caRep)
 	return caRep, nil
 
+}
+
+func (d *Handler) SignMsg(tp, idx uint32, msg []byte, pwd string) (*pb.SignMsgReply, error) {
+	var err error
+	req := pb.NewSignMsgRequest(tp, idx, msg, pwd)
+	payload, _ := proto.Marshal(req)
+	sid := d.session.id
+	chatMsg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_SIGN_MSG,sid, payload)
+
+	chatRep, xe := d.Client.Chat(context.Background(), chatMsg)
+	if xe != nil {
+		grpclog.Fatalln(xe)
+		return nil, xe
+	}
+
+	if chatRep.GetHeader().GetType() == pb.IceboxMessage_ERROR {
+		logger.Debug().Msgf("Device error: %s", chatRep.GetPayload())
+		return nil, fmt.Errorf("Device error: %s", chatRep.GetPayload())
+	}
+
+	var caRep = &pb.SignMsgReply{}
+	err = proto.Unmarshal(chatRep.GetPayload(), caRep)
+	if err != nil {
+		grpclog.Fatalln(err)
+		return nil, err
+	}
+
+	return caRep, nil
 }
 
 func printHeader(msg *pb.IceboxMessage, tip string)  {
