@@ -366,7 +366,7 @@ message ListAddressReply {
     required uint32 total_records = 1;  // 总共有多少数据
     required uint32 total_pages = 2;    // 总共有多少页
     required uint32 limit = 3;          // 每页几条数据
-    required uint32 offset = 4;         // 起始偏移量，相当于current
+    required uint32 offset = 4;         // 起始偏移量
     repeated Address addr = 5[(nanopb).max_count = 25];
 }
 
@@ -392,7 +392,7 @@ message ListSecretReply {
     required uint32 total_records = 1;  // 总共有多少数据
     required uint32 total_pages = 2;    // 总共有多少页
     required uint32 limit = 3;          // 每页几条数据
-    required uint32 offset = 4;         // 起始偏移量，相当于current
+    required uint32 offset = 4;         // 起始偏移量
     repeated Secret secret = 5[(nanopb).max_count = 25];
 }
 

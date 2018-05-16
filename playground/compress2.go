@@ -47,7 +47,7 @@ func main() {
 		//}
 	)
 
-	xmsg := randSeq(1024 )
+	xmsg := randSeq(200 )
 	test := pb.Error {
 		Code: pb.NewInt32(1),
 		Message: &xmsg,
@@ -71,6 +71,7 @@ func main() {
 	obj = buf.Bytes()
 	fmt.Printf("written to flated: %d\n", n)
 	fmt.Printf("size of flated: %d\n", len(obj))
+	fmt.Printf("ratio of shink: %f\n", float32(len(obj))/float32(n))
 	fmt.Printf("elapsed flated: %v\n\n", elapsed)
 	err = decompressFlate(obj, &test)
 	check(err)

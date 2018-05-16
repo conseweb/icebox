@@ -33,6 +33,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	"conseweb.com/wallet/icebox/core/paginator"
 	"conseweb.com/wallet/icebox/core/env"
+	//tx2 "github.com/bitgoin/tx"
 )
 
 //go:generate mockgen -source=helper.go -destination=../mocks/mock_Iceberg.go -package=mocks conseweb.com/wallet/icebox/core Iceberg
@@ -439,7 +440,10 @@ func (s *iceHelper) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb.Sign
 	//}
 	//logger.Debug().Msgf("PrivKey: %s, WIF: %s", hex.EncodeToString(xk.Serialize()), wif.String())
 	// TODO: txhash should be generated from transaction
-	tx, err := CreateSignedTx(xk, dest, amount, txhash, txidx, true)
+
+	out := TxOutput{amount, dest}
+	in := TxInput{txhash, txidx}
+	tx, err := CreateSignedTx(xk, &in, &out, true)
 	if err != nil {
 		return nil, err
 	}

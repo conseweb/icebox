@@ -33,6 +33,24 @@ type Transaction struct {
 	SignedTx           string `json:"signedtx"`
 }
 
+type TxOutput struct {
+	value uint64
+	address string
+}
+
+func (x *TxOutput) Get() (uint64, string) {
+	return x.value, x.address
+}
+
+type TxInput struct {
+	prev_hash 		string
+	output_index 	uint32
+}
+
+func (in *TxInput) Get() (string, uint32) {
+	return in.prev_hash, in.output_index
+}
+
 func createScriptPubKey(publicKeyBase58 string) []byte {
 	publicKeyBytes := base58check.Decode(publicKeyBase58)
 
@@ -186,6 +204,97 @@ func createRawTransaction(inputTxHash string, inputTxIdx uint32, base58DestAddr 
 	return buffer.Bytes()
 }
 
+
+func createRawTransaction2(input *TxInput, dest *TxOutput, change *TxOutput, scriptSig []byte) []byte {
+	// Create the raw transaction.
+
+	// Version field
+	version, err := hex.DecodeString("01000000")
+	if err != nil {
+		logger.Fatal().Err(err).Msgf("hex.DecodeString")
+	}
+
+	//# number of Inputs (always 1 in our case)
+	numInputs, err := hex.DecodeString("01")
+	if err != nil {
+		logger.Fatal().Err(err).Msgf("hex.DecodeString")
+	}
+
+	inputTxHash, inputTxIdx := input.Get()
+
+	//Input transaction hash
+	inputTxBytes, err := hex.DecodeString(inputTxHash)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	//Convert input transaction hash to little-endian form
+	inputTxBytesReversed := reverseByteOrder(inputTxBytes)
+
+	//Output index of input transaction
+	outputIndexBytes := make([]byte, 4)
+	binary.LittleEndian.PutUint32(outputIndexBytes, inputTxIdx)
+
+	//Script sig length
+	scriptSigLength := len(scriptSig)
+
+	//sequence_no. Normally 0xFFFFFFFF. Always in this case.
+	sequence, err := hex.DecodeString("ffffffff")
+	if err != nil {
+		logger.Fatal().Err(err).Msgf("hex.DecodeString")
+	}
+
+	//Numbers of outputs for the transaction being created. Always two in this example.
+	numOutputs, err := hex.DecodeString("02")
+	if err != nil {
+		logger.Fatal().Err(err).Msgf("hex.DecodeString")
+	}
+
+	satoshis1, base58DestAddr1 := dest.Get()
+	// *************** for output 1  **************
+	//Satoshis to send.
+	satoshiBytes1 := make([]byte, 8)
+	binary.LittleEndian.PutUint64(satoshiBytes1, satoshis1)
+
+	//Script pub key
+	scriptPubKey1 := createScriptPubKey(base58DestAddr1)
+	scriptPubKeyLength1 := len(scriptPubKey1)
+
+	satoshis2, base58DestAddr2 := change.Get()
+	// *************** for output 2 == change address **************
+	satoshiBytes2 := make([]byte, 8)
+	binary.LittleEndian.PutUint64(satoshiBytes2, satoshis2)
+
+	//Script pub key
+	scriptPubKey2 := createScriptPubKey(base58DestAddr2)
+	scriptPubKeyLength2 := len(scriptPubKey2)
+
+	//Lock time field
+	lockTimeField, err := hex.DecodeString("00000000")
+	if err != nil {
+		logger.Fatal().Err(err).Msgf("hex.DecodeString")
+	}
+
+	var buffer bytes.Buffer
+	buffer.Write(version)
+	buffer.Write(numInputs)
+	buffer.Write(inputTxBytesReversed)
+	buffer.Write(outputIndexBytes)
+	buffer.WriteByte(byte(scriptSigLength))
+	buffer.Write(scriptSig)
+	buffer.Write(sequence)
+	buffer.Write(numOutputs)
+	buffer.Write(satoshiBytes1)
+	buffer.WriteByte(byte(scriptPubKeyLength1))
+	buffer.Write(scriptPubKey1)
+	buffer.Write(satoshiBytes2)
+	buffer.WriteByte(byte(scriptPubKeyLength2))
+	buffer.Write(scriptPubKey2)
+	buffer.Write(lockTimeField)
+
+	return buffer.Bytes()
+}
+
 func CreateSignedMessage(privKey *btcec.PrivateKey, msg []byte) ([]byte, error) {
 
 	priv := privKey.Serialize()
@@ -198,8 +307,10 @@ func CreateSignedMessage(privKey *btcec.PrivateKey, msg []byte) ([]byte, error) 
 	return signedTx, nil
 }
 
+
+
 // FIXME: default should have change output
-func CreateSignedTx(privKey *btcec.PrivateKey, destination string, amount uint64, txHash string, srcIdx uint32, compressed bool) (*Transaction, error) {
+func CreateSignedTx(privKey *btcec.PrivateKey, input *TxInput, dest *TxOutput, compressed bool) (*Transaction, error) {
 	var transaction Transaction
 	// get source private key
 	net := env.RTEnv.GetNet()
@@ -221,6 +332,8 @@ func CreateSignedTx(privKey *btcec.PrivateKey, destination string, amount uint64
 
 	logger.Debug().Msgf("temp rawTxSig: %s, fromAddr: %s", hex.EncodeToString(tempScriptSig), base58FromAddr)
 
+	amount, destination := dest.Get()
+	txHash, srcIdx := input.Get()
 	rawTransaction := createRawTransaction(txHash, srcIdx, destination, amount, tempScriptSig)
 
 	//After completing the raw transaction, we append
