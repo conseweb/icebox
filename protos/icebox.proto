@@ -50,6 +50,7 @@ message IceboxMessage {
         GET_ADDRESS = 20;
         GET_SECRET = 21;
         SIGN_MSG = 22;
+        DISP_MSG = 23; // 在设备侧显示提示信息，可以强制要求用户在硬件侧进行需要确认后，才能进行下一步操作
     }
 
     message Header {
@@ -66,6 +67,8 @@ message IceboxMessage {
     required bytes payload = 2;
     required bytes signature = 3;
 }
+
+// NOTE: password - 真实设备是没有这个字段的
 
 // rpc只是用于演示相关接口，不用作实现
 service Icebox {
@@ -180,9 +183,9 @@ message ConversationRequest {
     // message id
     required uint32 message_id = 3;
     // encrypted message
-    required string content = 4;
+    required bytes content = 4;
     // signatures
-    required string signature = 5;
+    required bytes signature = 5;
 }
 
 message ConversationReply {
@@ -192,9 +195,9 @@ message ConversationReply {
     // message id
     required uint32 message_id = 3;
     // encrypted message
-    required string content = 4;
+    required bytes content = 4;
     // signatures
-    required string signature = 5;
+    required bytes signature = 5;
 }
 
 message EndRequest {
@@ -215,7 +218,7 @@ message CheckRequest {
 message CheckReply {
 //    required ReplyHeader header = 1;
     required int32 state = 2;  // 0: uninited, 1: inited
-    // if paired then return dev_id=hash(id+app_id)
+    // if paired then return dev_id=sha256(id+app_id)
     optional string dev_id = 3;
     //    optional string sn = 4; // device serial number
 }
@@ -228,7 +231,7 @@ message InitRequest {
 }
 message InitReply {
 //    required ReplyHeader header = 1;
-    required string dev_id = 2[(nanopb).max_size = 32];
+    required bytes dev_id = 2[(nanopb).max_size = 32];
 }
 
 // The request message containing the user's name.
@@ -262,7 +265,7 @@ message CreateAddressRequest {
 message CreateAddressReply {
     required uint32 type = 1;
     required uint32 idx = 2;
-    required string address = 3[(nanopb).max_size = 64]; // address
+    required bytes address = 3[(nanopb).max_size = 34]; // address
 }
 
 message CreateSecretRequest {
@@ -278,7 +281,7 @@ message CreateSecretReply {
     required uint32 site = 2;       // T2
     required uint32 account = 3;    // T3
     required uint32 index = 4;      // T4
-    required string secret = 5[(nanopb).max_size = 64]; // device produced password
+    required bytes secret = 5[(nanopb).max_size = 64]; // device produced password
 }
 
 // 保存用户自己的秘密
@@ -287,7 +290,7 @@ message AddSecretRequest {
     required uint32 type = 2;       // T1
     required uint32 site = 3;       // T2
     required uint32 account = 4;    // T3
-    required string secret = 5[(nanopb).max_size = 64];
+    required bytes secret = 5[(nanopb).max_size = 64];
 }
 
 message AddSecretReply {
@@ -295,7 +298,7 @@ message AddSecretReply {
     required uint32 site = 2;       // T2
     required uint32 account = 3;    // T3
     required uint32 idx = 4;        // T4
-    required string secret = 5[(nanopb).max_size = 64]; // user's password
+    required bytes secret = 5[(nanopb).max_size = 64]; // user's password
 }
 
 message SignTxRequest {
@@ -304,9 +307,9 @@ message SignTxRequest {
     required uint32 idx = 3;
     required uint64 amount = 4;
     // TODO: 该最大值未经验证
-    required string dest = 5[(nanopb).max_size = 64];
+    required string dest = 5[(nanopb).max_size = 34];
     // TODO: 该最大值未经验证
-    required string tx_hash = 6[(nanopb).max_size = 64];
+    required bytes tx_hash = 6[(nanopb).max_size = 32];
     required uint32 tx_idx = 7;
 }
 
@@ -323,7 +326,7 @@ message SignMsgRequest {
 }
 
 message SignMsgReply {
-    required bytes signed = 1[(nanopb).max_size = 512];
+    required bytes signed = 1[(nanopb).max_size = 70];
 }
 
 // list all of wallets
@@ -359,7 +362,7 @@ message Address {
     required uint32 type = 1;
     required uint32 idx = 2;
     optional string name = 3;
-    required string s_addr = 4[(nanopb).max_size = 64];
+    required bytes s_addr = 4[(nanopb).max_size = 34]; // bitcoin's base58_check address = 34
 }
 
 message ListAddressReply {
@@ -385,7 +388,7 @@ message Secret {
     required uint32 site = 2;
     required uint32 account = 3;
     required uint32 idx = 4;
-    required string s_secret = 5[(nanopb).max_size = 64];
+    required bytes s_secret = 5[(nanopb).max_size = 64];
 }
 
 message ListSecretReply {
@@ -426,4 +429,14 @@ message ResetRequest {
     required string password = 1;
 }
 message ResetReply {
+}
+
+message DispMsgRequest {
+    required bytes title = 1;
+    required bytes content = 2;
+    required bytes icon = 3;
+}
+
+message DispMsgReply {
+    required bool result = 1;
 }

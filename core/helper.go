@@ -2,10 +2,10 @@ package core
 
 import (
 	"bytes"
-	"conseweb.com/wallet/icebox/coinutil/bip32"
-	"conseweb.com/wallet/icebox/coinutil/base58"
-	"conseweb.com/wallet/icebox/coinutil/bip44"
-	"conseweb.com/wallet/icebox/coinutil/bip39"
+	"github.com/conseweb/coinutil/bip32"
+	"github.com/conseweb/coinutil/base58"
+	"github.com/conseweb/coinutil/bip44"
+	"github.com/conseweb/coinutil/bip39"
 	"conseweb.com/wallet/icebox/common/crypto"
 	"conseweb.com/wallet/icebox/core/models"
 	"conseweb.com/wallet/icebox/common/guid"
@@ -19,7 +19,7 @@ import (
 	"golang.org/x/crypto/scrypt"
 	"io/ioutil"
 	"errors"
-	"conseweb.com/wallet/icebox/coinutil"
+	"github.com/conseweb/coinutil"
 	"golang.org/x/net/context"
 	pb "conseweb.com/wallet/icebox/protos"
 	"math/rand"

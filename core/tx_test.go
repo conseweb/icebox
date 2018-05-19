@@ -5,12 +5,12 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 	"fmt"
 	"encoding/hex"
-	"conseweb.com/wallet/icebox/coinutil/base58"
+	"github.com/conseweb/coinutil/base58"
 	"conseweb.com/wallet/icebox/core/env"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
 	"conseweb.com/wallet/icebox/common"
-	"conseweb.com/wallet/icebox/coinutil"
+	"github.com/conseweb/coinutil"
 )
 
 type tx_test struct {

@@ -16,7 +16,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"conseweb.com/wallet/icebox/coinutil"
+	"github.com/conseweb/coinutil"
 
 	//"conseweb.com/go-bip44"
 	"github.com/tyler-smith/go-bip32"

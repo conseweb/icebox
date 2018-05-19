@@ -6,7 +6,7 @@ import (
 	"github.com/btcsuite/btcd/chaincfg/chainhash"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
-	"conseweb.com/wallet/icebox/coinutil"
+	"github.com/conseweb/coinutil"
 	"conseweb.com/wallet/icebox/core/env"
 	"github.com/prettymuchbryce/hellobitcoin/base58check"
 	"log"
@@ -173,7 +173,7 @@ func createRawTransaction(inputTxHash string, inputTxIdx uint32, base58DestAddr 
 		logger.Fatal().Err(err).Msgf("hex.DecodeString")
 	}
 
-	//Satoshis to send.
+	// Satoshis to send.
 	satoshiBytes := make([]byte, 8)
 	binary.LittleEndian.PutUint64(satoshiBytes, satoshis)
 
@@ -308,7 +308,6 @@ func CreateSignedMessage(privKey *btcec.PrivateKey, msg []byte) ([]byte, error) 
 }
 
 
-
 // FIXME: default should have change output
 func CreateSignedTx(privKey *btcec.PrivateKey, input *TxInput, dest *TxOutput, compressed bool) (*Transaction, error) {
 	var transaction Transaction
@@ -365,6 +364,64 @@ func CreateSignedTx(privKey *btcec.PrivateKey, input *TxInput, dest *TxOutput, c
 
 	return &transaction,nil
 }
+
+
+func CreateSignedTx2(privKey *btcec.PrivateKey, input *TxInput, dest *TxOutput, change *TxOutput, compressed bool) (*Transaction, error) {
+	var transaction Transaction
+	// get source private key
+	net := env.RTEnv.GetNet()
+
+	// decode source public key
+	var addresspubkey *coinutil.AddressPubKey
+	if compressed {
+		addresspubkey, _ = coinutil.NewAddressPubKey(privKey.PubKey().SerializeCompressed(), net)
+	} else {
+		addresspubkey, _ = coinutil.NewAddressPubKey(privKey.PubKey().SerializeUncompressed(), net)
+	}
+
+	//First we create the raw transaction.
+	//In order to construct the raw transaction we need the input transaction hash,
+	//the destination address, the number of satoshis to send, and the rawTxSig
+	//which is temporarily (prior to signing) the ScriptPubKey of the input transaction.
+	base58FromAddr := addresspubkey.EncodeAddress()
+	tempScriptSig := createScriptPubKey(base58FromAddr)
+
+	logger.Debug().Msgf("temp rawTxSig: %s, fromAddr: %s", hex.EncodeToString(tempScriptSig), base58FromAddr)
+
+	amount, destination := dest.Get()
+	//txHash, srcIdx := input.Get()
+	rawTransaction := createRawTransaction2(input, dest, change, tempScriptSig)
+
+	//After completing the raw transaction, we append
+	//SIGHASH_ALL in little-endian format to the end of the raw transaction.
+	hashCodeType, err := hex.DecodeString("01000000")
+	if err != nil {
+		logger.Fatal().Err(err).Msgf("hex.DecodeString")
+		return nil, err
+	}
+
+	var rawTransactionBuffer bytes.Buffer
+	rawTransactionBuffer.Write(rawTransaction)
+	rawTransactionBuffer.Write(hashCodeType)
+	rawTransactionWithHashCodeType := rawTransactionBuffer.Bytes()
+
+	//Sign the raw transaction, and output it to the console.
+	rawTxHash, rawTxSig, err := createScriptSig(rawTransactionWithHashCodeType, privKey, true)
+	logger.Debug().Msgf("RawTx: %s, TxID: %s", hex.EncodeToString(rawTransaction), hex.EncodeToString(rawTxHash))
+	// create signed tx with scriptsig
+	finalTransaction := createRawTransaction2(input, dest, change, rawTxSig)
+
+	transaction.TxId = hex.EncodeToString(rawTxHash)
+	transaction.UnsignedTx = hex.EncodeToString(rawTransaction)
+	finalTransactionHex := hex.EncodeToString(finalTransaction)
+	transaction.SignedTx = finalTransactionHex
+	transaction.Amount = int64(amount)
+	transaction.SourceAddress = base58FromAddr
+	transaction.DestinationAddress = destination
+
+	return &transaction,nil
+}
+
 
 // from: utxo
 // to: address, amount

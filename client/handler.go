@@ -5,15 +5,15 @@ import (
 	pb "conseweb.com/wallet/icebox/protos"
 	"google.golang.org/grpc"
 	"time"
-	"conseweb.com/wallet/icebox/coinutil/bip32"
+	"github.com/conseweb/coinutil/bip32"
 	"conseweb.com/wallet/icebox/core/common"
 	"fmt"
 	"conseweb.com/wallet/icebox/common/address"
 	"google.golang.org/grpc/grpclog"
 	"context"
-	"conseweb.com/wallet/icebox/coinutil/base58"
+	"github.com/conseweb/coinutil/base58"
 	"github.com/btcsuite/btcd/btcec"
-	"conseweb.com/wallet/icebox/coinutil/bip39"
+	"github.com/conseweb/coinutil/bip39"
 	"github.com/gogo/protobuf/proto"
 	"encoding/binary"
 	"conseweb.com/wallet/icebox/common/crypto"
@@ -745,6 +745,10 @@ func (d *Handler) SignMsg(tp, idx uint32, msg []byte, pwd string) (*pb.SignMsgRe
 	}
 
 	return caRep, nil
+}
+
+func (d *Handler) DispMsg(title, content string, icon []byte) (*pb.DispMsgReply, error)  {
+	return nil, nil
 }
 
 func printHeader(msg *pb.IceboxMessage, tip string)  {

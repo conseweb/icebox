@@ -4,7 +4,7 @@ import (
 	"encoding/hex"
 	"conseweb.com/wallet/icebox/common/crypto/koblitz/kelliptic"
 	"math/big"
-	"conseweb.com/wallet/icebox/coinutil/base58"
+	"github.com/conseweb/coinutil/base58"
 	"crypto/elliptic"
 )
 

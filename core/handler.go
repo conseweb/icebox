@@ -15,7 +15,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"conseweb.com/wallet/icebox/common/crypto"
 	"github.com/btcsuite/btcd/btcec"
-	"conseweb.com/wallet/icebox/coinutil/base58"
+	"github.com/conseweb/coinutil/base58"
 )
 
 var (
