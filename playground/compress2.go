@@ -14,7 +14,7 @@ import (
 	"github.com/gogo/protobuf/proto"
 	//"github.com/zvelo/msg"
 
-	pb "conseweb.com/wallet/icebox/protos"
+	pb "github.com/conseweb/icebox/protos"
 )
 
 var letters = []rune("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")

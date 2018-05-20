@@ -6,10 +6,10 @@ import (
 	"fmt"
 	"encoding/hex"
 	"github.com/conseweb/coinutil/base58"
-	"conseweb.com/wallet/icebox/core/env"
+	"github.com/conseweb/icebox/core/env"
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcutil"
-	"conseweb.com/wallet/icebox/common"
+	"github.com/conseweb/icebox/common"
 	"github.com/conseweb/coinutil"
 )
 

@@ -5,7 +5,7 @@
 package mocks
 
 import (
-	protos "conseweb.com/wallet/icebox/protos"
+	protos "github.com/conseweb/icebox/protos"
 	gomock "github.com/golang/mock/gomock"
 	context "golang.org/x/net/context"
 	reflect "reflect"

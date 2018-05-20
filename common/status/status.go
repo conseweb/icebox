@@ -35,7 +35,7 @@ import (
 	"github.com/golang/protobuf/ptypes"
 	spb "google.golang.org/genproto/googleapis/rpc/status"
 	//"google.golang.org/grpc/codes"
-	"conseweb.com/wallet/icebox/common/codes"
+	"github.com/conseweb/icebox/common/codes"
 )
 
 // statusError is an alias of a status proto.  It implements error and Status,

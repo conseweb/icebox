@@ -270,13 +270,14 @@ func NewDeleteAddressRequest(tp, idx uint32, pass string) *DeleteAddressRequest 
 	return req
 }
 
-func NewSignTxRequest(tp, idx uint32, amount uint64, dest, txhash string, txidx uint32, pass string) *SignTxRequest {
+// txhash: should be 32 byte; prev tx hash
+func NewSignTxRequest(tp, idx uint32, amount uint64, dest string, txhash []byte, txidx uint32, pass string) *SignTxRequest {
 	req := new(SignTxRequest)
 	req.Type = &tp
 	req.Idx = &idx
 	req.Amount = &amount
 	req.Dest = &dest
-	req.TxHash = &txhash
+	req.TxHash = txhash
 	req.TxIdx = &txidx
 	req.Password = &pass
 	return req
@@ -327,11 +328,11 @@ func NewCheckReply(state int32, devid *string) *CheckReply {
 	return reply
 }
 
-func NewInitReply(devid string) *InitReply {
+func NewInitReply(devid []byte) *InitReply {
 
 	reply := new(InitReply)
 	//reply.Header = CloneHeader(req.Header)
-	reply.DevId = &devid
+	reply.DevId = devid
 	return reply
 }
 
@@ -363,13 +364,13 @@ func NewCreateAddressReply(tp, idx uint32, addr string) *CreateAddressReply {
 	return reply
 }
 
-func NewCreateSecretReply(tp, site, account, idx uint32, secret string) *CreateSecretReply {
+func NewCreateSecretReply(tp, site, account, idx uint32, secret []byte) *CreateSecretReply {
 	reply := new(CreateSecretReply)
 	reply.Type = &tp
 	reply.Site = &site
 	reply.Account = &account
 	reply.Index = &idx
-	reply.Secret = &secret
+	reply.Secret = secret
 	return reply
 }
 

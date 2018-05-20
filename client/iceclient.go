@@ -9,11 +9,11 @@ import (
 	"os"
 
 	"github.com/rs/zerolog"
-	"conseweb.com/wallet/icebox/common/flogging"
-	"conseweb.com/wallet/icebox/common"
-	"conseweb.com/wallet/icebox/core/paginator"
-	"conseweb.com/wallet/icebox/protos"
-	"conseweb.com/wallet/icebox/client/util"
+	"github.com/conseweb/icebox/common/flogging"
+	"github.com/conseweb/icebox/common"
+	"github.com/conseweb/icebox/core/paginator"
+	"github.com/conseweb/icebox/protos"
+	"github.com/conseweb/icebox/client/util"
 	"encoding/hex"
 	"github.com/blockcypher/gobcy"
 )
@@ -102,7 +102,7 @@ func main() {
 		if err != nil {
 			logger.Fatal().Err(err).Msgf("")
 		}
-		logger.Info().Msgf("Inited, DevID: %s", *irep.DevId)
+		logger.Info().Msgf("Inited, DevID: %s", hex.EncodeToString(irep.DevId))
 		handler.FSM.Event("INIT")
 	default:
 		logger.Fatal().Msgf("Something wrong!!")
@@ -159,7 +159,7 @@ func main() {
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("GetAddressByIdx error encountered.")
 	}
-	fromAddr := gap.GetAddr().GetSAddr()
+	fromAddr := string(gap.GetAddr().GetSAddr())
 	logger.Debug().Msgf("from addr: %s", fromAddr)
 
 	bcy := gobcy.API{blockcypher_api_token, "btc", "test3"}

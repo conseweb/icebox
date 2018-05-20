@@ -6,7 +6,7 @@ import (
 	"crypto/rand"
 	"encoding/hex"
 	"errors"
-	"conseweb.com/wallet/icebox/common/crypto/koblitz/kelliptic"
+	"github.com/conseweb/icebox/common/crypto/koblitz/kelliptic"
 	"io"
 	"math/big"
 )

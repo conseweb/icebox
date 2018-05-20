@@ -7,9 +7,8 @@ import (
 	"github.com/btcsuite/btcd/txscript"
 	"github.com/btcsuite/btcd/wire"
 	"github.com/conseweb/coinutil"
-	"conseweb.com/wallet/icebox/core/env"
+	"github.com/conseweb/icebox/core/env"
 	"github.com/prettymuchbryce/hellobitcoin/base58check"
-	"log"
 	"encoding/binary"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/btcsuite/btcutil"
@@ -43,11 +42,11 @@ func (x *TxOutput) Get() (uint64, string) {
 }
 
 type TxInput struct {
-	prev_hash 		string
+	prev_hash 		[]byte  // prev_hash's bytes, not hex string
 	output_index 	uint32
 }
 
-func (in *TxInput) Get() (string, uint32) {
+func (in *TxInput) Get() ([]byte, uint32) {
 	return in.prev_hash, in.output_index
 }
 
@@ -129,7 +128,7 @@ func createScriptSig(rawTransaction []byte, privateKey *btcec.PrivateKey, compre
 	return rawTxHash, rawTxSig, nil
 }
 
-func createRawTransaction(inputTxHash string, inputTxIdx uint32, base58DestAddr string, satoshis uint64, scriptSig []byte) []byte {
+func createRawTransaction(inputTxBytes []byte, inputTxIdx uint32, base58DestAddr string, satoshis uint64, scriptSig []byte) []byte {
 	// Create the raw transaction.
 
 	// Version field
@@ -145,10 +144,10 @@ func createRawTransaction(inputTxHash string, inputTxIdx uint32, base58DestAddr 
 	}
 
 	//Input transaction hash
-	inputTxBytes, err := hex.DecodeString(inputTxHash)
-	if err != nil {
-		log.Fatal(err)
-	}
+	//inputTxBytes, err := hex.DecodeString(inputTxHash)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 	//Convert input transaction hash to little-endian form
 	inputTxBytesReversed := reverseByteOrder(inputTxBytes)
@@ -220,13 +219,13 @@ func createRawTransaction2(input *TxInput, dest *TxOutput, change *TxOutput, scr
 		logger.Fatal().Err(err).Msgf("hex.DecodeString")
 	}
 
-	inputTxHash, inputTxIdx := input.Get()
+	inputTxBytes, inputTxIdx := input.Get()
 
 	//Input transaction hash
-	inputTxBytes, err := hex.DecodeString(inputTxHash)
-	if err != nil {
-		log.Fatal(err)
-	}
+	//inputTxBytes, err := hex.DecodeString(inputTxHash)
+	//if err != nil {
+	//	log.Fatal(err)
+	//}
 
 	//Convert input transaction hash to little-endian form
 	inputTxBytesReversed := reverseByteOrder(inputTxBytes)

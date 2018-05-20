@@ -3,17 +3,17 @@ package core
 import (
 	"golang.org/x/net/context"
 
-	pb "conseweb.com/wallet/icebox/protos"
+	pb "github.com/conseweb/icebox/protos"
 
 	"errors"
 	"os"
 	"time"
-	"conseweb.com/wallet/icebox/common/flogging"
+	"github.com/conseweb/icebox/common/flogging"
 	"github.com/rs/zerolog"
-	"conseweb.com/wallet/icebox/common/fsm"
+	"github.com/conseweb/icebox/common/fsm"
 	_ "github.com/mattn/go-sqlite3"  // must exists, or will cause -- sql: unknown driver "sqlite3"
 	"github.com/golang/protobuf/proto"
-	"conseweb.com/wallet/icebox/common/crypto"
+	"github.com/conseweb/icebox/common/crypto"
 	"github.com/btcsuite/btcd/btcec"
 	"github.com/conseweb/coinutil/base58"
 )

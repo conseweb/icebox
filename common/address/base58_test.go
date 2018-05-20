@@ -1,10 +1,10 @@
-package address_test
+package address
 
 import (
 	"encoding/hex"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
-	"conseweb.com/wallet/icebox/common/address"
+	"github.com/conseweb/icebox/common/address"
 )
 
 var base58_plaintext string = "806A1B4E9EAD05B31AEA30FA22FFB6D07AA4EBFB6088832E1860F7B43A448DF288"

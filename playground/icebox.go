@@ -21,7 +21,7 @@ import (
 	//"conseweb.com/go-bip44"
 	"github.com/tyler-smith/go-bip32"
 	"github.com/tyler-smith/go-bip39"
-	"conseweb.com/wallet/icebox/core/models"
+	"github.com/conseweb/icebox/core/models"
 )
 
 const (
@@ -228,7 +228,7 @@ func CreateFormula(coin, chain, index uint32, name string) (*bip32.Key, error) {
 	return nil, nil
 }
 
-func mainx() {
+func mymain() {
 	InitDevice(secretFn)
 
 	// _, err := CreateTransaction("5HusYj2b2x4nroApgfvaSfKYZhRbKFH41bVyPooymbC6KfgSXdD", "1KKKK6N21XKo48zWKuQKXdvSsCf95ibHFa", 91234, "81b4c832d70cb56ff957589752eb4125a4cab78a25a8fc52d6a09e5bd4404d48")

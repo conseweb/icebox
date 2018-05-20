@@ -1,8 +1,8 @@
 package core
 
 import (
-	"conseweb.com/wallet/icebox/common/fsm"
-	pb "conseweb.com/wallet/icebox/protos"
+	"github.com/conseweb/icebox/common/fsm"
+	pb "github.com/conseweb/icebox/protos"
 )
 
 // example FSM for demonstration purposes.

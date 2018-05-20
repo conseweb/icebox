@@ -265,7 +265,7 @@ message CreateAddressRequest {
 message CreateAddressReply {
     required uint32 type = 1;
     required uint32 idx = 2;
-    required bytes address = 3[(nanopb).max_size = 34]; // address
+    required string address = 3[(nanopb).max_size = 34]; // address
 }
 
 message CreateSecretRequest {
@@ -306,9 +306,9 @@ message SignTxRequest {
     required uint32 type = 2;
     required uint32 idx = 3;
     required uint64 amount = 4;
-    // TODO: 该最大值未经验证
+    // FIXME: 该最大值未经验证
     required string dest = 5[(nanopb).max_size = 34];
-    // TODO: 该最大值未经验证
+    // FIXME: 该最大值未经验证
     required bytes tx_hash = 6[(nanopb).max_size = 32];
     required uint32 tx_idx = 7;
 }
@@ -362,7 +362,7 @@ message Address {
     required uint32 type = 1;
     required uint32 idx = 2;
     optional string name = 3;
-    required bytes s_addr = 4[(nanopb).max_size = 34]; // bitcoin's base58_check address = 34
+    required string s_addr = 4[(nanopb).max_size = 34]; // bitcoin's base58_check address = 34
 }
 
 message ListAddressReply {

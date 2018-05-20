@@ -5,11 +5,11 @@ import (
 	"golang.org/x/net/trace"  // 引入trace包
 	"google.golang.org/grpc/grpclog"
 	"net/http"
-	"conseweb.com/wallet/icebox/common/flogging"
+	"github.com/conseweb/icebox/common/flogging"
 	"fmt"
 	"github.com/cheapRoc/grpc-zerolog"
 	"net"
-	//"conseweb.com/wallet/icebox/core"
+	//"github.com/conseweb/icebox/core"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/testdata"
@@ -17,8 +17,8 @@ import (
 	"os"
 	"github.com/rs/zerolog"
 	_ "github.com/rs/zerolog/log"
-	pb "conseweb.com/wallet/icebox/protos"
-	"conseweb.com/wallet/icebox/core"
+	pb "github.com/conseweb/icebox/protos"
+	"github.com/conseweb/icebox/core"
 )
 
 var (

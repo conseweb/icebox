@@ -6,13 +6,13 @@ import (
 	"github.com/conseweb/coinutil/base58"
 	"github.com/conseweb/coinutil/bip44"
 	"github.com/conseweb/coinutil/bip39"
-	"conseweb.com/wallet/icebox/common/crypto"
-	"conseweb.com/wallet/icebox/core/models"
-	"conseweb.com/wallet/icebox/common/guid"
+	"github.com/conseweb/icebox/common/crypto"
+	"github.com/conseweb/icebox/core/models"
+	"github.com/conseweb/icebox/common/guid"
 	"encoding/hex"
-	"conseweb.com/wallet/icebox/core/common"
+	"github.com/conseweb/icebox/core/common"
 	"fmt"
-	"conseweb.com/wallet/icebox/common/address"
+	"github.com/conseweb/icebox/common/address"
 	"github.com/jinzhu/gorm"
 	"encoding/binary"
 	"os"
@@ -21,22 +21,21 @@ import (
 	"errors"
 	"github.com/conseweb/coinutil"
 	"golang.org/x/net/context"
-	pb "conseweb.com/wallet/icebox/protos"
+	pb "github.com/conseweb/icebox/protos"
 	"math/rand"
 	"time"
 
-	"conseweb.com/wallet/icebox/common/crypto/koblitz/kelliptic"
+	"github.com/conseweb/icebox/common/crypto/koblitz/kelliptic"
 	"github.com/btcsuite/btcd/btcec"
 	"crypto/sha256"
 	_ "github.com/mattn/go-sqlite3"  // must exists, or will cause -- sql: unknown driver "sqlite3"
 
 	"github.com/gogo/protobuf/proto"
-	"conseweb.com/wallet/icebox/core/paginator"
-	"conseweb.com/wallet/icebox/core/env"
-	//tx2 "github.com/bitgoin/tx"
+	"github.com/conseweb/icebox/core/paginator"
+	"github.com/conseweb/icebox/core/env"
 )
 
-//go:generate mockgen -source=helper.go -destination=../mocks/mock_Iceberg.go -package=mocks conseweb.com/wallet/icebox/core Iceberg
+//go:generate mockgen -source=helper.go -destination=../mocks/mock_Iceberg.go -package=mocks github.com/conseweb/icebox/core Iceberg
 
 
 type Iceberg interface {
@@ -257,7 +256,8 @@ func (s *iceHelper) CreateSecret(ctx context.Context, req *pb.CreateSecretReques
 			if err != nil {
 				return nil, err
 			}
-			reply := pb.NewCreateSecretReply(0, site, account, uint32(idx), *secret)
+
+			reply := pb.NewCreateSecretReply(0, site, account, uint32(idx), []byte(*secret))
 			return reply, nil
 		}
 	}
@@ -304,7 +304,11 @@ func (s *iceHelper) ListSecret(ctx context.Context, req *pb.ListSecretRequest) (
 		x.Site = pb.NewUInt32(addrs[i].T2)
 		x.Account = pb.NewUInt32(addrs[i].T3)
 		x.Idx = pb.NewUInt32(addrs[i].T4)
-		x.SSecret, _ = s.generateAddress(addrs[i].T2, addrs[i].T4, pass)
+		SSecret, err := s.generateAddress(addrs[i].T2, addrs[i].T4, pass)
+		if err != nil {
+			return nil, err
+		}
+		x.SSecret = []byte(*SSecret)
 		addrs2[i] = x
 	}
 
@@ -343,11 +347,14 @@ func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest)
 	db.Model(&models.Address{}).Where("t2 = ?", tp).Limit(limit).Offset(offset).Find(&addrs)
 
 	for i, _ := range addrs {
-		//db.Model(addrs[i])
 		x := new(pb.Address)
 		x.Type = pb.NewUInt32(addrs[i].T2)
 		x.Idx = pb.NewUInt32(addrs[i].T5)
-		x.SAddr, _ = s.generateAddress(addrs[i].T2, addrs[i].T5, pass)
+		var err error
+		x.SAddr, err = s.generateAddress(addrs[i].T2, addrs[i].T5, pass)
+		if err != nil {
+			return nil, err
+		}
 		addrs2[i] = x
 	}
 
@@ -373,9 +380,6 @@ func (s *iceHelper) GetAddress(ctx context.Context, req *pb.GetAddressRequest) (
 			return nil, errors.New(fmt.Sprintf("Not address exists for coin type: %d", tp))
 		}
 	}
-
-	//addr := models.Address{}
-	//db.Model(&models.Address{}).Where("t2 = ? AND t5 = ?", tp, idx).First(&addr)
 
 	saddr, err := s.generateAddress(tp, idx, pass)
 	if err != nil {
@@ -538,12 +542,12 @@ func (s *iceHelper) resetDevice() (err error) {
 	return nil
 }
 
-func (s *iceHelper) newDeviceID(dfn string) (string, error) {
+func (s *iceHelper) newDeviceID(dfn string) ([]byte, error) {
 	id := guid.New96()
 	s.id = hex.EncodeToString(id.Bytes())
 	// serialize to file
 	err := ioutil.WriteFile(dfn, []byte(s.id), 0644)
-	return s.id, err
+	return id.Bytes(), err
 }
 
 func (s *iceHelper) loadDeviceID(dfn string) (sid string, err error) {

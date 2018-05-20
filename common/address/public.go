@@ -2,7 +2,7 @@ package address
 
 import (
 	"encoding/hex"
-	"conseweb.com/wallet/icebox/common/crypto/koblitz/kelliptic"
+	"github.com/conseweb/icebox/common/crypto/koblitz/kelliptic"
 	"math/big"
 	"github.com/conseweb/coinutil/base58"
 	"crypto/elliptic"

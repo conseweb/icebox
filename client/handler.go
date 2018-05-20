@@ -1,14 +1,14 @@
 package main
 
 import (
-	"conseweb.com/wallet/icebox/common/fsm"
-	pb "conseweb.com/wallet/icebox/protos"
+	"github.com/conseweb/icebox/common/fsm"
+	pb "github.com/conseweb/icebox/protos"
 	"google.golang.org/grpc"
 	"time"
 	"github.com/conseweb/coinutil/bip32"
-	"conseweb.com/wallet/icebox/core/common"
+	"github.com/conseweb/icebox/core/common"
 	"fmt"
-	"conseweb.com/wallet/icebox/common/address"
+	"github.com/conseweb/icebox/common/address"
 	"google.golang.org/grpc/grpclog"
 	"context"
 	"github.com/conseweb/coinutil/base58"
@@ -16,9 +16,10 @@ import (
 	"github.com/conseweb/coinutil/bip39"
 	"github.com/gogo/protobuf/proto"
 	"encoding/binary"
-	"conseweb.com/wallet/icebox/common/crypto"
-	"conseweb.com/wallet/icebox/client/util"
+	"github.com/conseweb/icebox/common/crypto"
+	"github.com/conseweb/icebox/client/util"
 	"errors"
+	"encoding/hex"
 )
 
 const (
@@ -689,9 +690,16 @@ func (d *Handler) ListSecret(tp, site, offset, limit uint32, pwd string) (*pb.Li
 	return reply, nil
 }
 
+
+// txhash: should be hex string, 64 char, byte len = 32
 func (d *Handler) SignTx(tp, idx uint32, amount uint64, dest, txhash string, txidx uint32, pwd string) (*pb.SignTxReply, error) {
 	var err error
-	req := pb.NewSignTxRequest(tp, idx, amount, dest, txhash, txidx, pwd)
+	byteTxHash, err := hex.DecodeString(txhash)
+	if err != nil {
+		grpclog.Fatalln(err)
+		return nil, err
+	}
+	req := pb.NewSignTxRequest(tp, idx, amount, dest, byteTxHash, txidx, pwd)
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_SIGN_TX,sid, payload)
@@ -749,6 +757,14 @@ func (d *Handler) SignMsg(tp, idx uint32, msg []byte, pwd string) (*pb.SignMsgRe
 
 func (d *Handler) DispMsg(title, content string, icon []byte) (*pb.DispMsgReply, error)  {
 	return nil, nil
+}
+
+func checkError(e error) error {
+	if e != nil {
+		grpclog.Fatalln(e)
+		return e
+	}
+	return nil
 }
 
 func printHeader(msg *pb.IceboxMessage, tip string)  {

@@ -2,17 +2,17 @@ package core
 
 import (
 	. "github.com/smartystreets/goconvey/convey"
-	pb "conseweb.com/wallet/icebox/protos"
+	pb "github.com/conseweb/icebox/protos"
 
 	"testing"
 	_ "fmt"
-	"conseweb.com/wallet/icebox/core/common"
+	"github.com/conseweb/icebox/core/common"
 
 	"github.com/golang/protobuf/proto"
 	"context"
 )
 
-//go:generate mockgen -source=handler_test.go -destination=../mocks/mock_IceboxMessage.go -package=mocks conseweb.com/wallet/icebox/core IceboxMsgIntf
+//go:generate mockgen -source=handler_test.go -destination=../mocks/mock_IceboxMessage.go -package=mocks github.com/conseweb/icebox/core IceboxMsgIntf
 
 type IceboxMsgIntf interface {
 	Reset()
