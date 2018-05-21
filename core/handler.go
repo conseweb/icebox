@@ -14,7 +14,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"  // must exists, or will cause -- sql: unknown driver "sqlite3"
 	"github.com/golang/protobuf/proto"
 	"github.com/conseweb/icebox/common/crypto"
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/conseweb/btcd/btcec"
 	"github.com/conseweb/coinutil/base58"
 )
 

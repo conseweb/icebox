@@ -4,9 +4,9 @@ package wallet
 import (
 	"errors"
 	"time"
-	"github.com/btcsuite/btcd/chaincfg"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	btc "github.com/btcsuite/btcutil"
+	"github.com/conseweb/btcd/chaincfg"
+	"github.com/conseweb/btcd/chaincfg/chainhash"
+	btc "github.com/conseweb/btcutil"
 	hd "github.com/conseweb/coinutil/bip32"
 )
 

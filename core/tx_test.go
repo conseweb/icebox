@@ -7,8 +7,8 @@ import (
 	"encoding/hex"
 	"github.com/conseweb/coinutil/base58"
 	"github.com/conseweb/icebox/core/env"
-	"github.com/btcsuite/btcd/txscript"
-	"github.com/btcsuite/btcutil"
+	"github.com/conseweb/btcd/txscript"
+	"github.com/conseweb/btcutil"
 	"github.com/conseweb/icebox/common"
 	"github.com/conseweb/coinutil"
 )
@@ -149,7 +149,7 @@ func TestKeys(t *testing.T) {
 func TestCreateRawTransaction(t *testing.T) {
 	Convey(`createRawTransaction should working.`, t, func() {
 
-		inputTxHash := tx_tests[0].inputTxHash
+		inputTxHash, _ := hex.DecodeString(tx_tests[0].inputTxHash)
 		inputTxIdx := tx_tests[0].inputTxIdx
 		base58ToAddr := tx_tests[0].base58ToAddr
 		amountSatoshis := tx_tests[0].amountSatoshis
@@ -164,7 +164,7 @@ func TestCreateRawTransaction(t *testing.T) {
 func TestCreateRawTransactionWithUnCompressedFromAddr(t *testing.T) {
 	Convey(`createRawTransaction should working.`, t, func() {
 
-		inputTxHash := tx_tests[0].inputTxHash
+		inputTxHash, _ := hex.DecodeString(tx_tests[0].inputTxHash)
 		inputTxIdx := tx_tests[0].inputTxIdx
 		base58ToAddr := tx_tests[0].base58ToAddr
 		amountSatoshis := tx_tests[0].amountSatoshis
@@ -195,7 +195,7 @@ func TestDecoceWif(t *testing.T) {
 func TestSignedTxHash(t *testing.T) {
 	Convey(`Create double hash should working.`, t, func() {
 
-		inputTxHash := tx_tests[0].inputTxHash
+		inputTxHash, _ := hex.DecodeString(tx_tests[0].inputTxHash)
 		inputTxIdx := tx_tests[0].inputTxIdx
 		base58ToAddr := tx_tests[0].base58ToAddr
 		amountSatoshis := tx_tests[0].amountSatoshis

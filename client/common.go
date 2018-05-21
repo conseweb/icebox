@@ -1,6 +1,6 @@
 package main
 
-import "github.com/btcsuite/btcd/chaincfg"
+import "github.com/conseweb/btcd/chaincfg"
 
 //const (
 //	isDebug = true;

@@ -10,7 +10,7 @@ import (
 	"crypto/sha256"
 	"math/big"
 	"crypto/ecdsa"
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/conseweb/btcd/btcec"
 	"crypto/rand"
 )
 

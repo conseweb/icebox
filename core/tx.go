@@ -3,15 +3,15 @@ package core
 import (
 	"bytes"
 	"encoding/hex"
-	"github.com/btcsuite/btcd/chaincfg/chainhash"
-	"github.com/btcsuite/btcd/txscript"
-	"github.com/btcsuite/btcd/wire"
+	"github.com/conseweb/btcd/chaincfg/chainhash"
+	"github.com/conseweb/btcd/txscript"
+	"github.com/conseweb/btcd/wire"
 	"github.com/conseweb/coinutil"
 	"github.com/conseweb/icebox/core/env"
 	"github.com/prettymuchbryce/hellobitcoin/base58check"
 	"encoding/binary"
-	"github.com/btcsuite/btcd/btcec"
-	"github.com/btcsuite/btcutil"
+	"github.com/conseweb/btcd/btcec"
+	"github.com/conseweb/btcutil"
 )
 
 type utxo struct {

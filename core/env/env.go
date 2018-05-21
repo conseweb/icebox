@@ -1,6 +1,6 @@
 package env
 
-import "github.com/btcsuite/btcd/chaincfg"
+import "github.com/conseweb/btcd/chaincfg"
 
 type Env struct {
 	isDebug bool

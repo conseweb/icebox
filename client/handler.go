@@ -12,7 +12,7 @@ import (
 	"google.golang.org/grpc/grpclog"
 	"context"
 	"github.com/conseweb/coinutil/base58"
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/conseweb/btcd/btcec"
 	"github.com/conseweb/coinutil/bip39"
 	"github.com/gogo/protobuf/proto"
 	"encoding/binary"

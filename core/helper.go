@@ -26,7 +26,7 @@ import (
 	"time"
 
 	"github.com/conseweb/icebox/common/crypto/koblitz/kelliptic"
-	"github.com/btcsuite/btcd/btcec"
+	"github.com/conseweb/btcd/btcec"
 	"crypto/sha256"
 	_ "github.com/mattn/go-sqlite3"  // must exists, or will cause -- sql: unknown driver "sqlite3"
 
