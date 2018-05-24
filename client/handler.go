@@ -1,4 +1,4 @@
-package main
+package client
 
 import (
 	"github.com/conseweb/icebox/common/fsm"
@@ -20,11 +20,17 @@ import (
 	"github.com/conseweb/icebox/client/util"
 	"errors"
 	"encoding/hex"
+	"github.com/rs/zerolog"
+	"github.com/conseweb/icebox/common/flogging"
 )
 
 const (
 	sessionKeyFn = "session_key.dat"
  	timeout      = 500 * time.Millisecond
+)
+
+var (
+	logger = flogging.MustGetLogger("client", zerolog.DebugLevel)
 )
 
 type Session struct {
@@ -97,7 +103,7 @@ func NewHandler(to string, opts []grpc.DialOption) *Handler {
 
 func (d *Handler) Connect() error {
 	var err error
-	d.Conn, err = grpc.Dial(*serverAddr, d.opts...)
+	d.Conn, err = grpc.Dial(d.To, d.opts...)
 	if err != nil {
 		return err
 	}

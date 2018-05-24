@@ -3,7 +3,6 @@ package models
 import (
 	"fmt"
 	"github.com/jinzhu/gorm"
-	//"github.com/conseweb/icebox/models"
 )
 
 // T1: 44, T2: coin type, T3: account=0, T4: change/chain=0, T5: index

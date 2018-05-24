@@ -699,6 +699,8 @@ func (s *iceHelper) initDB(fn string) (db *gorm.DB, err error) {
 	db.Create(&models.Coin{T2: 9, Symbol: "xcp", Name: "counterparty"})
 	db.Create(&models.Coin{T2: 60, Symbol: "eth", Name: "ethereum"})
 	db.Create(&models.Coin{T2: 61, Symbol: "etc", Name: "ethereum classic"})
+	db.Create(&models.Coin{T2: 133, Symbol: "zec", Name: "zcash"})
+	db.Create(&models.Coin{T2: 145, Symbol: "bch", Name: "bitcoin cash"})
 
 	s.db = db
 	return db, err

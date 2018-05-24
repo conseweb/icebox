@@ -8,10 +8,10 @@ import (
 	"github.com/conseweb/btcd/wire"
 	"github.com/conseweb/coinutil"
 	"github.com/conseweb/icebox/core/env"
-	"github.com/prettymuchbryce/hellobitcoin/base58check"
 	"encoding/binary"
 	"github.com/conseweb/btcd/btcec"
 	"github.com/conseweb/btcutil"
+	"github.com/conseweb/icebox/core/base58check"
 )
 
 type utxo struct {
@@ -52,6 +52,7 @@ func (in *TxInput) Get() ([]byte, uint32) {
 
 func createScriptPubKey(publicKeyBase58 string) []byte {
 	publicKeyBytes := base58check.Decode(publicKeyBase58)
+	//publicKeyBytes := base58.Decode(publicKeyBase58)
 
 	var scriptPubKey bytes.Buffer
 	scriptPubKey.WriteByte(byte(118))                 	//OP_DUP 			hex=76
@@ -365,6 +366,8 @@ func CreateSignedTx(privKey *btcec.PrivateKey, input *TxInput, dest *TxOutput, c
 }
 
 
+// FIXME: should support locktime
+// FIXME: should default use compressed public key
 func CreateSignedTx2(privKey *btcec.PrivateKey, input *TxInput, dest *TxOutput, change *TxOutput, compressed bool) (*Transaction, error) {
 	var transaction Transaction
 	// get source private key

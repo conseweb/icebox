@@ -14,6 +14,7 @@ import (
 	"github.com/conseweb/icebox/core/paginator"
 	"github.com/conseweb/icebox/protos"
 	"github.com/conseweb/icebox/client/util"
+	"github.com/conseweb/icebox/client"
 	"encoding/hex"
 	"github.com/blockcypher/gobcy"
 )
@@ -50,7 +51,7 @@ func main() {
 		opts = append(opts, grpc.WithInsecure())
 	}
 
-	handler := NewHandler(*serverAddr, opts)
+	handler := client.NewHandler(*serverAddr, opts)
 
 	handler.FSM.Event("CREATE")
 
@@ -200,7 +201,7 @@ func main() {
 	// pub key: hex: 0259c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c
 	// dest: "1, 807294064, msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb"
 	var signTxReply *protos.SignTxReply
-	if RTEnv.isTestNet {
+	if client.RTEnv.IsTestNet() {
 		signTxReply, err = handler.SignTx(uint32(tp), uint32(idx), uint64(amount), "msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb", *goodTxId, uint32(outn), common.Test_password)
 	} else {
 		// TODO: address should change to mainnet address
@@ -221,7 +222,7 @@ func main() {
 		var reply *protos.SignMsgReply
 		msg := "9d5f89bd7855e6dcfb0fb7aef8b4748d7b3082f313e88eb7936b19c95de454d9"
 		wantToSign, _ := hex.DecodeString(msg)
-		if RTEnv.isTestNet {
+		if client.RTEnv.IsTestNet() {
 			reply, err = handler.SignMsg(uint32(tp), uint32(idx), wantToSign, common.Test_password)
 		} else {
 			// TODO: address should change to mainnet address
