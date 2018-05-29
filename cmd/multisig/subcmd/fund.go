@@ -1,5 +1,5 @@
 // fund.go - Funding P2SH address from a Bitcoin address.
-package multisig
+package subcmd
 
 import (
 	"github.com/conseweb/icebox/core/base58check"

@@ -61,10 +61,11 @@ func makeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
-func NewHandler(to string, opts []grpc.DialOption) *Handler {
+func NewHandler(to string) *Handler {
+
 	d := &Handler{
 		To: to,
-		opts: opts,
+		//opts: opts,
 		session: new(Session),
 	}
 

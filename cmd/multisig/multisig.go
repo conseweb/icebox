@@ -1,12 +1,12 @@
-package main
+package multisig
 
 import (
-	"github.com/conseweb/icebox/core/multisig"
+	multisig "github.com/conseweb/icebox/cmd/multisig/subcmd"
 
 	"os"
 
 	"github.com/rs/zerolog"
-	"gopkg.in/alecthomas/kingpin.v1"
+	"gopkg.in/alecthomas/kingpin.v2"
 	"github.com/conseweb/icebox/common/flogging"
 )
 
@@ -41,28 +41,24 @@ var (
 )
 
 func main() {
-	if len(os.Args) < 2 {
-		logger.Info().Msgf("You need more than 1 arguments")
 
-	} else {
-		switch kingpin.MustParse(app.Parse(os.Args[1:])) {
+	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
 
-		//keys -- Generate public/private key pairs
-		case cmdKeys.FullCommand():
-			multisig.OutputKeys(*cmdKeysCount, *cmdKeysConcise)
+	//keys -- Generate public/private key pairs
+	case cmdKeys.FullCommand():
+		multisig.OutputKeys(*cmdKeysCount, *cmdKeysConcise)
 
-			//address -- Create a multisig P2SH address
-		case cmdAddress.FullCommand():
-			multisig.OutputAddress(*cmdAddressM, *cmdAddressN, *cmdAddressPublicKeys)
+		//address -- Create a multisig P2SH address
+	case cmdAddress.FullCommand():
+		multisig.OutputAddress(*cmdAddressM, *cmdAddressN, *cmdAddressPublicKeys)
 
-			//address -- Fund a P2SH address
-		case cmdFund.FullCommand():
-			multisig.OutputFund(*cmdFundPrivateKey, *cmdFundInputTx, *cmdFundAmount, *cmdFundDestination)
+		//address -- Fund a P2SH address
+	case cmdFund.FullCommand():
+		multisig.OutputFund(*cmdFundPrivateKey, *cmdFundInputTx, *cmdFundAmount, *cmdFundDestination)
 
-			//address -- Spend a multisig P2SH address
-		case cmdSpend.FullCommand():
-			multisig.OutputSpend(*cmdSpendPrivateKeys, *cmdSpendDestination, *cmdSpendRedeemScript, *cmdSpendInputTx, *cmdSpendAmount)
-		}
+		//address -- Spend a multisig P2SH address
+	case cmdSpend.FullCommand():
+		multisig.OutputSpend(*cmdSpendPrivateKeys, *cmdSpendDestination, *cmdSpendRedeemScript, *cmdSpendInputTx, *cmdSpendAmount)
 	}
 
 }

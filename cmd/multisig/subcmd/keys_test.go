@@ -1,4 +1,4 @@
-package multisig
+package subcmd
 
 import (
 	"encoding/hex"

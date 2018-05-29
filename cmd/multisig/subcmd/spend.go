@@ -1,5 +1,5 @@
 // spend.go - Spending P2SH multisig funds to a Bitcoin address.
-package multisig
+package subcmd
 
 import (
 	"github.com/conseweb/icebox/core/base58check"

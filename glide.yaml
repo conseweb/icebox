@@ -55,3 +55,5 @@ testImport:
   version: ^1.2.1
   subpackages:
   - assert
+- package: github.com/nanopb/nanopb
+- package: github.com/alecthomas/kingpin

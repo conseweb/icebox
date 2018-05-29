@@ -1,7 +1,7 @@
 // Package multisig contains the main starting threads for each of the subcommands for go-bitcoin-multisig.
 //
 // address.go - Generating P2SH addresses.
-package multisig
+package subcmd
 
 import (
 	"github.com/conseweb/icebox/core/base58check"

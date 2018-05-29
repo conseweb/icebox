@@ -1,4 +1,4 @@
-package multisig
+package subcmd
 
 import (
 	"github.com/conseweb/icebox/core/testutils"
