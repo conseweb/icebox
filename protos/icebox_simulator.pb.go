@@ -66,6 +66,11 @@ import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
 
+import (
+	context "golang.org/x/net/context"
+	grpc "google.golang.org/grpc"
+)
+
 // Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
 var _ = fmt.Errorf
@@ -1746,6 +1751,80 @@ func init() {
 	proto.RegisterType((*DispMsgReply)(nil), "DispMsgReply")
 	proto.RegisterEnum("IceboxMessage_Command", IceboxMessage_Command_name, IceboxMessage_Command_value)
 	proto.RegisterEnum("Address_HashAlgo", Address_HashAlgo_name, Address_HashAlgo_value)
+}
+
+// Reference imports to suppress errors if they are not otherwise used.
+var _ context.Context
+var _ grpc.ClientConn
+
+// This is a compile-time assertion to ensure that this generated file
+// is compatible with the grpc package it is being compiled against.
+const _ = grpc.SupportPackageIsVersion4
+
+// Client API for Icebox service
+
+type IceboxClient interface {
+	// 会话需要加密
+	Execute(ctx context.Context, in *IceboxMessage, opts ...grpc.CallOption) (*IceboxMessage, error)
+}
+
+type iceboxClient struct {
+	cc *grpc.ClientConn
+}
+
+func NewIceboxClient(cc *grpc.ClientConn) IceboxClient {
+	return &iceboxClient{cc}
+}
+
+func (c *iceboxClient) Execute(ctx context.Context, in *IceboxMessage, opts ...grpc.CallOption) (*IceboxMessage, error) {
+	out := new(IceboxMessage)
+	err := grpc.Invoke(ctx, "/Icebox/Execute", in, out, c.cc, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+// Server API for Icebox service
+
+type IceboxServer interface {
+	// 会话需要加密
+	Execute(context.Context, *IceboxMessage) (*IceboxMessage, error)
+}
+
+func RegisterIceboxServer(s *grpc.Server, srv IceboxServer) {
+	s.RegisterService(&_Icebox_serviceDesc, srv)
+}
+
+func _Icebox_Execute_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(IceboxMessage)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(IceboxServer).Execute(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Icebox/Execute",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(IceboxServer).Execute(ctx, req.(*IceboxMessage))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+var _Icebox_serviceDesc = grpc.ServiceDesc{
+	ServiceName: "Icebox",
+	HandlerType: (*IceboxServer)(nil),
+	Methods: []grpc.MethodDesc{
+		{
+			MethodName: "Execute",
+			Handler:    _Icebox_Execute_Handler,
+		},
+	},
+	Streams:  []grpc.StreamDesc{},
+	Metadata: "icebox_simulator.proto",
 }
 
 func init() { proto.RegisterFile("icebox_simulator.proto", fileDescriptor0) }

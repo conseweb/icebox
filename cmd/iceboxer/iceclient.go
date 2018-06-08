@@ -1,4 +1,4 @@
-package iceboxer
+package main
 
 import (
 	"flag"

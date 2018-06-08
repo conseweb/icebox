@@ -1,4 +1,4 @@
-package multisig
+package main
 
 import (
 	multisig "github.com/conseweb/icebox/cmd/multisig/subcmd"

@@ -1,8 +1,6 @@
 package protos
 
 import (
-	"C"
-
 	"time"
 	mrand "math/rand"
 	"bytes"
@@ -14,7 +12,8 @@ import (
 	"github.com/conseweb/btcd/btcec"
 	"crypto/rand"
 	"github.com/golang/protobuf/proto"
-	//pb "github.com/conseweb/icebox/protos"
+
+	//"C"
 )
 
 const (
