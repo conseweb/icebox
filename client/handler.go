@@ -186,9 +186,9 @@ func (d *Handler) generateSessionKey(r string) *bip32.ExtendedKey {
 
 func (d *Handler) Hello() (*pb.HiReply, error) {
 	var err error
-	req := pb.NewHiRequest(common.App_magic)
+	//req := pb.NewHiRequest(common.App_magic)
 
-	payload, _ := proto.Marshal(req)
+	payload, _ := pb.EncodeHiRequest(common.App_magic)
 	ct := pb.NewIceboxMessage(pb.IceboxMessage_HELLO, payload)
 
 	//ctx, cancel := context.WithTimeout(context.Background(), timeout)
@@ -231,8 +231,8 @@ func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
 	bs := base58.Encode(b)
 	logger.Debug().Msgf("Base58 raw public string: '%s'", bs)
 	hb := util.Hash256(b)
-	req := pb.NewNegotiateRequest(bs, base58.Encode(hb))
-	payload, _ := proto.Marshal(req)
+	//req := pb.NewNegotiateRequest(bs, base58.Encode(hb))
+	payload, _ := pb.EncodeNegotiateRequest(bs, base58.Encode(hb))
 	x := pb.NewIceboxMessage(pb.IceboxMessage_NEGOTIATE, payload)
 
 	//ctx, cancel := context.WithTimeout(context.Background(), timeout)

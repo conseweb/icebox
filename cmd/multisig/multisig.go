@@ -15,7 +15,7 @@ var (
 	app = kingpin.New("multisig", "A Bitcoin multisig transaction builder built in Go")
 
 	//keys subcommand
-	cmdKeys        = app.Command("keys", "Generate public/private key pairs valid for use on Bitcoin network. **PSEUDORANDOM AND FOR DEMONSTRATION PURPOSES ONLY. DO NOT USE IN PRODUCTION.**")
+	cmdKeys        = app.Command("keys", "Generate public/private key pairs valid for use on Bitcoin network.")
 	cmdKeysCount   = cmdKeys.Flag("count", "No. of key pairs to generate.").Default("1").Int()
 	cmdKeysConcise = cmdKeys.Flag("concise", "Turn on concise output. Default is off (verbose output).").Default("false").Bool()
 	//address subcommand

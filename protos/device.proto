@@ -14,7 +14,7 @@ enum CoinType {
 
 // coin or product table，静态配置表
 // for password: t1 = 1, t2 = 0, t3 = 0
-message FeatureTable {
+message AddressTable {
     required uint32 t1 = 1;         // for bip44: purpose = 44'
     required uint32 t2 = 2;         // for bip44: coin_type
     required uint32 t3 = 3;         // for bip44: account
@@ -24,7 +24,7 @@ message FeatureTable {
     optional string name = 5;    // like "bitcoin"
 }
 
-message FormulaTable {
+message CoinTable {
     required uint32  t2 = 1;                 // for bip44: coin_type
     required uint32 t4 = 2[default = 0];  // 该字段一般取值为0/1, 默认为0, 暂未使用
     required uint32 t5 = 3;                 // for bip44: address_index

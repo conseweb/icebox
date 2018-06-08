@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+message Config {
+    string currentversion = 1;
+    string upgrademsg = 2;
+    string upgradeurl = 3;
+
+
+    message DataType {
+        string invalidatedate = 1;
+        string url = 2;
+        string cache = 3;
+        string autorefresh = 4;
+    }
+
+    message DataTypes {
+        DataType package = 1;
+        DataType request = 2;
+        DataType milestones = 3;
+        DataType milestonerange = 4;
+    }
+
+    DataTypes datatypes = 4;
+}
+

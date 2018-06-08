@@ -15,6 +15,7 @@ import (
 	"github.com/conseweb/icebox/protos"
 	"github.com/conseweb/icebox/client/util"
 	"github.com/conseweb/icebox/client"
+	cli "github.com/conseweb/icebox/cmd/iceboxer/subcmd"
 	"encoding/hex"
 	"gopkg.in/alecthomas/kingpin.v2"
 	"github.com/blockcypher/gobcy"
@@ -67,19 +68,19 @@ func main() {
 
 	//keys -- Generate public/private key pairs
 	case cmdKeys.FullCommand():
-		multisig.OutputKeys(*cmdKeysCount, *cmdKeysConcise)
+		cli.OutputKeys(*cmdKeysCount, *cmdKeysConcise)
 
 		//address -- Create a multisig P2SH address
 	case cmdAddress.FullCommand():
-		multisig.OutputAddress(*cmdAddressM, *cmdAddressN, *cmdAddressPublicKeys)
+		cli.OutputAddress(*cmdAddressM, *cmdAddressN, *cmdAddressPublicKeys)
 
 		//address -- Fund a P2SH address
 	case cmdFund.FullCommand():
-		multisig.OutputFund(*cmdFundPrivateKey, *cmdFundInputTx, *cmdFundAmount, *cmdFundDestination)
+		cli.OutputFund(*cmdFundPrivateKey, *cmdFundInputTx, *cmdFundAmount, *cmdFundDestination)
 
 		//address -- Spend a multisig P2SH address
 	case cmdSpend.FullCommand():
-		multisig.OutputSpend(*cmdSpendPrivateKeys, *cmdSpendDestination, *cmdSpendRedeemScript, *cmdSpendInputTx, *cmdSpendAmount)
+		cli.OutputSpend(*cmdSpendPrivateKeys, *cmdSpendDestination, *cmdSpendRedeemScript, *cmdSpendInputTx, *cmdSpendAmount)
 	}
 
 	flag.Parse()

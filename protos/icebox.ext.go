@@ -1,6 +1,7 @@
 package protos
 
 import (
+	"C"
 
 	"time"
 	mrand "math/rand"
@@ -12,6 +13,7 @@ import (
 	"crypto/ecdsa"
 	"github.com/conseweb/btcd/btcec"
 	"crypto/rand"
+	"github.com/golang/protobuf/proto"
 )
 
 const (
@@ -56,6 +58,32 @@ func NewIceboxMessage(t IceboxMessage_Type, p []byte) *IceboxMessage  {
 	m.Signature = []byte{'g', 'o', 'l', 'a', 'n', 'g'}
 
 	return m
+}
+
+//export EncodeIceboxMessage
+func EncodeIceboxMessage(t IceboxMessage_Type, p []byte) ([]byte, error)  {
+	m := new(IceboxMessage)
+	m.Header = new(IceboxMessage_Header)
+	m.Header.Version = NewUInt32(Version)
+	var sid = mrand.Uint32()
+	m.Header.SessionId = &sid
+	m.Header.Type = &t
+
+	now := time.Now()
+	s := int64(now.Second()) // from 'int'
+	n := int32(now.Nanosecond()) // from 'int'
+	m.Header.Timestamp = &Timestamp{Seconds:&s, Nanos:&n}
+
+	if p != nil {
+		m.Payload = p
+	}
+	m.Signature = []byte{'g', 'o', 'l', 'a', 'n', 'g'}
+
+	payload, err := proto.Marshal(m)
+	if err != nil {
+		return nil, err
+	}
+	return payload, nil
 }
 
 func Hash256(b []byte) []byte {
@@ -166,20 +194,45 @@ func NewError(code int32, msg string) *Error  {
 	return xe
 }
 
-func NewHiRequest(magic int64) *HiRequest {
+//func NewHiRequest(magic int64) *HiRequest {
+//	req := new(HiRequest)
+//	//req.Header = NewHeader()
+//	req.MagicA = &magic
+//	return req
+//}
+
+//export EncodeHiRequest
+func EncodeHiRequest(magic int64) ([]byte, error) {
 	req := new(HiRequest)
 	//req.Header = NewHeader()
 	req.MagicA = &magic
-	return req
+	payload, err := proto.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	return payload, nil
 }
 
 // key: KeyA, public key of requester side
-func NewNegotiateRequest(key, hash string) *NegotiateRequest {
+//func NewNegotiateRequest(key, hash string) *NegotiateRequest {
+//	req := new(NegotiateRequest)
+//	req.Hash = &hash
+//	//req.Header = NewHeader()
+//	req.KeyA = &key
+//	return req
+//}
+
+//export EncodeNegotiateRequest
+func EncodeNegotiateRequest(key, hash string) ([]byte, error) {
 	req := new(NegotiateRequest)
 	req.Hash = &hash
 	//req.Header = NewHeader()
 	req.KeyA = &key
-	return req
+	payload, err := proto.Marshal(req)
+	if err != nil {
+		return nil, err
+	}
+	return payload, nil
 }
 
 func NewStartRequest() *StartRequest {

@@ -30,8 +30,8 @@ type IceboxMsgIntf interface {
 func TestHelloWithErrorMsgType(t *testing.T) {
 	Convey(`Hello request should received error for invalid msg type'.`, t, func() {
 
-		req := pb.NewHiRequest(common.App_magic)
-		payload, _ := proto.Marshal(req)
+		//req := pb.NewHiRequest(common.App_magic)
+		payload, _ := pb.EncodeHiRequest(common.App_magic);
 		ct := pb.NewIceboxMessage(pb.IceboxMessage_HELLO+1, payload)
 		handler := NewIcebergHandler()
 		res, err := handler.Chat(context.Background(), ct)
@@ -43,8 +43,8 @@ func TestHelloWithErrorMsgType(t *testing.T) {
 func TestHelloWithErrorMagicNumber(t *testing.T) {
 	Convey(`Hello request should received error for invalid magic number'.`, t, func() {
 
-		req := pb.NewHiRequest(common.App_magic+1)
-		payload, _ := proto.Marshal(req)
+		//req := pb.NewHiRequest(common.App_magic+1)
+		payload, _ := pb.EncodeHiRequest(common.App_magic+1)
 		ct := pb.NewIceboxMessage(pb.IceboxMessage_HELLO, payload)
 		handler := NewIcebergHandler()
 		res, err := handler.Chat(context.Background(), ct)
@@ -60,8 +60,8 @@ func TestHelloWithErrorMagicNumber(t *testing.T) {
 
 func TestHelloSuccess(t *testing.T) {
 	Convey(`Hello request should received device's magic number'.`, t, func() {
-		req := pb.NewHiRequest(common.App_magic)
-		payload, _ := proto.Marshal(req)
+		//req := pb.NewHiRequest(common.App_magic)
+		payload, _ := pb.EncodeHiRequest(common.App_magic)
 		ct := pb.NewIceboxMessage(pb.IceboxMessage_HELLO, payload)
 		handler := NewIcebergHandler()
 		res, err := handler.Chat(context.Background(), ct)
@@ -80,7 +80,7 @@ func TestHelloSuccess(t *testing.T) {
 func TestNegotiateSuccess(t *testing.T) {
 	Convey(`Negotiate request should received a key'.`, t, func() {
 		//req := pb.NewNegotiateRequest()
-		//payload, _ := proto.Marshal(req)
+		//payload, _ := pb.EncodeNegotiateRequest(common.App_magic)
 		//ct := pb.NewIceboxMessage(pb.IceboxMessage_HELLO, payload)
 		//handler := NewIcebergHandler()
 		//res, err := handler.Chat(context.Background(), ct)
