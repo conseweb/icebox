@@ -39,13 +39,13 @@ func NewInt32(v int32) *int32 {
 	return &i
 }
 
-func NewIceboxMessage(t IceboxMessage_Type, p []byte) *IceboxMessage  {
+func NewIceboxMessage(t IceboxMessage_Command, p []byte) *IceboxMessage  {
 	m := new(IceboxMessage)
 	m.Header = new(IceboxMessage_Header)
 	m.Header.Version = NewUInt32(Version)
 	var sid = mrand.Uint32()
 	m.Header.SessionId = &sid
-	m.Header.Type = &t
+	m.Header.Cmd = &t
 
 	now := time.Now()
 	s := int64(now.Second()) // from 'int'
@@ -61,13 +61,13 @@ func NewIceboxMessage(t IceboxMessage_Type, p []byte) *IceboxMessage  {
 }
 
 //export EncodeIceboxMessage
-func EncodeIceboxMessage(t IceboxMessage_Type, p []byte) ([]byte, error)  {
+func EncodeIceboxMessage(t IceboxMessage_Command, p []byte) ([]byte, error)  {
 	m := new(IceboxMessage)
 	m.Header = new(IceboxMessage_Header)
 	m.Header.Version = NewUInt32(Version)
 	var sid = mrand.Uint32()
 	m.Header.SessionId = &sid
-	m.Header.Type = &t
+	m.Header.Cmd = &t
 
 	now := time.Now()
 	s := int64(now.Second()) // from 'int'
@@ -92,13 +92,13 @@ func Hash256(b []byte) []byte {
 	return h.Sum(nil)
 }
 
-func NewIceboxMessageWithSID(t IceboxMessage_Type, sid uint32, p []byte) *IceboxMessage  {
+func NewIceboxMessageWithSID(t IceboxMessage_Command, sid uint32, p []byte) *IceboxMessage  {
 	m := new(IceboxMessage)
 	m.Header = new(IceboxMessage_Header)
 	v := NewUInt32(Version)
 	m.Header.Version = v
 	m.Header.SessionId = &sid
-	m.Header.Type = &t
+	m.Header.Cmd = &t
 	now := time.Now()
 	s := int64(now.Second()) // from 'int'
 	n := int32(now.Nanosecond()) // from 'int'
@@ -124,7 +124,7 @@ func GetMessageHash(h *IceboxMessage_Header, p []byte) []byte {
 	binary.LittleEndian.PutUint32(b4, h.GetVersion())
 	buf.Write(b4)
 	// type: 4 byte
-	binary.LittleEndian.PutUint32(b4, uint32(h.GetType()))
+	binary.LittleEndian.PutUint32(b4, uint32(h.GetCmd()))
 	buf.Write(b4)
 	// timestamp: 8 + 4 bytes
 	binary.LittleEndian.PutUint64(b8, uint64(h.GetTimestamp().GetSeconds()))

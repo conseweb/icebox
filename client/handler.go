@@ -776,7 +776,7 @@ func checkError(e error) error {
 
 func printHeader(msg *pb.IceboxMessage, tip string)  {
 	logger.Debug().Msgf("%s: version:%d type:%s session_id:%d", tip,
-		msg.GetHeader().GetVersion(), msg.GetHeader().GetType(), msg.GetHeader().GetSessionId())
+		msg.GetHeader().GetVersion(), msg.GetHeader().GetCmd(), msg.GetHeader().GetSessionId())
 }
 
 func printBody(msg *pb.IceboxMessage, tip string)  {

@@ -19,3 +19,7 @@ go_build_iceserver_go
 vendor
 cmd/signer
 
+mobile
+nanopb
+playground/*.json
+protos2

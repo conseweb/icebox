@@ -116,11 +116,11 @@ func (d *IcebergHandler) beforePingEvent(e *fsm.Event, state string) {
 	logger.Debug().Msgf("Before %s, dest is %s, current is %s", e.Event, e.Dst, state)
 }
 
-func (s *IcebergHandler) Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.IceboxMessage, error)  {
+func (s *IcebergHandler) Execute(ctx context.Context, req *pb.IceboxMessage) (*pb.IceboxMessage, error)  {
 	hdr := req.GetHeader()
 	v := hdr.GetVersion()
 	sid := hdr.GetSessionId()
-	t := hdr.GetType()
+	t := hdr.GetCmd()
 	payload := req.GetPayload()
 	sig := req.GetSignature()
 	logger.Debug().Msgf("Header version: %d, session id: %d, type: %s", v, sid, t)

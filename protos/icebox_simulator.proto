@@ -25,7 +25,7 @@ message Timestamp {
 
 message IceboxMessage {
 
-    enum Type {
+    enum Command {
         UNDEFINED = 0;
         ERROR = 1;
         HELLO = 2;
@@ -55,7 +55,7 @@ message IceboxMessage {
 
     message Header {
         required uint32 version = 1[default = 1];  // 消息版本号
-        required Type type = 2;
+        required Command cmd = 2;
         required Timestamp  timestamp = 3;
         required uint32 session_id = 4;
     }
@@ -80,7 +80,7 @@ service Icebox {
     //    rpc StartSession (StartRequest) returns (StartReply) {}
 
     // 会话需要加密
-    rpc Chat (IceboxMessage) returns (IceboxMessage) {}
+    rpc Execute (IceboxMessage) returns (IceboxMessage) {}
 
     // 结束当前会话后，立刻锁定设备；
     //    rpc EndSession (EndRequest) returns (EndReply) {}
@@ -129,18 +129,6 @@ service Icebox {
 message Error {
     required int32 code = 1;
     optional string message = 2[(nanopb).max_size = 256];
-}
-
-message Header {
-    required uint32 ver = 1 [default = 1];    // 消息版本号
-    required uint32 sn = 2;     // 消息序列号，返回消息的序列号必须等于请求消息的序列号
-}
-
-message ReplyHeader {
-    required uint32 ver = 1 [default = 1];    // 消息版本号
-    required uint32 sn = 2;     // 消息序列号，返回消息的序列号必须等于请求消息的序列号
-    required uint32 code = 3;
-    optional string message = 4[(nanopb).max_size = 128];
 }
 
 message HiRequest {
@@ -359,10 +347,18 @@ message ListAddressRequest {
 }
 
 message Address {
+
+    enum HashAlgo {
+        RAW = 0;
+        SHA256 = 1;
+        DSHA256 = 2;
+    }
+
     required uint32 type = 1;
     required uint32 idx = 2;
     optional string name = 3;
-    required string s_addr = 4[(nanopb).max_size = 34]; // bitcoin's base58_check address = 34
+    required HashAlgo algo = 4[default = RAW];
+    required string s_addr = 5[(nanopb).max_size = 34]; // bitcoin's base58_check address = 34
 }
 
 message ListAddressReply {

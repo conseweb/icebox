@@ -21,7 +21,7 @@ type IceboxMsgIntf interface {
 	Descriptor() ([]byte, []int)
 
 	GetVersion() uint32
-	GetType() pb.IceboxMessage_Type
+	GetType() pb.IceboxMessage_Command
 	GetSessionId() uint32
 	GetPayload() []byte
 	GetSignature() []byte
@@ -34,9 +34,9 @@ func TestHelloWithErrorMsgType(t *testing.T) {
 		payload, _ := pb.EncodeHiRequest(common.App_magic);
 		ct := pb.NewIceboxMessage(pb.IceboxMessage_HELLO+1, payload)
 		handler := NewIcebergHandler()
-		res, err := handler.Chat(context.Background(), ct)
+		res, err := handler.Execute(context.Background(), ct)
 		So(err, ShouldEqual, nil)
-		So(res.GetHeader().GetType(), ShouldEqual, pb.IceboxMessage_ERROR)
+		So(res.GetHeader().GetCmd(), ShouldEqual, pb.IceboxMessage_ERROR)
 	})
 }
 
@@ -47,9 +47,9 @@ func TestHelloWithErrorMagicNumber(t *testing.T) {
 		payload, _ := pb.EncodeHiRequest(common.App_magic+1)
 		ct := pb.NewIceboxMessage(pb.IceboxMessage_HELLO, payload)
 		handler := NewIcebergHandler()
-		res, err := handler.Chat(context.Background(), ct)
+		res, err := handler.Execute(context.Background(), ct)
 		So(err, ShouldEqual, nil)
-		So(res.GetHeader().GetType(), ShouldEqual, pb.IceboxMessage_ERROR)
+		So(res.GetHeader().GetCmd(), ShouldEqual, pb.IceboxMessage_ERROR)
 
 		var result = &pb.Error{}
 		err = proto.Unmarshal(res.GetPayload(), result)
@@ -64,10 +64,10 @@ func TestHelloSuccess(t *testing.T) {
 		payload, _ := pb.EncodeHiRequest(common.App_magic)
 		ct := pb.NewIceboxMessage(pb.IceboxMessage_HELLO, payload)
 		handler := NewIcebergHandler()
-		res, err := handler.Chat(context.Background(), ct)
+		res, err := handler.Execute(context.Background(), ct)
 		So(err, ShouldEqual, nil)
-		So(res.GetHeader().GetType(), ShouldNotEqual, pb.IceboxMessage_ERROR)
-		So(res.GetHeader().GetType(), ShouldEqual, pb.IceboxMessage_HELLO)
+		So(res.GetHeader().GetCmd(), ShouldNotEqual, pb.IceboxMessage_ERROR)
+		So(res.GetHeader().GetCmd(), ShouldEqual, pb.IceboxMessage_HELLO)
 
 		var result = &pb.HiReply{}
 		err = proto.Unmarshal(res.GetPayload(), result)
