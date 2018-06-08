@@ -128,18 +128,6 @@ message Error {
     optional string message = 2[(nanopb).max_size = 256];
 }
 
-message Header {
-    required uint32 ver = 1 [default = 1];    // 消息版本号
-    required uint32 sn = 2;     // 消息序列号，返回消息的序列号必须等于请求消息的序列号
-}
-
-message ReplyHeader {
-    required uint32 ver = 1 [default = 1];    // 消息版本号
-    required uint32 sn = 2;     // 消息序列号，返回消息的序列号必须等于请求消息的序列号
-    required uint32 code = 3;
-    optional string message = 4[(nanopb).max_size = 128];
-}
-
 message HiRequest {
 //    required Header header = 1;
     required int64 magicA = 2;

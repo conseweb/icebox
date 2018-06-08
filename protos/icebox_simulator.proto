@@ -60,9 +60,6 @@ message IceboxMessage {
         required uint32 session_id = 4;
     }
 
-//    required uint32 version = 1[default = 1];  // 消息版本号
-//    required Type type = 2;
-//    required uint32 session_id = 3;
     required Header header = 1;
     required bytes payload = 2;
     required bytes signature = 3;
