@@ -14,6 +14,7 @@ import (
 	"github.com/conseweb/btcd/btcec"
 	"crypto/rand"
 	"github.com/golang/protobuf/proto"
+	//pb "github.com/conseweb/icebox/protos"
 )
 
 const (
