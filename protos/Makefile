@@ -6,3 +6,6 @@
 
 icebox_simulator.pb.go: icebox_simulator.proto
 	protoc icebox_simulator.proto --go_out=plugins=grpc:.
+
+icebox.pb.go: icebox.proto
+	protoc -I . --go_out=. icebox.proto

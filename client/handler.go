@@ -31,6 +31,7 @@ const (
 
 var (
 	logger = flogging.MustGetLogger("client", zerolog.DebugLevel)
+	errmsg string
 )
 
 type Session struct {

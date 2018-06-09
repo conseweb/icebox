@@ -68,7 +68,7 @@ message IceboxMessage {
 // NOTE: password - 真实设备是没有这个字段的
 
 // rpc只是用于演示相关接口，不用作实现
-service Icebox {
+//service Icebox {
 
 //    rpc Hello (HiRequest) returns (HiReply) {}
     // 协商会话密钥过程。会话过程采用AES进行加密，密钥使用协商出来的共享密钥的前32字节
@@ -77,7 +77,7 @@ service Icebox {
     //    rpc StartSession (StartRequest) returns (StartReply) {}
 
     // 会话需要加密
-    rpc Execute (IceboxMessage) returns (IceboxMessage) {}
+//    rpc Execute (IceboxMessage) returns (IceboxMessage) {}
 
     // 结束当前会话后，立刻锁定设备；
     //    rpc EndSession (EndRequest) returns (EndReply) {}
@@ -121,7 +121,7 @@ service Icebox {
     //
     //    rpc DeleteAddress (DeleteAddressRequest) returns (DeleteAddressReply) {}
 
-}
+//}
 
 message Error {
     required int32 code = 1;

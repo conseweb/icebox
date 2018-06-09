@@ -65,6 +65,7 @@ package protos
 import proto "github.com/golang/protobuf/proto"
 import fmt "fmt"
 import math "math"
+import _ "."
 
 import (
 	context "golang.org/x/net/context"
@@ -252,9 +253,6 @@ func (m *Timestamp) GetNanos() int32 {
 }
 
 type IceboxMessage struct {
-	//    required uint32 version = 1[default = 1];  // 消息版本号
-	//    required Type type = 2;
-	//    required uint32 session_id = 3;
 	Header           *IceboxMessage_Header `protobuf:"bytes,1,req,name=header" json:"header,omitempty"`
 	Payload          []byte                `protobuf:"bytes,2,req,name=payload" json:"payload,omitempty"`
 	Signature        []byte                `protobuf:"bytes,3,req,name=signature" json:"signature,omitempty"`
