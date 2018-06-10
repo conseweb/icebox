@@ -1,5 +1,6 @@
 package protos
 
+
 import (
 	"time"
 	mrand "math/rand"
@@ -12,8 +13,6 @@ import (
 	"github.com/conseweb/btcd/btcec"
 	"crypto/rand"
 	"github.com/golang/protobuf/proto"
-
-	"C"
 )
 
 const (
@@ -24,8 +23,8 @@ var (
 	ErrInfo string
 )
 
-//export GetErrInfo
-func GetErrInfo() string {
+//export CGetErrInfo
+func CGetErrInfo() string {
 	return ErrInfo
 }
 
@@ -69,17 +68,6 @@ func NewIceboxMessage(t IceboxMessage_Command, p []byte) *IceboxMessage  {
 	return m
 }
 
-//export EncodeIceboxMessage
-func EncodeIceboxMessage(t IceboxMessage_Command, p []byte) ([]byte)  {
-	req := NewIceboxMessage(t, p)
-	payload, err := proto.Marshal(req)
-	if err != nil {
-		ErrInfo = err.Error()
-		return nil
-	}
-	return payload
-}
-
 func Hash256(b []byte) []byte {
 	h := sha256.New()
 	h.Write([]byte(b))
@@ -108,16 +96,6 @@ func NewIceboxMessageWithSID(t IceboxMessage_Command, sid uint32, p []byte) *Ice
 	return m
 }
 
-//export EncodeIceboxMessageWithSID
-func EncodeIceboxMessageWithSID(t IceboxMessage_Command, sid uint32, p []byte) []byte {
-	req := NewIceboxMessageWithSID(t, sid, p)
-	payload, err := proto.Marshal(req)
-	if err != nil {
-		ErrInfo = err.Error()
-		return nil
-	}
-	return payload
-}
 
 func GetMessageHash(h *IceboxMessage_Header, p []byte) []byte {
 	buf := new(bytes.Buffer)
@@ -206,15 +184,13 @@ func NewHiRequest(magic int64) *HiRequest {
 	return req
 }
 
-//export EncodeHiRequest
-func EncodeHiRequest(magic int64) ([]byte) {
+func EncodeHiRequest(magic int64) ([]byte, error) {
 	req := NewHiRequest(magic)
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 // key: KeyA, public key of requester side
@@ -226,31 +202,29 @@ func NewNegotiateRequest(key, hash string) *NegotiateRequest {
 	return req
 }
 
-//export EncodeNegotiateRequest
-func EncodeNegotiateRequest(key, hash string) ([]byte) {
+func EncodeNegotiateRequest(key, hash string) ([]byte, error) {
 	req := NewNegotiateRequest(key, hash)
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
+
 
 func NewStartRequest() *StartRequest {
 	req := new(StartRequest)
 	return req
 }
 
-//export EncodeStartRequest
-func EncodeStartRequest() ([]byte) {
+
+func EncodeStartRequest() ([]byte, error) {
 	req := NewStartRequest()
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 
@@ -260,15 +234,13 @@ func NewCheckRequest() *CheckRequest {
 	return req
 }
 
-//export EncodeCheckRequest
-func EncodeCheckRequest() ([]byte) {
+func EncodeCheckRequest() ([]byte, error) {
 	req := NewCheckRequest()
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewInitRequest(password string) *InitRequest {
@@ -278,15 +250,13 @@ func NewInitRequest(password string) *InitRequest {
 	return req
 }
 
-//export EncodeInitRequest
-func EncodeInitRequest(password string) ([]byte) {
+func EncodeInitRequest(password string) ([]byte, error) {
 	req := NewInitRequest(password)
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewPingRequest() *PingRequest {
@@ -295,15 +265,13 @@ func NewPingRequest() *PingRequest {
 	return req
 }
 
-//export EncodePingRequest
-func EncodePingRequest() ([]byte) {
+func EncodePingRequest() ([]byte, error) {
 	req := NewPingRequest()
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewAddCoinRequest(tp, idx uint32, symbol, name string) *AddCoinRequest {
@@ -315,15 +283,13 @@ func NewAddCoinRequest(tp, idx uint32, symbol, name string) *AddCoinRequest {
 	return req
 }
 
-//export EncodeAddCoinRequest
-func EncodeAddCoinRequest(tp, idx uint32, symbol, name string) ([]byte) {
+func EncodeAddCoinRequest(tp, idx uint32, symbol, name string) ([]byte, error) {
 	req := NewAddCoinRequest(tp, idx, symbol, name)
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewCreateAddressRequest(tp uint32, pass string) *CreateAddressRequest {
@@ -335,15 +301,13 @@ func NewCreateAddressRequest(tp uint32, pass string) *CreateAddressRequest {
 	return req
 }
 
-//export EncodeCreateAddressRequest
-func EncodeCreateAddressRequest(tp uint32, pass string) ([]byte) {
+func EncodeCreateAddressRequest(tp uint32, pass string) ([]byte, error) {
 	req := NewCreateAddressRequest(tp, pass)
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewCreateSecretRequest(tp, site, account uint32, pass string) *CreateSecretRequest {
@@ -355,15 +319,13 @@ func NewCreateSecretRequest(tp, site, account uint32, pass string) *CreateSecret
 	return req
 }
 
-//export EncodeCreateSecretRequest
-func EncodeCreateSecretRequest(tp, site, account uint32, pass string) ([]byte) {
+func EncodeCreateSecretRequest(tp, site, account uint32, pass string) ([]byte, error) {
 	req := NewCreateSecretRequest(tp, site, account, pass)
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewGetAddressRequest(tp, idx uint32,  pass string) *GetAddressRequest {
@@ -374,15 +336,13 @@ func NewGetAddressRequest(tp, idx uint32,  pass string) *GetAddressRequest {
 	return req
 }
 
-//export EncodeGetAddressRequest
-func EncodeGetAddressRequest(tp, idx uint32,  pass string) ([]byte) {
+func EncodeGetAddressRequest(tp, idx uint32,  pass string) ([]byte, error) {
 	req := NewGetAddressRequest(tp, idx, pass)
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewListAddressRequest(tp, offset, limit uint32,  pass string) *ListAddressRequest {
@@ -395,15 +355,13 @@ func NewListAddressRequest(tp, offset, limit uint32,  pass string) *ListAddressR
 	return req
 }
 
-//export EncodeListAddressRequest
-func EncodeListAddressRequest(tp, offset, limit uint32,  pass string) ([]byte) {
+func EncodeListAddressRequest(tp, offset, limit uint32,  pass string) ([]byte, error) {
 	req := NewListAddressRequest(tp, offset, limit, pass)
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewListSecretRequest(tp, site, offset, limit uint32,  pass string) *ListSecretRequest {
@@ -417,15 +375,13 @@ func NewListSecretRequest(tp, site, offset, limit uint32,  pass string) *ListSec
 	return req
 }
 
-//export EncodeListSecretRequest
-func EncodeListSecretRequest(tp, site, offset, limit uint32,  pass string) ([]byte) {
+func EncodeListSecretRequest(tp, site, offset, limit uint32,  pass string) ([]byte, error) {
 	req := NewListSecretRequest(tp, site, offset, limit, pass)
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewDeleteAddressRequest(tp, idx uint32, pass string) *DeleteAddressRequest {
@@ -436,15 +392,13 @@ func NewDeleteAddressRequest(tp, idx uint32, pass string) *DeleteAddressRequest 
 	return req
 }
 
-//export EncodeDeleteAddressRequest
-func EncodeDeleteAddressRequest(tp, idx uint32, pass string) ([]byte) {
+func EncodeDeleteAddressRequest(tp, idx uint32, pass string) ([]byte, error) {
 	req := NewDeleteAddressRequest(tp, idx, pass)
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 // txhash: should be 32 byte; prev tx hash
@@ -460,15 +414,13 @@ func NewSignTxRequest(tp, idx uint32, amount uint64, dest string, txhash []byte,
 	return req
 }
 
-//export EncodeSignTxRequest
-func EncodeSignTxRequest(tp, idx uint32, amount uint64, dest string, txhash []byte, txidx uint32, pass string) ([]byte) {
+func EncodeSignTxRequest(tp, idx uint32, amount uint64, dest string, txhash []byte, txidx uint32, pass string) ([]byte, error) {
 	req := NewSignTxRequest(tp, idx, amount, dest, txhash, txidx, pass)
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewSignMsgRequest(tp, idx uint32, msg []byte, pass string) *SignMsgRequest {
@@ -480,15 +432,13 @@ func NewSignMsgRequest(tp, idx uint32, msg []byte, pass string) *SignMsgRequest 
 	return req
 }
 
-//export EncodeSignMsgRequest
-func EncodeSignMsgRequest(tp, idx uint32, msg []byte, pass string) ([]byte) {
+func EncodeSignMsgRequest(tp, idx uint32, msg []byte, pass string) ([]byte, error) {
 	req := NewSignMsgRequest(tp, idx, msg, pass)
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewResetRequest() *ResetRequest {
@@ -497,15 +447,13 @@ func NewResetRequest() *ResetRequest {
 	return req
 }
 
-//export EncodeResetRequest
-func EncodeResetRequest() ([]byte) {
+func EncodeResetRequest() ([]byte, error) {
 	req := NewResetRequest()
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewHiReply(magic int64) *HiReply {
@@ -515,15 +463,13 @@ func NewHiReply(magic int64) *HiReply {
 	return reply
 }
 
-//export EncodeHiReply
-func EncodeHiReply(magic int64) ([]byte) {
+func EncodeHiReply(magic int64) ([]byte, error) {
 	req := NewHiReply(magic)
 	payload, err := proto.Marshal(req)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewNegotiateReply(key, hash string) *NegotiateReply {
@@ -534,15 +480,13 @@ func NewNegotiateReply(key, hash string) *NegotiateReply {
 	return reply
 }
 
-//export EncodeNegotiateReply
-func EncodeNegotiateReply(key, hash string) ([]byte) {
+func EncodeNegotiateReply(key, hash string) ([]byte, error) {
 	reply := NewNegotiateReply(key, hash)
 	payload, err := proto.Marshal(reply)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewCheckReply(state int32, devid *string) *CheckReply {
@@ -556,15 +500,13 @@ func NewCheckReply(state int32, devid *string) *CheckReply {
 	return reply
 }
 
-//export EncodeCheckReply
-func EncodeCheckReply(state int32, devid *string) ([]byte) {
+func EncodeCheckReply(state int32, devid *string) ([]byte, error) {
 	reply := NewCheckReply(state, devid)
 	payload, err := proto.Marshal(reply)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewInitReply(devid []byte) *InitReply {
@@ -575,15 +517,13 @@ func NewInitReply(devid []byte) *InitReply {
 	return reply
 }
 
-//export EncodeInitReply
-func EncodeInitReply(devid []byte) ([]byte) {
+func EncodeInitReply(devid []byte) ([]byte, error) {
 	reply := NewInitReply(devid)
 	payload, err := proto.Marshal(reply)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewPingReply() *PingReply {
@@ -594,15 +534,13 @@ func NewPingReply() *PingReply {
 	return reply
 }
 
-//export EncodePingReply
-func EncodePingReply() ([]byte) {
+func EncodePingReply() ([]byte, error) {
 	reply := NewPingReply()
 	payload, err := proto.Marshal(reply)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewStartReply() *StartReply {
@@ -610,15 +548,13 @@ func NewStartReply() *StartReply {
 	return reply
 }
 
-//export EncodeStartReply
-func EncodeStartReply() ([]byte) {
+func EncodeStartReply() ([]byte, error) {
 	reply := NewStartReply()
 	payload, err := proto.Marshal(reply)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewAddCoinReply() *AddCoinReply {
@@ -628,15 +564,13 @@ func NewAddCoinReply() *AddCoinReply {
 	return reply
 }
 
-//export EncodeAddCoinReply
-func EncodeAddCoinReply() ([]byte) {
+func EncodeAddCoinReply() ([]byte, error) {
 	reply := NewAddCoinReply()
 	payload, err := proto.Marshal(reply)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewCreateAddressReply(tp, idx uint32, addr string) *CreateAddressReply {
@@ -647,15 +581,13 @@ func NewCreateAddressReply(tp, idx uint32, addr string) *CreateAddressReply {
 	return reply
 }
 
-//export EncodeCreateAddressReply
-func EncodeCreateAddressReply(tp, idx uint32, addr string) ([]byte) {
+func EncodeCreateAddressReply(tp, idx uint32, addr string) ([]byte, error) {
 	reply := NewCreateAddressReply(tp, idx, addr)
 	payload, err := proto.Marshal(reply)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewCreateSecretReply(tp, site, account, idx uint32, secret []byte) *CreateSecretReply {
@@ -668,15 +600,13 @@ func NewCreateSecretReply(tp, site, account, idx uint32, secret []byte) *CreateS
 	return reply
 }
 
-//export EncodeCreateSecretReply
-func EncodeCreateSecretReply(tp, site, account, idx uint32, secret []byte) ([]byte) {
+func EncodeCreateSecretReply(tp, site, account, idx uint32, secret []byte) ([]byte, error) {
 	reply := NewCreateSecretReply(tp, site, account, idx, secret)
 	payload, err := proto.Marshal(reply)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewGetAddressReply(addr Address) *GetAddressReply {
@@ -686,17 +616,17 @@ func NewGetAddressReply(addr Address) *GetAddressReply {
 	return reply
 }
 
-//export EncodeGetAddressReply
-func EncodeGetAddressReply(addr Address) ([]byte) {
-	reply := NewGetAddressReply(addr)
-
-	payload, err := proto.Marshal(reply)
-	if err != nil {
-		ErrInfo = err.Error()
-		return nil
-	}
-	return payload
-}
+//export CEncodeGetAddressReply
+//func CEncodeGetAddressReply(addr Address) ([]byte) {
+//	reply := NewGetAddressReply(addr)
+//
+//	payload, err := proto.Marshal(reply)
+//	if err != nil {
+//		ErrInfo = err.Error()
+//		return nil
+//	}
+//	return payload
+//}
 
 func NewListAddressReply(num, page, offset, limit uint32, addrs []*Address) *ListAddressReply {
 	reply := new(ListAddressReply)
@@ -713,16 +643,14 @@ func NewListAddressReply(num, page, offset, limit uint32, addrs []*Address) *Lis
 	return reply
 }
 
-//export EncodeListAddressReply
-func EncodeListAddressReply(num, page, offset, limit uint32, addrs []*Address) ([]byte) {
+func EncodeListAddressReply(num, page, offset, limit uint32, addrs []*Address) ([]byte, error) {
 	reply := NewListAddressReply(num, page, offset, limit, addrs)
 
 	payload, err := proto.Marshal(reply)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewListSecretReply(num, page, offset, limit uint32, secrets []*Secret) *ListSecretReply {
@@ -740,16 +668,14 @@ func NewListSecretReply(num, page, offset, limit uint32, secrets []*Secret) *Lis
 	return reply
 }
 
-//export EncodeListSecretReply
-func EncodeListSecretReply(num, page, offset, limit uint32, secrets []*Secret) ([]byte) {
+func EncodeListSecretReply(num, page, offset, limit uint32, secrets []*Secret) ([]byte, error) {
 	reply := NewListSecretReply(num, page, offset, limit, secrets)
 
 	payload, err := proto.Marshal(reply)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewDeleteAddressReply(addr string) *DeleteAddressReply {
@@ -757,15 +683,13 @@ func NewDeleteAddressReply(addr string) *DeleteAddressReply {
 	return reply
 }
 
-//export EncodeDeleteAddressReply
-func EncodeDeleteAddressReply(addr string) []byte {
+func EncodeDeleteAddressReply(addr string) ([]byte, error) {
 	reply := NewDeleteAddressReply(addr)
 	payload, err := proto.Marshal(reply)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewSignTxReply(tx []byte) *SignTxReply {
@@ -774,15 +698,13 @@ func NewSignTxReply(tx []byte) *SignTxReply {
 	return reply
 }
 
-//export EncodeSignTxReply
-func EncodeSignTxReply(tx []byte) []byte {
+func EncodeSignTxReply(tx []byte) ([]byte, error) {
 	reply := NewSignTxReply(tx)
 	payload, err := proto.Marshal(reply)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewSignMsgReply(msg []byte) *SignMsgReply {
@@ -791,15 +713,13 @@ func NewSignMsgReply(msg []byte) *SignMsgReply {
 	return reply
 }
 
-//export EncodeSignMsgReply
-func EncodeSignMsgReply(msg []byte) []byte {
+func EncodeSignMsgReply(msg []byte) ([]byte, error) {
 	reply := NewSignMsgReply(msg)
 	payload, err := proto.Marshal(reply)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
 func NewResetReply() *ResetReply {
@@ -808,14 +728,12 @@ func NewResetReply() *ResetReply {
 	return reply
 }
 
-//export EncodeResetReply
-func EncodeResetReply() []byte {
+func EncodeResetReply() ([]byte, error) {
 	reply := NewResetReply()
 	payload, err := proto.Marshal(reply)
 	if err != nil {
-		ErrInfo = err.Error()
-		return nil
+		return nil, err
 	}
-	return payload
+	return payload, nil
 }
 
