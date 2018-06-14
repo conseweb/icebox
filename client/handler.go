@@ -189,15 +189,12 @@ func (d *Handler) Hello() (*pb.HelloReply, error) {
 	payload, _ := pb.EncodeHiRequest(common.App_magic)
 	ct := pb.NewIceboxMessage(pb.IceboxMessage_HELLO, payload)
 
-	//ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	//defer cancel()
-
 	res, err := d.Client.Execute(context.Background(), ct)
 	if err != nil {
 		//grpclog.Fatalln(err)
 		grpclog.Fatalf("%v.Chat(_) = _, %v: ", d.Client, err)
 	}
-	grpclog.Infoln("HiReply: ", res)
+	grpclog.Infoln("HelloReply: ", res)
 
 	hdr := res.GetHeader()
 	if hdr.GetCmd() == pb.IceboxMessage_ERROR {

@@ -69,7 +69,7 @@ func TestHelloSuccess(t *testing.T) {
 		So(res.GetHeader().GetCmd(), ShouldNotEqual, pb.IceboxMessage_ERROR)
 		So(res.GetHeader().GetCmd(), ShouldEqual, pb.IceboxMessage_HELLO)
 
-		var result = &pb.HiReply{}
+		var result = &pb.HelloReply{}
 		err = proto.Unmarshal(res.GetPayload(), result)
 		So(err, ShouldEqual, nil)
 		So(result.GetMagicB(), ShouldEqual, common.Device_magic)

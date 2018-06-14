@@ -55,8 +55,8 @@ func NewIceboxMessage(t IceboxMessage_Command, p []byte) *IceboxMessage {
 	m.Header.Cmd = &t
 
 	now := time.Now()
-	s := int64(now.Second())     // from 'int'
-	n := int32(now.Nanosecond()) // from 'int'
+	s := now.Unix()     			// seconds since 1970
+	n := int32(now.Nanosecond()) 	// from 'int'
 	m.Header.Timestamp = &Timestamp{Seconds: &s, Nanos: &n}
 
 	if p != nil {
@@ -81,8 +81,8 @@ func NewIceboxMessageWithSID(t IceboxMessage_Command, sid uint32, p []byte) *Ice
 	m.Header.SessionId = &sid
 	m.Header.Cmd = &t
 	now := time.Now()
-	s := int64(now.Second())     // from 'int'
-	n := int32(now.Nanosecond()) // from 'int'
+	s := now.Unix()    				// seconds since 1970
+	n := int32(now.Nanosecond()) 	//
 	ts := Timestamp{Seconds: &s, Nanos: &n}
 	m.Header.Timestamp = &ts
 	if p != nil {
