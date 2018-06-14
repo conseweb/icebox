@@ -259,4 +259,3 @@ package coins
 //	WAVES=5741564
 // )
 type Coin uint32
-

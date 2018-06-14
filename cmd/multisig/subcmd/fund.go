@@ -2,12 +2,12 @@
 package subcmd
 
 import (
-	"github.com/conseweb/icebox/core/base58check"
 	"bytes"
 	"encoding/hex"
 	"fmt"
-	"log"
+	"github.com/conseweb/icebox/core/base58check"
 	"github.com/conseweb/icebox/core/btcutil"
+	"log"
 )
 
 //OutputFund formats and prints relevant outputs to the user.

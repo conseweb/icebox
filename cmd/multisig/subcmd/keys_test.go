@@ -2,8 +2,8 @@ package subcmd
 
 import (
 	"encoding/hex"
-	"testing"
 	"github.com/conseweb/icebox/core/btcutil"
+	"testing"
 )
 
 func TestGenerateKeys(t *testing.T) {

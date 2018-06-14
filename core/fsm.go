@@ -7,8 +7,7 @@ import (
 
 // example FSM for demonstration purposes.
 type DeviceConnectionFSM struct {
-	To  string
-	FSM *fsm.FSM
+	To     string
+	FSM    *fsm.FSM
 	Client *pb.IceboxClient
 }
-

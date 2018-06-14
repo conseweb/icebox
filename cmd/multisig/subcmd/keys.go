@@ -2,11 +2,11 @@
 package subcmd
 
 import (
-	"github.com/conseweb/icebox/core/base58check"
 	"encoding/hex"
 	"fmt"
-	"log"
+	"github.com/conseweb/icebox/core/base58check"
 	"github.com/conseweb/icebox/core/btcutil"
+	"log"
 )
 
 // OutputKeys formats and prints relevant outputs to the user.

@@ -3,8 +3,8 @@ package main
 import (
 	"bytes"
 	"compress/gzip"
-	"fmt"
 	"encoding/base64"
+	"fmt"
 	"io/ioutil"
 )
 
@@ -30,7 +30,7 @@ func main() {
 	data, _ := base64.StdEncoding.DecodeString(str)
 	fmt.Printf("len: %d, %v\n", len(data), data)
 	rdata := bytes.NewReader(data)
-	r,_ := gzip.NewReader(rdata)
+	r, _ := gzip.NewReader(rdata)
 	s, _ := ioutil.ReadAll(r)
 	fmt.Printf("len: %d, %v\n", len(s), string(s))
 

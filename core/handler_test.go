@@ -1,15 +1,15 @@
 package core
 
 import (
-	. "github.com/smartystreets/goconvey/convey"
 	pb "github.com/conseweb/icebox/protos"
+	. "github.com/smartystreets/goconvey/convey"
 
-	"testing"
 	_ "fmt"
 	"github.com/conseweb/icebox/core/common"
+	"testing"
 
-	"github.com/golang/protobuf/proto"
 	"context"
+	"github.com/golang/protobuf/proto"
 )
 
 //go:generate mockgen -source=handler_test.go -destination=../mocks/mock_IceboxMessage.go -package=mocks github.com/conseweb/icebox/core IceboxMsgIntf
@@ -31,7 +31,7 @@ func TestHelloWithErrorMsgType(t *testing.T) {
 	Convey(`Hello request should received error for invalid msg type'.`, t, func() {
 
 		//req := pb.NewHiRequest(common.App_magic)
-		payload, _ := pb.EncodeHiRequest(common.App_magic);
+		payload, _ := pb.EncodeHiRequest(common.App_magic)
 		ct := pb.NewIceboxMessage(pb.IceboxMessage_HELLO+1, payload)
 		handler := NewIcebergHandler()
 		res, err := handler.Execute(context.Background(), ct)
@@ -44,7 +44,7 @@ func TestHelloWithErrorMagicNumber(t *testing.T) {
 	Convey(`Hello request should received error for invalid magic number'.`, t, func() {
 
 		//req := pb.NewHiRequest(common.App_magic+1)
-		payload, _ := pb.EncodeHiRequest(common.App_magic+1)
+		payload, _ := pb.EncodeHiRequest(common.App_magic + 1)
 		ct := pb.NewIceboxMessage(pb.IceboxMessage_HELLO, payload)
 		handler := NewIcebergHandler()
 		res, err := handler.Execute(context.Background(), ct)

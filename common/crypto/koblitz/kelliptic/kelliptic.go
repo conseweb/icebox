@@ -19,7 +19,6 @@ import (
 	"errors"
 	"math/big"
 	"sync"
-
 )
 
 // A Curve represents a Koblitz Curve with a=0.
@@ -317,7 +316,7 @@ func S256() *Curve {
 }
 
 func CompressPoint(curve *Curve, X, Y *big.Int) (cp []byte) {
-    return curve.CompressPoint(X, Y)
+	return curve.CompressPoint(X, Y)
 }
 
 // Point Compression Routines. These could use a lot of testing.
@@ -401,7 +400,7 @@ func (curve *Curve) Sqrt(a *big.Int) *big.Int {
 	if a.Cmp(ZERO) == 0 {
 		return ZERO
 	} else if p.Cmp(TWO) == 0 {
-		return a.Mod(a,p)
+		return a.Mod(a, p)
 	} else if LegendreSymbol(a, p) != 1 {
 		return ZERO
 	} else if c.Mod(p, FOUR).Cmp(THREE) == 0 {
@@ -514,4 +513,3 @@ func LegendreSymbol(a, p *big.Int) int {
 
 	return 1 // 1 if a is a quadratic residue modulo p and a ≢ 0 (mod p)
 }
-

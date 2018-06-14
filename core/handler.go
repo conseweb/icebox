@@ -6,16 +6,16 @@ import (
 	pb "github.com/conseweb/icebox/protos"
 
 	"errors"
-	"os"
-	"time"
-	"github.com/conseweb/icebox/common/flogging"
-	"github.com/rs/zerolog"
-	"github.com/conseweb/icebox/common/fsm"
-	_ "github.com/mattn/go-sqlite3"  // must exists, or will cause -- sql: unknown driver "sqlite3"
-	"github.com/golang/protobuf/proto"
-	"github.com/conseweb/icebox/common/crypto"
 	"github.com/conseweb/btcd/btcec"
 	"github.com/conseweb/coinutil/base58"
+	"github.com/conseweb/icebox/common/crypto"
+	"github.com/conseweb/icebox/common/flogging"
+	"github.com/conseweb/icebox/common/fsm"
+	"github.com/golang/protobuf/proto"
+	_ "github.com/mattn/go-sqlite3" // must exists, or will cause -- sql: unknown driver "sqlite3"
+	"github.com/rs/zerolog"
+	"os"
+	"time"
 )
 
 var (
@@ -23,13 +23,13 @@ var (
 )
 
 type CoinID struct {
-	T1	   uint32 			// for bip44: purpose = 44;
-	T2     uint32           // for bip44: coin_type;
+	T1 uint32 // for bip44: purpose = 44;
+	T2 uint32 // for bip44: coin_type;
 }
 
 type AddressID struct {
-	Coin 	CoinID
-	T5     	uint32			// for bip44: address_index;
+	Coin CoinID
+	T5   uint32 // for bip44: address_index;
 }
 
 func exists(fn string) bool {
@@ -41,15 +41,15 @@ func exists(fn string) bool {
 }
 
 type Session struct {
-	id 			uint32 				// session id
-	key 		*btcec.PrivateKey	// private key
-	peerKey 	*btcec.PublicKey	// peer's public key
-	sharedKey 	*btcec.PublicKey	// shared public key
-	shortKey 	string     			// aes key
+	id        uint32            // session id
+	key       *btcec.PrivateKey // private key
+	peerKey   *btcec.PublicKey  // peer's public key
+	sharedKey *btcec.PublicKey  // shared public key
+	shortKey  string            // aes key
 }
 
 type IcebergHandler struct {
-	FSM 	*fsm.FSM
+	FSM    *fsm.FSM
 	helper *iceHelper
 }
 
@@ -57,11 +57,10 @@ func makeTimestamp() int64 {
 	return time.Now().UnixNano() / int64(time.Millisecond)
 }
 
-
-func NewIcebergHandler() *IcebergHandler  {
+func NewIcebergHandler() *IcebergHandler {
 	d := &IcebergHandler{
 
-		helper:newHelper(),
+		helper: newHelper(),
 	}
 
 	// est_unchecked : established and unchecked
@@ -94,7 +93,6 @@ func NewIcebergHandler() *IcebergHandler  {
 	return d
 }
 
-
 func (d *IcebergHandler) enterState(e *fsm.Event, state string) {
 	logger.Debug().Msgf("Enter %s from %s, fired by event %s\n", e.Dst, e.Src, e.Event)
 }
@@ -116,7 +114,7 @@ func (d *IcebergHandler) beforePingEvent(e *fsm.Event, state string) {
 	logger.Debug().Msgf("Before %s, dest is %s, current is %s", e.Event, e.Dst, state)
 }
 
-func (s *IcebergHandler) Execute(ctx context.Context, req *pb.IceboxMessage) (*pb.IceboxMessage, error)  {
+func (s *IcebergHandler) Execute(ctx context.Context, req *pb.IceboxMessage) (*pb.IceboxMessage, error) {
 	hdr := req.GetHeader()
 	v := hdr.GetVersion()
 	sid := hdr.GetSessionId()
@@ -406,10 +404,3 @@ func (s *IcebergHandler) Execute(ctx context.Context, req *pb.IceboxMessage) (*p
 	//return s.HandleIceboxStream(stream.Context(), stream)
 	return nil, errors.New("Not implemented!")
 }
-
-
-
-
-
-
-

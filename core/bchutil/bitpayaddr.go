@@ -7,16 +7,16 @@ package bchutil
 import (
 	"errors"
 
+	"fmt"
 	"github.com/conseweb/btcd/chaincfg"
+	"github.com/conseweb/btcutil"
 	"github.com/conseweb/btcutil/base58"
 	"golang.org/x/crypto/ripemd160"
-	"github.com/conseweb/btcutil"
-	"fmt"
 )
 
 var (
 	bitpayP2PkH = byte(0x1C)
-	bitpayP2SH = byte(0x28)
+	bitpayP2SH  = byte(0x28)
 )
 
 // UnsupportedWitnessVerError describes an error where a segwit address being

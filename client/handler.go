@@ -1,32 +1,32 @@
 package client
 
 import (
-	"github.com/conseweb/icebox/common/fsm"
-	pb "github.com/conseweb/icebox/protos"
-	"google.golang.org/grpc"
-	"time"
-	"github.com/conseweb/coinutil/bip32"
-	"github.com/conseweb/icebox/core/common"
-	"fmt"
-	"github.com/conseweb/icebox/common/address"
-	"google.golang.org/grpc/grpclog"
 	"context"
-	"github.com/conseweb/coinutil/base58"
-	"github.com/conseweb/btcd/btcec"
-	"github.com/conseweb/coinutil/bip39"
-	"github.com/gogo/protobuf/proto"
 	"encoding/binary"
-	"github.com/conseweb/icebox/common/crypto"
-	"github.com/conseweb/icebox/client/util"
-	"errors"
 	"encoding/hex"
-	"github.com/rs/zerolog"
+	"errors"
+	"fmt"
+	"github.com/conseweb/btcd/btcec"
+	"github.com/conseweb/coinutil/base58"
+	"github.com/conseweb/coinutil/bip32"
+	"github.com/conseweb/coinutil/bip39"
+	"github.com/conseweb/icebox/client/util"
+	"github.com/conseweb/icebox/common/address"
+	"github.com/conseweb/icebox/common/crypto"
 	"github.com/conseweb/icebox/common/flogging"
+	"github.com/conseweb/icebox/common/fsm"
+	"github.com/conseweb/icebox/core/common"
+	pb "github.com/conseweb/icebox/protos"
+	"github.com/gogo/protobuf/proto"
+	"github.com/rs/zerolog"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/grpclog"
+	"time"
 )
 
 const (
 	sessionKeyFn = "session_key.dat"
- 	timeout      = 500 * time.Millisecond
+	timeout      = 500 * time.Millisecond
 )
 
 var (
@@ -35,23 +35,22 @@ var (
 )
 
 type Session struct {
-	id 			uint32 				// session id
-	key 		*btcec.PrivateKey	// private key
-	peerKey 	*btcec.PublicKey	// peer's public key
-	sharedKey 	*btcec.PublicKey	// shared public key
-	shortKey 	string
+	id        uint32            // session id
+	key       *btcec.PrivateKey // private key
+	peerKey   *btcec.PublicKey  // peer's public key
+	sharedKey *btcec.PublicKey  // shared public key
+	shortKey  string
 }
 
 // example FSM for demonstration purposes.
 type Handler struct {
-	opts   []grpc.DialOption
+	opts    []grpc.DialOption
 	session *Session
-	To     string
-	FSM    *fsm.FSM
-	Conn   *grpc.ClientConn
-	Client pb.IceboxClient
+	To      string
+	FSM     *fsm.FSM
+	Conn    *grpc.ClientConn
+	Client  pb.IceboxClient
 }
-
 
 func newUInt32(v uint32) *uint32 {
 	var i = v
@@ -65,8 +64,8 @@ func makeTimestamp() int64 {
 func NewHandler(to string, opts []grpc.DialOption) *Handler {
 
 	d := &Handler{
-		To: to,
-		opts: opts,
+		To:      to,
+		opts:    opts,
 		session: new(Session),
 	}
 
@@ -90,13 +89,13 @@ func NewHandler(to string, opts []grpc.DialOption) *Handler {
 			{Name: "TIMEOUT", Src: []string{"est_unchecked", "est_inited", "est_uninited"}, Dst: "plugged"},
 		},
 		fsm.Callbacks{
-			"enter_state":  func(e *fsm.Event) { d.enterState(e, d.FSM.Current()) },
-			"enter_created":  func(e *fsm.Event) { d.enterCreated(e, d.FSM.Current()) },
-			"enter_unplugged":  func(e *fsm.Event) { d.enterUnplugged(e, d.FSM.Current()) },
-			"before_HELLO": func(e *fsm.Event) { d.beforeHello(e, d.FSM.Current()) },
-			"after_HELLO":  func(e *fsm.Event) { d.afterHello(e, d.FSM.Current()) },
-			"before_PING":  func(e *fsm.Event) { d.beforePing(e, d.FSM.Current()) },
-			"after_PING":   func(e *fsm.Event) { d.afterPing(e, d.FSM.Current()) },
+			"enter_state":     func(e *fsm.Event) { d.enterState(e, d.FSM.Current()) },
+			"enter_created":   func(e *fsm.Event) { d.enterCreated(e, d.FSM.Current()) },
+			"enter_unplugged": func(e *fsm.Event) { d.enterUnplugged(e, d.FSM.Current()) },
+			"before_HELLO":    func(e *fsm.Event) { d.beforeHello(e, d.FSM.Current()) },
+			"after_HELLO":     func(e *fsm.Event) { d.afterHello(e, d.FSM.Current()) },
+			"before_PING":     func(e *fsm.Event) { d.beforePing(e, d.FSM.Current()) },
+			"after_PING":      func(e *fsm.Event) { d.afterPing(e, d.FSM.Current()) },
 		},
 	)
 
@@ -157,7 +156,6 @@ func (d *Handler) processStream() error {
 	return nil
 }
 
-
 func (d *Handler) generateSessionKey(r string) *bip32.ExtendedKey {
 	entropy, _ := bip39.NewEntropy(256)
 	mnemonic, _ := bip39.NewMnemonic(entropy)
@@ -183,7 +181,6 @@ func (d *Handler) generateSessionKey(r string) *bip32.ExtendedKey {
 	//d.session.key, _ = masterKey.ECPrivKey()
 	return masterKey
 }
-
 
 func (d *Handler) Hello() (*pb.HiReply, error) {
 	var err error
@@ -247,7 +244,7 @@ func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
 
 	if res.GetHeader().GetCmd() == pb.IceboxMessage_ERROR {
 		logger.Debug().Msgf("Device error: %s", res.GetPayload())
-		return nil,errors.New(fmt.Sprintf("Device error : %s", res.GetPayload()))
+		return nil, errors.New(fmt.Sprintf("Device error : %s", res.GetPayload()))
 	}
 
 	var result = &pb.NegotiateReply{}
@@ -321,7 +318,7 @@ func (d *Handler) Start() (*pb.StartReply, error) {
 	if res.GetHeader().GetCmd() == pb.IceboxMessage_ERROR {
 		logger.Debug().Msgf("Device error: %s", res.GetPayload())
 		// should exit
-		return nil,errors.New(fmt.Sprintf("Device error : %s", res.GetPayload()))
+		return nil, errors.New(fmt.Sprintf("Device error : %s", res.GetPayload()))
 	}
 
 	var reply = &pb.StartReply{}
@@ -351,7 +348,6 @@ func (d *Handler) Start() (*pb.StartReply, error) {
 
 	return reply, nil
 }
-
 
 func (d *Handler) CheckDevice() (*pb.CheckReply, error) {
 	var err error
@@ -424,7 +420,7 @@ func (d *Handler) InitDevice(pas string) (*pb.InitReply, error) {
 	ireq := pb.NewInitRequest(pas)
 	payload, _ := proto.Marshal(ireq)
 	sid := d.session.id
-	ct := pb.NewIceboxMessageWithSID(pb.IceboxMessage_INIT,sid, payload)
+	ct := pb.NewIceboxMessageWithSID(pb.IceboxMessage_INIT, sid, payload)
 
 	res, xe := d.Client.Execute(context.Background(), ct)
 	if xe != nil {
@@ -451,7 +447,7 @@ func (d *Handler) PingDevice() error {
 	req := pb.NewPingRequest()
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
-	ct := pb.NewIceboxMessageWithSID(pb.IceboxMessage_PING,sid, payload)
+	ct := pb.NewIceboxMessageWithSID(pb.IceboxMessage_PING, sid, payload)
 
 	res, err := d.Client.Execute(context.Background(), ct)
 	if err != nil {
@@ -478,7 +474,7 @@ func (d *Handler) ResetDevice() error {
 	resetReq := pb.NewResetRequest()
 	payload, _ := proto.Marshal(resetReq)
 	sid := d.session.id
-	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_RESET,sid, payload)
+	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_RESET, sid, payload)
 
 	res, err := d.Client.Execute(context.Background(), msg)
 	if err != nil {
@@ -537,7 +533,7 @@ func (d *Handler) GetAddressByIdx(tp, idx uint32, pwd string) (*pb.GetAddressRep
 	req := pb.NewGetAddressRequest(tp, idx, pwd)
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
-	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_GET_ADDRESS,sid, payload)
+	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_GET_ADDRESS, sid, payload)
 
 	chatRep, xe := d.Client.Execute(context.Background(), msg)
 	if xe != nil {
@@ -569,7 +565,7 @@ func (d *Handler) ListAddress(tp, offset, limit uint32, pwd string) (*pb.ListAdd
 	req := pb.NewListAddressRequest(tp, offset, limit, pwd)
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
-	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_LIST_ADDRESS,sid, payload)
+	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_LIST_ADDRESS, sid, payload)
 
 	chatRep, xe := d.Client.Execute(context.Background(), msg)
 	if xe != nil {
@@ -606,7 +602,7 @@ func (d *Handler) DeleteAddress(tp, idx uint32, pwd string) (*pb.DeleteAddressRe
 	req := pb.NewDeleteAddressRequest(tp, idx, pwd)
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
-	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_DELETE_ADDRESS,sid, payload)
+	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_DELETE_ADDRESS, sid, payload)
 
 	irep, xe := d.Client.Execute(context.Background(), msg)
 	if xe != nil {
@@ -666,7 +662,7 @@ func (d *Handler) ListSecret(tp, site, offset, limit uint32, pwd string) (*pb.Li
 	req := pb.NewListSecretRequest(tp, site, offset, limit, pwd)
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
-	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_LIST_SECRET,sid, payload)
+	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_LIST_SECRET, sid, payload)
 
 	chatRep, xe := d.Client.Execute(context.Background(), msg)
 	if xe != nil {
@@ -698,7 +694,6 @@ func (d *Handler) ListSecret(tp, site, offset, limit uint32, pwd string) (*pb.Li
 	return reply, nil
 }
 
-
 // txhash: should be hex string, 64 char, byte len = 32
 func (d *Handler) SignTx(tp, idx uint32, amount uint64, dest, txhash string, txidx uint32, pwd string) (*pb.SignTxReply, error) {
 	var err error
@@ -710,7 +705,7 @@ func (d *Handler) SignTx(tp, idx uint32, amount uint64, dest, txhash string, txi
 	req := pb.NewSignTxRequest(tp, idx, amount, dest, byteTxHash, txidx, pwd)
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
-	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_SIGN_TX,sid, payload)
+	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_SIGN_TX, sid, payload)
 
 	chatRep, xe := d.Client.Execute(context.Background(), msg)
 	if xe != nil {
@@ -740,7 +735,7 @@ func (d *Handler) SignMsg(tp, idx uint32, msg []byte, pwd string) (*pb.SignMsgRe
 	req := pb.NewSignMsgRequest(tp, idx, msg, pwd)
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
-	chatMsg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_SIGN_MSG,sid, payload)
+	chatMsg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_SIGN_MSG, sid, payload)
 
 	chatRep, xe := d.Client.Execute(context.Background(), chatMsg)
 	if xe != nil {
@@ -763,7 +758,7 @@ func (d *Handler) SignMsg(tp, idx uint32, msg []byte, pwd string) (*pb.SignMsgRe
 	return caRep, nil
 }
 
-func (d *Handler) DispMsg(title, content string, icon []byte) (*pb.DispMsgReply, error)  {
+func (d *Handler) DispMsg(title, content string, icon []byte) (*pb.DispMsgReply, error) {
 	return nil, nil
 }
 
@@ -775,12 +770,12 @@ func checkError(e error) error {
 	return nil
 }
 
-func printHeader(msg *pb.IceboxMessage, tip string)  {
+func printHeader(msg *pb.IceboxMessage, tip string) {
 	logger.Debug().Msgf("%s: version:%d type:%s session_id:%d", tip,
 		msg.GetHeader().GetVersion(), msg.GetHeader().GetCmd(), msg.GetHeader().GetSessionId())
 }
 
-func printBody(msg *pb.IceboxMessage, tip string)  {
+func printBody(msg *pb.IceboxMessage, tip string) {
 	logger.Debug().Msgf("%s: payload:%s signature:%s", tip,
 		base58.Encode(msg.GetPayload()), base58.Encode(msg.GetSignature()))
 }

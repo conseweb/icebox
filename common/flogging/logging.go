@@ -25,9 +25,9 @@ import (
 
 	//"github.com/op/go-logging"
 
-	"github.com/rs/zerolog"
 	"errors"
 	"fmt"
+	"github.com/rs/zerolog"
 )
 
 const (
@@ -216,4 +216,3 @@ func MustGetLogger(module string, lvl zerolog.Level) *zerolog.Logger {
 //
 //	return levelAll.String()
 //}
-

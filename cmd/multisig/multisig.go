@@ -5,9 +5,9 @@ import (
 
 	"os"
 
+	"github.com/conseweb/icebox/common/flogging"
 	"github.com/rs/zerolog"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"github.com/conseweb/icebox/common/flogging"
 )
 
 // Kingpin configurations for command-line subcommands and their respective flags.

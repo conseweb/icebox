@@ -1,10 +1,10 @@
 package bchutil
 
 import (
-	"testing"
+	"bytes"
 	"github.com/conseweb/btcd/chaincfg"
 	"github.com/conseweb/btcutil"
-	"bytes"
+	"testing"
 )
 
 func TestDecodeBitpay(t *testing.T) {

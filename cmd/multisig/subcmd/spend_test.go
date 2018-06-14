@@ -1,10 +1,10 @@
 package subcmd
 
 import (
+	"github.com/conseweb/icebox/core/btcutil"
 	"github.com/conseweb/icebox/core/testutils"
 	"reflect"
 	"testing"
-	"github.com/conseweb/icebox/core/btcutil"
 )
 
 func TestGenerateSpend(t *testing.T) {

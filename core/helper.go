@@ -2,41 +2,40 @@ package core
 
 import (
 	"bytes"
-	"github.com/conseweb/coinutil/bip32"
-	"github.com/conseweb/coinutil/base58"
-	"github.com/conseweb/coinutil/bip44"
-	"github.com/conseweb/coinutil/bip39"
-	"github.com/conseweb/icebox/common/crypto"
-	"github.com/conseweb/icebox/core/models"
-	"github.com/conseweb/icebox/common/guid"
-	"encoding/hex"
-	"github.com/conseweb/icebox/core/common"
-	"fmt"
-	"github.com/conseweb/icebox/common/address"
-	"github.com/jinzhu/gorm"
 	"encoding/binary"
-	"os"
-	"golang.org/x/crypto/scrypt"
-	"io/ioutil"
+	"encoding/hex"
 	"errors"
+	"fmt"
 	"github.com/conseweb/coinutil"
-	"golang.org/x/net/context"
+	"github.com/conseweb/coinutil/base58"
+	"github.com/conseweb/coinutil/bip32"
+	"github.com/conseweb/coinutil/bip39"
+	"github.com/conseweb/coinutil/bip44"
+	"github.com/conseweb/icebox/common/address"
+	"github.com/conseweb/icebox/common/crypto"
+	"github.com/conseweb/icebox/common/guid"
+	"github.com/conseweb/icebox/core/common"
+	"github.com/conseweb/icebox/core/models"
 	pb "github.com/conseweb/icebox/protos"
+	"github.com/jinzhu/gorm"
+	"golang.org/x/crypto/scrypt"
+	"golang.org/x/net/context"
+	"io/ioutil"
 	"math/rand"
+	"os"
 	"time"
 
-	"github.com/conseweb/icebox/common/crypto/koblitz/kelliptic"
-	"github.com/conseweb/btcd/btcec"
 	"crypto/sha256"
-	_ "github.com/mattn/go-sqlite3"  // must exists, or will cause -- sql: unknown driver "sqlite3"
+	"github.com/conseweb/btcd/btcec"
+	"github.com/conseweb/icebox/common/crypto/koblitz/kelliptic"
+	_ "github.com/mattn/go-sqlite3" // must exists, or will cause -- sql: unknown driver "sqlite3"
 
-	"github.com/gogo/protobuf/proto"
-	"github.com/conseweb/icebox/core/paginator"
 	"github.com/conseweb/icebox/core/env"
+	"github.com/conseweb/icebox/core/paginator"
+	"github.com/gogo/protobuf/proto"
 )
 
 //go:generate mockgen -source=helper.go -destination=../mocks/mock_Iceberg.go -package=mocks github.com/conseweb/icebox/core Iceberg
-
 
 type Iceberg interface {
 	Hello(ctx context.Context, req *pb.HiRequest) (*pb.HiReply, error)
@@ -48,11 +47,11 @@ type Iceberg interface {
 
 type iceHelper struct {
 	negotiated bool
-	id string
-	db *gorm.DB
-	session *Session
+	id         string
+	db         *gorm.DB
+	session    *Session
 	// features
-	features map[CoinID] models.Coin
+	features map[CoinID]models.Coin
 
 	// formulas
 	formulas map[CoinID][]*models.Address
@@ -61,7 +60,7 @@ type iceHelper struct {
 func newHelper() *iceHelper {
 	d := &iceHelper{
 		negotiated: false,
-		session: new(Session),
+		session:    new(Session),
 	}
 
 	id := guid.New96()
@@ -157,7 +156,7 @@ func (s *iceHelper) CheckDevice(ctx context.Context, req *pb.CheckRequest) (*pb.
 	if !s.isInitialized() {
 		// return uninit
 		// zero := int32(0)
-		reply := pb.NewCheckReply(0,nil)
+		reply := pb.NewCheckReply(0, nil)
 		return reply, nil
 	}
 
@@ -167,7 +166,6 @@ func (s *iceHelper) CheckDevice(ctx context.Context, req *pb.CheckRequest) (*pb.
 	reply := pb.NewCheckReply(1, &devid)
 	return reply, nil
 }
-
 
 func (s *iceHelper) InitDevice(ctx context.Context, req *pb.InitRequest) (*pb.InitReply, error) {
 	// remove all files
@@ -194,12 +192,12 @@ func (s *iceHelper) InitDevice(ctx context.Context, req *pb.InitRequest) (*pb.In
 	return reply, nil
 }
 
-func (s *iceHelper) Ping(ctx context.Context, req *pb.PingRequest) (*pb.PingReply, error)  {
+func (s *iceHelper) Ping(ctx context.Context, req *pb.PingRequest) (*pb.PingReply, error) {
 	reply := pb.NewPingReply()
 	return reply, nil
 }
 
-func (s *iceHelper) AddCoin(ctx context.Context, req *pb.AddCoinRequest) (*pb.AddCoinReply, error)  {
+func (s *iceHelper) AddCoin(ctx context.Context, req *pb.AddCoinRequest) (*pb.AddCoinReply, error) {
 	tp := req.GetType()
 	idx := req.GetIdx()
 	symbol := req.GetSymbol()
@@ -209,7 +207,7 @@ func (s *iceHelper) AddCoin(ctx context.Context, req *pb.AddCoinRequest) (*pb.Ad
 	return reply, nil
 }
 
-func (s *iceHelper) CreateAddress(ctx context.Context, req *pb.CreateAddressRequest) (*pb.CreateAddressReply, error)  {
+func (s *iceHelper) CreateAddress(ctx context.Context, req *pb.CreateAddressRequest) (*pb.CreateAddressReply, error) {
 
 	tp := req.GetType()
 	//idx := req.GetIdx()
@@ -239,7 +237,7 @@ func (s *iceHelper) CreateAddress(ctx context.Context, req *pb.CreateAddressRequ
 
 }
 
-func (s *iceHelper) CreateSecret(ctx context.Context, req *pb.CreateSecretRequest) (*pb.CreateSecretReply, error)  {
+func (s *iceHelper) CreateSecret(ctx context.Context, req *pb.CreateSecretRequest) (*pb.CreateSecretReply, error) {
 
 	pwd := req.GetPassword()
 	site := req.GetSite()
@@ -263,11 +261,11 @@ func (s *iceHelper) CreateSecret(ctx context.Context, req *pb.CreateSecretReques
 	}
 }
 
-func (s *iceHelper) ListCoin(context.Context, *pb.ListCoinRequest) (*pb.ListCoinReply, error)  {
+func (s *iceHelper) ListCoin(context.Context, *pb.ListCoinRequest) (*pb.ListCoinReply, error) {
 	return nil, errors.New("Not implemented!")
 }
 
-func (s *iceHelper) ListSecret(ctx context.Context, req *pb.ListSecretRequest) (*pb.ListSecretReply, error)  {
+func (s *iceHelper) ListSecret(ctx context.Context, req *pb.ListSecretRequest) (*pb.ListSecretReply, error) {
 	tp := req.GetType()
 	site := req.GetSite()
 	account := req.GetAccount()
@@ -286,7 +284,7 @@ func (s *iceHelper) ListSecret(ctx context.Context, req *pb.ListSecretRequest) (
 	}
 
 	totalPages := uint32(totalRecords) / limit
-	if uint32(totalRecords) % limit > 0 {
+	if uint32(totalRecords)%limit > 0 {
 		totalPages += 1
 	}
 
@@ -321,7 +319,7 @@ func (s *iceHelper) ListSecret(ctx context.Context, req *pb.ListSecretRequest) (
 	}
 }
 
-func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest) (*pb.ListAddressReply, error)  {
+func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest) (*pb.ListAddressReply, error) {
 	tp := req.GetType()
 	//idx := req.GetIdx()
 	pass := req.GetPassword()
@@ -367,7 +365,7 @@ func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest)
 	}
 }
 
-func (s *iceHelper) GetAddress(ctx context.Context, req *pb.GetAddressRequest) (*pb.GetAddressReply, error)  {
+func (s *iceHelper) GetAddress(ctx context.Context, req *pb.GetAddressRequest) (*pb.GetAddressReply, error) {
 	tp := req.GetType()
 	pass := req.GetPassword()
 	idx := req.GetIdx()
@@ -386,12 +384,12 @@ func (s *iceHelper) GetAddress(ctx context.Context, req *pb.GetAddressRequest) (
 		return nil, err
 	}
 
-	pbAddr := pb.Address{Type:&tp, Idx:&idx, SAddr:saddr}
+	pbAddr := pb.Address{Type: &tp, Idx: &idx, SAddr: saddr}
 	reply := pb.NewGetAddressReply(pbAddr)
 	return reply, nil
 }
 
-func (s *iceHelper) SignMsg(ctx context.Context, req *pb.SignMsgRequest) (*pb.SignMsgReply, error)  {
+func (s *iceHelper) SignMsg(ctx context.Context, req *pb.SignMsgRequest) (*pb.SignMsgReply, error) {
 	msg := req.GetMessage()
 	tp := req.GetType()
 	idx := req.GetIdx()
@@ -417,7 +415,7 @@ func (s *iceHelper) SignMsg(ctx context.Context, req *pb.SignMsgRequest) (*pb.Si
 	return reply, nil
 }
 
-func (s *iceHelper) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb.SignTxReply, error)  {
+func (s *iceHelper) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb.SignTxReply, error) {
 	tp := req.GetType()
 	idx := req.GetIdx()
 	amount := req.GetAmount()
@@ -456,11 +454,11 @@ func (s *iceHelper) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb.Sign
 	return reply, nil
 }
 
-func (s *iceHelper) RemoveCoin(context.Context, *pb.RemoveCoinRequest) (*pb.RemoveCoinReply, error)  {
+func (s *iceHelper) RemoveCoin(context.Context, *pb.RemoveCoinRequest) (*pb.RemoveCoinReply, error) {
 	return nil, errors.New("Not implemented!")
 }
 
-func (s *iceHelper) DeleteSecret(context.Context, *pb.DeleteSecretRequest) (*pb.DeleteSecretReply, error)  {
+func (s *iceHelper) DeleteSecret(context.Context, *pb.DeleteSecretRequest) (*pb.DeleteSecretReply, error) {
 	return nil, errors.New("Not implemented!")
 }
 
@@ -468,7 +466,7 @@ func (s *iceHelper) DeleteSecret(context.Context, *pb.DeleteSecretRequest) (*pb.
 //	return nil, errors.New("Not implemented!")
 //}
 
-func (s *iceHelper) ResetDevice(ctx context.Context, req *pb.ResetRequest) (*pb.ResetReply, error)  {
+func (s *iceHelper) ResetDevice(ctx context.Context, req *pb.ResetRequest) (*pb.ResetReply, error) {
 	// reset device: remove all files
 	err := s.resetDevice()
 	if err != nil {
@@ -619,7 +617,7 @@ func (s *iceHelper) newPrivKey(sfn, password string) (key *address.PrivateKey, e
 	return nil, errors.New("Invalid private key.")
 }
 
-func (s *iceHelper) generateSubPrivKey(tp, idx uint32, password string) (*bip32.ExtendedKey, error)  {
+func (s *iceHelper) generateSubPrivKey(tp, idx uint32, password string) (*bip32.ExtendedKey, error) {
 	masterKey, err := s.loadSecretKey(common.Secret_path, password)
 	if err != nil {
 		return nil, err
@@ -649,7 +647,7 @@ func (s *iceHelper) generateSubPrivKey(tp, idx uint32, password string) (*bip32.
 }
 
 // 使用内部的主私钥来生成新地址
-func (s *iceHelper) generateAddress(tp, idx uint32, password string) (*string, error)  {
+func (s *iceHelper) generateAddress(tp, idx uint32, password string) (*string, error) {
 	masterKey, err := s.loadSecretKey(common.Secret_path, password)
 	if err != nil {
 		return nil, err
@@ -720,7 +718,7 @@ func (s *iceHelper) isInitialized() bool {
 	return true
 }
 
-func (s *iceHelper) dbCoinExists(tp uint32) bool  {
+func (s *iceHelper) dbCoinExists(tp uint32) bool {
 	var cnt int
 	s.openDb().Model(&models.Coin{}).Where("t2 = ?", tp).Count(&cnt)
 	if cnt <= 0 {
@@ -729,7 +727,7 @@ func (s *iceHelper) dbCoinExists(tp uint32) bool  {
 	return true
 }
 
-func (s *iceHelper) dbAddrExists(tp uint32, idx int32) bool  {
+func (s *iceHelper) dbAddrExists(tp uint32, idx int32) bool {
 	var cnt int
 	if idx < 0 {
 		s.openDb().Model(&models.Address{}).Where("t2 = ?", tp).Count(&cnt)
@@ -745,7 +743,7 @@ func (s *iceHelper) dbAddrExists(tp uint32, idx int32) bool  {
 	return true
 }
 
-func (s *iceHelper) dbSecretExists(site, account uint32, idx int32) bool  {
+func (s *iceHelper) dbSecretExists(site, account uint32, idx int32) bool {
 	var cnt int
 	if idx < 0 {
 		s.openDb().Model(&models.Secret{}).Where("t2 = ? AND t3 = ?", site, account).Count(&cnt)
@@ -805,7 +803,6 @@ func Hash256(b []byte) []byte {
 	h.Write([]byte(b))
 	return h.Sum(nil)
 }
-
 
 func DoubleHash256(b []byte) []byte {
 	h1 := sha256.New()

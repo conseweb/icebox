@@ -3,20 +3,20 @@ package main
 import (
 	"bytes"
 	"encoding/hex"
-	"log"
 	"github.com/conseweb/btcd/chaincfg/chainhash"
 	"github.com/conseweb/btcd/txscript"
 	"github.com/conseweb/btcd/wire"
 	"github.com/conseweb/btcutil"
+	"log"
 
 	"github.com/conseweb/btcd/chaincfg"
 )
 
 const (
-	txFee = 10000
+	txFee       = 10000
 	fromAddress = "mijhw2WHeqgimoTqoKMWSCRVs8XFXxk9qx"
-	toAddress = "muph2LMYEHiTUuCC9FusNJ8aWyjySJ9srB"
-	fromWIF = "5Jg5fEQHNF385G1vQunCzBAC9rKakKAqgfVuFet6DN6J32qsmnL"
+	toAddress   = "muph2LMYEHiTUuCC9FusNJ8aWyjySJ9srB"
+	fromWIF     = "5Jg5fEQHNF385G1vQunCzBAC9rKakKAqgfVuFet6DN6J32qsmnL"
 )
 
 type utxo struct {
@@ -37,12 +37,12 @@ func main() {
 	}
 
 	unspentTx := utxo{
-		Address: "mijhw2WHeqgimoTqoKMWSCRVs8XFXxk9qx",
-		TxID: "5de1f708644f269f4fd87c648cc5d67cac64ebcf5b743f5d5063a141d6a01f14",
+		Address:     "mijhw2WHeqgimoTqoKMWSCRVs8XFXxk9qx",
+		TxID:        "5de1f708644f269f4fd87c648cc5d67cac64ebcf5b743f5d5063a141d6a01f14",
 		OutputIndex: 0,
-		Script: "76a9142351cbad27a2607960ba370dccd1400c481230fa88ac",
-		Satoshis: 8125000,
-		Height: 1291076,
+		Script:      "76a9142351cbad27a2607960ba370dccd1400c481230fa88ac",
+		Satoshis:    8125000,
+		Height:      1291076,
 	}
 
 	tx := wire.NewMsgTx(wire.TxVersion)
@@ -81,19 +81,18 @@ func main() {
 	}
 
 	sig, err := txscript.SignatureScript(
-		tx,                  		// The tx to be signed.
-		0,                   	// The index of the txin the signature is for.
-		txIn.PkScript,     			// The other half of the script from the PubKeyHash.
-		txscript.SigHashAll, 		// The signature flags that indicate what the sig covers.
-		wif.PrivKey,          		// The key to generate the signature with.
-		true,              // The compress sig flag. This saves space on the blockchain.
+		tx,                  // The tx to be signed.
+		0,                   // The index of the txin the signature is for.
+		txIn.PkScript,       // The other half of the script from the PubKeyHash.
+		txscript.SigHashAll, // The signature flags that indicate what the sig covers.
+		wif.PrivKey,         // The key to generate the signature with.
+		true,                // The compress sig flag. This saves space on the blockchain.
 	)
 	if err != nil {
 		log.Fatalf("could not generate signature: %v", err)
 	}
 
 	tx.TxIn[0].SignatureScript = sig
-
 
 	log.Printf("signed raw transaction: %s", txToHex(tx))
 }

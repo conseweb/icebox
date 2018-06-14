@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"log"
 	"math/big"
-
 )
 
 func Encode(prefix string, byteData []byte) string {

@@ -47,9 +47,9 @@ func main() {
 		//}
 	)
 
-	xmsg := randSeq(200 )
-	test := pb.Error {
-		Code: pb.NewInt32(1),
+	xmsg := randSeq(200)
+	test := pb.Error{
+		Code:    pb.NewInt32(1),
 		Message: &xmsg,
 	}
 

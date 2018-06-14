@@ -1,16 +1,16 @@
 package core
 
 import (
-	"testing"
-	. "github.com/smartystreets/goconvey/convey"
-	"fmt"
 	"encoding/hex"
-	"github.com/conseweb/coinutil/base58"
-	"github.com/conseweb/icebox/core/env"
+	"fmt"
 	"github.com/conseweb/btcd/txscript"
 	"github.com/conseweb/btcutil"
-	"github.com/conseweb/icebox/common"
 	"github.com/conseweb/coinutil"
+	"github.com/conseweb/coinutil/base58"
+	"github.com/conseweb/icebox/common"
+	"github.com/conseweb/icebox/core/env"
+	. "github.com/smartystreets/goconvey/convey"
+	"testing"
 )
 
 type tx_test struct {
@@ -24,7 +24,7 @@ type tx_test struct {
 	amountSatoshis uint64
 	hexScriptSig   string
 	rawTx          string
-	signedTx	   string
+	signedTx       string
 	resultTxHash   string
 }
 
@@ -40,7 +40,7 @@ var tx_tests = []tx_test{
 		"68855a72a1e728d332025f5813ef35e8a6c1a8f5fb43e610c149b782ee290538",
 		"cR5soFTPrbdDiFRehXFRwzC8gKvETa2roa2ApN5pxRbK8tfQYbQP",
 		"0259c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c", // compressed public key
-		"mx8hhz3tWjbKkeeTXUyCPUuaJmY9U6SZse",	// compressed public key
+		"mx8hhz3tWjbKkeeTXUyCPUuaJmY9U6SZse",                                 // compressed public key
 		"3ef58f2581ed01ab1ba231aeb77846d3340367e651fa6bb1022cdc2790e0698f",
 		0,
 		"msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb",
@@ -80,7 +80,6 @@ var tx_tests = []tx_test{
 		"",
 	},
 }
-
 
 func TestCreateScriptPubKey(t *testing.T) {
 	Convey(`createScriptPubKey should be working.`, t, func() {
@@ -267,7 +266,6 @@ func TestSignature(t *testing.T) {
 // 19 76 a9 14 82e81438d7fa15ce205a9683dc786c241bc820f2 88 ac
 // 00000000
 
-
 // expected:
 // 01000000
 // 01
@@ -294,7 +292,6 @@ func TestSignature(t *testing.T) {
 // 00000000
 
 // 01000000018f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e000000001976a914b644cf69fcc76fef6db694e671316e55a1a2e0b288acffffffff0130abdf03000000001976a91482e81438d7fa15ce205a9683dc786c241bc820f288ac00000000
-
 
 // 01000000
 // 01

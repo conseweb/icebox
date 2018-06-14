@@ -19,9 +19,9 @@ import (
 	"github.com/conseweb/coinutil"
 
 	//"conseweb.com/go-bip44"
+	"github.com/conseweb/icebox/core/models"
 	"github.com/tyler-smith/go-bip32"
 	"github.com/tyler-smith/go-bip39"
-	"github.com/conseweb/icebox/core/models"
 )
 
 const (

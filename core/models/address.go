@@ -7,11 +7,11 @@ import (
 
 // T1: 44, T2: coin type, T3: account=0, T4: change/chain=0, T5: index
 type Address struct {
-	ID      uint32 `gorm:"AUTO_INCREMENT, PRIMARY_KEY"` // set id to auto incrementable
-	T2      uint32 `gorm:"not null"`                    // for bip44: coin_type
-	T4 		uint32 `gorm:"default:0"`					// for bip44: change/chain
-	T5      uint32 `gorm:"not null"`					// for bip44: address_index
-	Name    string
+	ID   uint32 `gorm:"AUTO_INCREMENT, PRIMARY_KEY"` // set id to auto incrementable
+	T2   uint32 `gorm:"not null"`                    // for bip44: coin_type
+	T4   uint32 `gorm:"default:0"`                   // for bip44: change/chain
+	T5   uint32 `gorm:"not null"`                    // for bip44: address_index
+	Name string
 }
 
 func (p Address) GetEquality() (res string) {
@@ -28,5 +28,3 @@ func GetPath(db *gorm.DB, tp, idx uint32) string {
 	path := coin.GetEquality() + addr.GetEquality()
 	return path
 }
-
-

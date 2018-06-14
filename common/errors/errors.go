@@ -1,4 +1,3 @@
-
 package errors
 
 // VSCCInfoLookupFailureError error to indicate inability

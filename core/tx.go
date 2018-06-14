@@ -2,16 +2,16 @@ package core
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/hex"
+	"github.com/conseweb/btcd/btcec"
 	"github.com/conseweb/btcd/chaincfg/chainhash"
 	"github.com/conseweb/btcd/txscript"
 	"github.com/conseweb/btcd/wire"
-	"github.com/conseweb/coinutil"
-	"github.com/conseweb/icebox/core/env"
-	"encoding/binary"
-	"github.com/conseweb/btcd/btcec"
 	"github.com/conseweb/btcutil"
+	"github.com/conseweb/coinutil"
 	"github.com/conseweb/icebox/core/base58check"
+	"github.com/conseweb/icebox/core/env"
 )
 
 type utxo struct {
@@ -33,7 +33,7 @@ type Transaction struct {
 }
 
 type TxOutput struct {
-	value uint64
+	value   uint64
 	address string
 }
 
@@ -42,8 +42,8 @@ func (x *TxOutput) Get() (uint64, string) {
 }
 
 type TxInput struct {
-	prev_hash 		[]byte  // prev_hash's bytes, not hex string
-	output_index 	uint32
+	prev_hash    []byte // prev_hash's bytes, not hex string
+	output_index uint32
 }
 
 func (in *TxInput) Get() ([]byte, uint32) {
@@ -55,12 +55,12 @@ func createScriptPubKey(publicKeyBase58 string) []byte {
 	//publicKeyBytes := base58.Decode(publicKeyBase58)
 
 	var scriptPubKey bytes.Buffer
-	scriptPubKey.WriteByte(byte(118))                 	//OP_DUP 			hex=76
-	scriptPubKey.WriteByte(byte(169))                 	//OP_HASH160 		hex=a9
-	scriptPubKey.WriteByte(byte(len(publicKeyBytes))) 	//PUSH				hex=14 dec=20
+	scriptPubKey.WriteByte(byte(118))                 //OP_DUP 			hex=76
+	scriptPubKey.WriteByte(byte(169))                 //OP_HASH160 		hex=a9
+	scriptPubKey.WriteByte(byte(len(publicKeyBytes))) //PUSH				hex=14 dec=20
 	scriptPubKey.Write(publicKeyBytes)
-	scriptPubKey.WriteByte(byte(136)) 					//OP_EQUALVERIFY	hex=88
-	scriptPubKey.WriteByte(byte(172)) 					//OP_CHECKSIG		hex=ac
+	scriptPubKey.WriteByte(byte(136)) //OP_EQUALVERIFY	hex=88
+	scriptPubKey.WriteByte(byte(172)) //OP_CHECKSIG		hex=ac
 	return scriptPubKey.Bytes()
 }
 
@@ -204,7 +204,6 @@ func createRawTransaction(inputTxBytes []byte, inputTxIdx uint32, base58DestAddr
 	return buffer.Bytes()
 }
 
-
 func createRawTransaction2(input *TxInput, dest *TxOutput, change *TxOutput, scriptSig []byte) []byte {
 	// Create the raw transaction.
 
@@ -307,7 +306,6 @@ func CreateSignedMessage(privKey *btcec.PrivateKey, msg []byte) ([]byte, error) 
 	return signedTx, nil
 }
 
-
 // FIXME: default should have change output
 func CreateSignedTx(privKey *btcec.PrivateKey, input *TxInput, dest *TxOutput, compressed bool) (*Transaction, error) {
 	var transaction Transaction
@@ -362,9 +360,8 @@ func CreateSignedTx(privKey *btcec.PrivateKey, input *TxInput, dest *TxOutput, c
 	transaction.SourceAddress = base58FromAddr
 	transaction.DestinationAddress = destination
 
-	return &transaction,nil
+	return &transaction, nil
 }
-
 
 // FIXME: should support locktime
 // FIXME: should default use compressed public key
@@ -421,9 +418,8 @@ func CreateSignedTx2(privKey *btcec.PrivateKey, input *TxInput, dest *TxOutput, 
 	transaction.SourceAddress = base58FromAddr
 	transaction.DestinationAddress = destination
 
-	return &transaction,nil
+	return &transaction, nil
 }
-
 
 // from: utxo
 // to: address, amount
@@ -567,7 +563,6 @@ func CreateTransaction(secret string, destination string, amount uint64, txHash 
 // c0e1e40000000000
 // 19 76 a9 14 82e81438d7fa15ce205a9683dc786c241bc820f2 88 ac
 // 00000000
-
 
 // CreateSignedTx - raw tx:
 // 01000000018f69e09027dc2c02b16bfa51e6670334d34678b7ae31a21bab01ed81258ff53e000000001976a914e20b2d724ff385e3172b07bad14187c682f8b22e88acffffffff01c0e1e400000000001976a91482e81438d7fa15ce205a9683dc786c241bc820f288ac00000000

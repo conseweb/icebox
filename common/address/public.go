@@ -1,11 +1,11 @@
 package address
 
 import (
+	"crypto/elliptic"
 	"encoding/hex"
+	"github.com/conseweb/coinutil/base58"
 	"github.com/conseweb/icebox/common/crypto/koblitz/kelliptic"
 	"math/big"
-	"github.com/conseweb/coinutil/base58"
-	"crypto/elliptic"
 )
 
 type PublicKey struct {

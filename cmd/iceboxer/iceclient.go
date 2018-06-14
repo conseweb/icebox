@@ -5,20 +5,20 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/testdata"
-	"os/signal"
 	"os"
+	"os/signal"
 
-	"github.com/rs/zerolog"
-	"github.com/conseweb/icebox/common/flogging"
+	"encoding/hex"
+	"github.com/blockcypher/gobcy"
+	"github.com/conseweb/icebox/client"
+	"github.com/conseweb/icebox/client/util"
+	cli "github.com/conseweb/icebox/cmd/iceboxer/subcmd"
 	"github.com/conseweb/icebox/common"
+	"github.com/conseweb/icebox/common/flogging"
 	"github.com/conseweb/icebox/core/paginator"
 	"github.com/conseweb/icebox/protos"
-	"github.com/conseweb/icebox/client/util"
-	"github.com/conseweb/icebox/client"
-	cli "github.com/conseweb/icebox/cmd/iceboxer/subcmd"
-	"encoding/hex"
+	"github.com/rs/zerolog"
 	"gopkg.in/alecthomas/kingpin.v2"
-	"github.com/blockcypher/gobcy"
 )
 
 const (
@@ -57,10 +57,8 @@ var (
 	cmdSpendInputTx      = cmdSpend.Flag("input-tx", "Input transaction hash of bitcoin to send.").Required().String()
 	cmdSpendAmount       = cmdSpend.Flag("amount", "Amount of bitcoin to send in satoshi (100,000,000 satoshi = 1 bitcoin).").Required().Int()
 
-
 	logger = flogging.MustGetLogger("client", zerolog.DebugLevel)
 )
-
 
 func main() {
 
@@ -202,7 +200,7 @@ func main() {
 		}
 	}
 
-	tp := 1	// testnet
+	tp := 1 // testnet
 	idx := 1671493468
 	gap, err := handler.GetAddressByIdx(uint32(tp), uint32(idx), common.Test_password)
 	if err != nil {
@@ -234,13 +232,13 @@ func main() {
 	}
 
 	amount := int(15000000)
-  	goodTxId, outn, err := util.FindFirstSuitableUTXO(bcy, fromAddr, amount)
+	goodTxId, outn, err := util.FindFirstSuitableUTXO(bcy, fromAddr, amount)
 	if goodTxId == nil && outn == -1 && err == nil {
 		logger.Fatal().Msgf("Not enough balance.")
 		os.Exit(-1)
 	}
-  	if goodTxId != nil {
-  		logger.Debug().Msgf("Got suitable utxo: %s, %d", *goodTxId, outn)
+	if goodTxId != nil {
+		logger.Debug().Msgf("Got suitable utxo: %s, %d", *goodTxId, outn)
 	}
 
 	// src: "1, 1671493468,
@@ -285,9 +283,7 @@ func main() {
 		}
 	}
 
-
 	// TODO: broadcast it
-
 
 	// send reset request
 	//resetDevice(common)

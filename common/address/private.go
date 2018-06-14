@@ -107,7 +107,6 @@ func (p *PrivateKey) String2() string {
 	return ToBase58(addr, 51)
 }
 
-
 func (p *PrivateKey) Sign(m []byte) (s []byte, err error) {
 	K := new(ecdsa.PrivateKey)
 	K.Curve, K.X, K.Y, K.D = p.Curve, p.X, p.Y, p.D
@@ -123,11 +122,11 @@ func (p *PrivateKey) Sign(m []byte) (s []byte, err error) {
 }
 
 func (p *PublicKey) Verify(m, s []byte) bool {
-    P := new(ecdsa.PublicKey)
-    P.Curve, P.X, P.Y = p.Curve, p.X, p.Y
-    
-    R := new(big.Int).SetBytes(s[33:])
-    S := new(big.Int).SetBytes(s[1:33])
-    
+	P := new(ecdsa.PublicKey)
+	P.Curve, P.X, P.Y = p.Curve, p.X, p.Y
+
+	R := new(big.Int).SetBytes(s[33:])
+	S := new(big.Int).SetBytes(s[1:33])
+
 	return ecdsa.Verify(P, m, R, S)
 }

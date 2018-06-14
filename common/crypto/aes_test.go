@@ -1,13 +1,13 @@
 package crypto
 
 import (
+	_ "fmt"
 	. "github.com/smartystreets/goconvey/convey"
 	"testing"
-	_ "fmt"
 )
 
 type aes_test struct {
-	key string
+	key     string
 	message string
 }
 

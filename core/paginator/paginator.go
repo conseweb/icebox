@@ -2,10 +2,10 @@ package paginator
 
 func GetTotalPages(total, limit uint32) uint32 {
 	p := total / limit
-	if total % limit == 0 {
+	if total%limit == 0 {
 		return p
 	} else {
-		return p+1
+		return p + 1
 	}
 }
 
@@ -33,7 +33,7 @@ func IsOnePage(total, limit, offset uint32) bool {
 
 func HaveNext(total, limit, offset uint32) bool {
 	//p := GetTotalPages(total, limit)
-	if (offset < total) && (offset + limit < total) {
+	if (offset < total) && (offset+limit < total) {
 		return true
 	}
 	if IsLastPage(total, limit, offset) {

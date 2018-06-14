@@ -1,8 +1,8 @@
 package address
 
 import (
-	"golang.org/x/crypto/ripemd160"
 	"crypto/sha256"
+	"golang.org/x/crypto/ripemd160"
 )
 
 func DHash256(in []byte) []byte {

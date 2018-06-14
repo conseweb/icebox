@@ -3,21 +3,21 @@ package env
 import "github.com/conseweb/btcd/chaincfg"
 
 type Env struct {
-	isDebug bool
+	isDebug   bool
 	isEncrypt bool
 	isTestNet bool
-	net *chaincfg.Params
+	net       *chaincfg.Params
 }
 
 var (
 	RTEnv Env
 )
 
-func (e *Env) IsDebug() bool  {
+func (e *Env) IsDebug() bool {
 	return e.isDebug
 }
 
-func (e *Env) IsEncrypt() bool  {
+func (e *Env) IsEncrypt() bool {
 	return e.isEncrypt
 }
 

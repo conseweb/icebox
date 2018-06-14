@@ -3,15 +3,15 @@
 package main
 
 import (
-"bytes"
-"crypto/aes"
-"crypto/cipher"
-"crypto/rand"
-"encoding/base64"
-"errors"
-"fmt"
-"io"
-"strings"
+	"bytes"
+	"crypto/aes"
+	"crypto/cipher"
+	"crypto/rand"
+	"encoding/base64"
+	"errors"
+	"fmt"
+	"io"
+	"strings"
 )
 
 func addBase64Padding(value string) string {

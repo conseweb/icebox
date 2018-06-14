@@ -2,31 +2,31 @@ package main
 
 import (
 	"flag"
-	"golang.org/x/net/trace"  // 引入trace包
-	"google.golang.org/grpc/grpclog"
-	"net/http"
-	"github.com/conseweb/icebox/common/flogging"
 	"fmt"
 	"github.com/cheapRoc/grpc-zerolog"
+	"github.com/conseweb/icebox/common/flogging"
+	"golang.org/x/net/trace" // 引入trace包
+	"google.golang.org/grpc/grpclog"
 	"net"
+	"net/http"
 	//"github.com/conseweb/icebox/core"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials"
 	"google.golang.org/grpc/testdata"
 
-	"os"
+	"github.com/conseweb/icebox/core"
+	pb "github.com/conseweb/icebox/protos"
 	"github.com/rs/zerolog"
 	_ "github.com/rs/zerolog/log"
-	pb "github.com/conseweb/icebox/protos"
-	"github.com/conseweb/icebox/core"
+	"os"
 )
 
 var (
-	tls        = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
-	certFile   = flag.String("cert_file", "root/server.pem", "The TLS cert file")
-	keyFile    = flag.String("key_file", "root/server.key", "The TLS key file")
+	tls      = flag.Bool("tls", false, "Connection uses TLS if true, else plain TCP")
+	certFile = flag.String("cert_file", "root/server.pem", "The TLS cert file")
+	keyFile  = flag.String("key_file", "root/server.key", "The TLS key file")
 	//jsonDBFile = flag.String("json_db_file", "testdata/route_guide_db.json", "A json file containing a list of features")
-	port       = flag.Int("port", 50052, "The server port")
+	port = flag.Int("port", 50052, "The server port")
 
 	// Address gRPC服务地址
 	Address = fmt.Sprintf("localhost:%d", *port)

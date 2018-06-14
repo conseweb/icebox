@@ -4,13 +4,13 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	"bytes"
 	"github.com/conseweb/btcd/btcec"
 	"github.com/conseweb/btcd/chaincfg"
 	"github.com/conseweb/btcd/chaincfg/chainhash"
 	"github.com/conseweb/btcd/txscript"
 	"github.com/conseweb/btcd/wire"
 	"github.com/conseweb/btcutil"
-	"bytes"
 )
 
 // createFakeOriginTx creates a fake coinbase transaction that is used in the

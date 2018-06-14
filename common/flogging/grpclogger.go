@@ -18,9 +18,9 @@ package flogging
 
 import (
 	//"github.com/op/go-logging"
-	"google.golang.org/grpc/grpclog"
-	"github.com/rs/zerolog"
 	"github.com/cheapRoc/grpc-zerolog"
+	"github.com/rs/zerolog"
+	"google.golang.org/grpc/grpclog"
 )
 
 const GRPCModuleID = "grpc"

@@ -7,9 +7,9 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"io"
 	"strings"
-	"fmt"
 )
 
 func addBase64Padding(value string) string {

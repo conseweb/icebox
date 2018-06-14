@@ -2,15 +2,15 @@
 package subcmd
 
 import (
-	"github.com/conseweb/icebox/core/base58check"
 	"bytes"
 	"encoding/binary"
 	"encoding/csv"
 	"encoding/hex"
 	"fmt"
+	"github.com/conseweb/icebox/core/base58check"
+	"github.com/conseweb/icebox/core/btcutil"
 	"log"
 	"strings"
-	"github.com/conseweb/icebox/core/btcutil"
 )
 
 //OutputSpend formats and prints relevant outputs to the user.

@@ -1,18 +1,17 @@
 package protos
 
-
 import (
-	"time"
-	mrand "math/rand"
 	"bytes"
 	"encoding/binary"
+	mrand "math/rand"
+	"time"
 
-	"crypto/sha256"
-	"math/big"
 	"crypto/ecdsa"
-	"github.com/conseweb/btcd/btcec"
 	"crypto/rand"
+	"crypto/sha256"
+	"github.com/conseweb/btcd/btcec"
 	"github.com/golang/protobuf/proto"
+	"math/big"
 )
 
 const (
@@ -47,7 +46,7 @@ func NewInt32(v int32) *int32 {
 	return &i
 }
 
-func NewIceboxMessage(t IceboxMessage_Command, p []byte) *IceboxMessage  {
+func NewIceboxMessage(t IceboxMessage_Command, p []byte) *IceboxMessage {
 	m := new(IceboxMessage)
 	m.Header = new(IceboxMessage_Header)
 	m.Header.Version = NewUInt32(Version)
@@ -56,9 +55,9 @@ func NewIceboxMessage(t IceboxMessage_Command, p []byte) *IceboxMessage  {
 	m.Header.Cmd = &t
 
 	now := time.Now()
-	s := int64(now.Second()) // from 'int'
+	s := int64(now.Second())     // from 'int'
 	n := int32(now.Nanosecond()) // from 'int'
-	m.Header.Timestamp = &Timestamp{Seconds:&s, Nanos:&n}
+	m.Header.Timestamp = &Timestamp{Seconds: &s, Nanos: &n}
 
 	if p != nil {
 		m.Payload = p
@@ -74,7 +73,7 @@ func Hash256(b []byte) []byte {
 	return h.Sum(nil)
 }
 
-func NewIceboxMessageWithSID(t IceboxMessage_Command, sid uint32, p []byte) *IceboxMessage  {
+func NewIceboxMessageWithSID(t IceboxMessage_Command, sid uint32, p []byte) *IceboxMessage {
 	m := new(IceboxMessage)
 	m.Header = new(IceboxMessage_Header)
 	v := NewUInt32(Version)
@@ -82,9 +81,9 @@ func NewIceboxMessageWithSID(t IceboxMessage_Command, sid uint32, p []byte) *Ice
 	m.Header.SessionId = &sid
 	m.Header.Cmd = &t
 	now := time.Now()
-	s := int64(now.Second()) // from 'int'
+	s := int64(now.Second())     // from 'int'
 	n := int32(now.Nanosecond()) // from 'int'
-	ts := Timestamp{Seconds:&s, Nanos:&n}
+	ts := Timestamp{Seconds: &s, Nanos: &n}
 	m.Header.Timestamp = &ts
 	if p != nil {
 		m.Payload = p
@@ -95,7 +94,6 @@ func NewIceboxMessageWithSID(t IceboxMessage_Command, sid uint32, p []byte) *Ice
 
 	return m
 }
-
 
 func GetMessageHash(h *IceboxMessage_Header, p []byte) []byte {
 	buf := new(bytes.Buffer)
@@ -149,7 +147,6 @@ func AddSignatureToMsg(msg *IceboxMessage, privKey *btcec.PrivateKey) error {
 	return nil
 }
 
-
 //func NewHeader() *Header {
 //	v := NewUInt32(Version)
 //	ts := uint32(makeTimestamp())
@@ -170,7 +167,7 @@ func AddSignatureToMsg(msg *IceboxMessage, privKey *btcec.PrivateKey) error {
 //	return header
 //}
 
-func NewError(code int32, msg string) *Error  {
+func NewError(code int32, msg string) *Error {
 	xe := new(Error)
 	xe.Code = &code
 	xe.Message = &msg
@@ -211,12 +208,10 @@ func EncodeNegotiateRequest(key, hash string) ([]byte, error) {
 	return payload, nil
 }
 
-
 func NewStartRequest() *StartRequest {
 	req := new(StartRequest)
 	return req
 }
-
 
 func EncodeStartRequest() ([]byte, error) {
 	req := NewStartRequest()
@@ -226,7 +221,6 @@ func EncodeStartRequest() ([]byte, error) {
 	}
 	return payload, nil
 }
-
 
 func NewCheckRequest() *CheckRequest {
 	req := new(CheckRequest)
@@ -328,7 +322,7 @@ func EncodeCreateSecretRequest(tp, site, account uint32, pass string) ([]byte, e
 	return payload, nil
 }
 
-func NewGetAddressRequest(tp, idx uint32,  pass string) *GetAddressRequest {
+func NewGetAddressRequest(tp, idx uint32, pass string) *GetAddressRequest {
 	req := new(GetAddressRequest)
 	req.Type = &tp
 	req.Idx = &idx
@@ -336,7 +330,7 @@ func NewGetAddressRequest(tp, idx uint32,  pass string) *GetAddressRequest {
 	return req
 }
 
-func EncodeGetAddressRequest(tp, idx uint32,  pass string) ([]byte, error) {
+func EncodeGetAddressRequest(tp, idx uint32, pass string) ([]byte, error) {
 	req := NewGetAddressRequest(tp, idx, pass)
 	payload, err := proto.Marshal(req)
 	if err != nil {
@@ -345,7 +339,7 @@ func EncodeGetAddressRequest(tp, idx uint32,  pass string) ([]byte, error) {
 	return payload, nil
 }
 
-func NewListAddressRequest(tp, offset, limit uint32,  pass string) *ListAddressRequest {
+func NewListAddressRequest(tp, offset, limit uint32, pass string) *ListAddressRequest {
 	req := new(ListAddressRequest)
 	req.Type = &tp
 	req.Offset = &offset
@@ -355,7 +349,7 @@ func NewListAddressRequest(tp, offset, limit uint32,  pass string) *ListAddressR
 	return req
 }
 
-func EncodeListAddressRequest(tp, offset, limit uint32,  pass string) ([]byte, error) {
+func EncodeListAddressRequest(tp, offset, limit uint32, pass string) ([]byte, error) {
 	req := NewListAddressRequest(tp, offset, limit, pass)
 	payload, err := proto.Marshal(req)
 	if err != nil {
@@ -364,7 +358,7 @@ func EncodeListAddressRequest(tp, offset, limit uint32,  pass string) ([]byte, e
 	return payload, nil
 }
 
-func NewListSecretRequest(tp, site, offset, limit uint32,  pass string) *ListSecretRequest {
+func NewListSecretRequest(tp, site, offset, limit uint32, pass string) *ListSecretRequest {
 	req := new(ListSecretRequest)
 	req.Type = &tp
 	req.Site = &site
@@ -375,7 +369,7 @@ func NewListSecretRequest(tp, site, offset, limit uint32,  pass string) *ListSec
 	return req
 }
 
-func EncodeListSecretRequest(tp, site, offset, limit uint32,  pass string) ([]byte, error) {
+func EncodeListSecretRequest(tp, site, offset, limit uint32, pass string) ([]byte, error) {
 	req := NewListSecretRequest(tp, site, offset, limit, pass)
 	payload, err := proto.Marshal(req)
 	if err != nil {
@@ -736,4 +730,3 @@ func EncodeResetReply() ([]byte, error) {
 	}
 	return payload, nil
 }
-

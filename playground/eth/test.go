@@ -8,22 +8,22 @@ import (
 	"strings"
 	"time"
 
-	_ "github.com/ethereum/go-ethereum/accounts/abi"
-	"github.com/ethereum/go-ethereum/common"
-	"github.com/ethereum/go-ethereum/core/types"
-	"github.com/ethereum/go-ethereum/ethclient"
-	"github.com/ethereum/go-ethereum/crypto"
+	"crypto/ecdsa"
 	"encoding/hex"
 	"encoding/json"
-	"crypto/ecdsa"
-	"github.com/ethereum/go-ethereum/accounts/keystore"
-	"github.com/rs/zerolog"
 	"github.com/conseweb/icebox/common/flogging"
 	"github.com/ethereum/go-ethereum/accounts/abi"
+	_ "github.com/ethereum/go-ethereum/accounts/abi"
+	"github.com/ethereum/go-ethereum/accounts/keystore"
+	"github.com/ethereum/go-ethereum/common"
+	"github.com/ethereum/go-ethereum/core/types"
+	"github.com/ethereum/go-ethereum/crypto"
+	"github.com/ethereum/go-ethereum/ethclient"
+	"github.com/rs/zerolog"
 )
 
 const (
-	key = `{"address": "", "crypto": {"cipher": "ase-128-ctr"}}`
+	key     = `{"address": "", "crypto": {"cipher": "ase-128-ctr"}}`
 	TestABI = ""
 	TestBin = "0x6006"
 )
@@ -33,36 +33,36 @@ var (
 )
 
 type GethTxn struct {
-  To   string     `json:"to"`
-  From string     `json:"from"`
-  Gas string      `json:"gas"`
-  GasPrice string `json:"gasPrice"`
-  Value string    `json:"value"`
-  Data string     `json:"input"`
+	To       string `json:"to"`
+	From     string `json:"from"`
+	Gas      string `json:"gas"`
+	GasPrice string `json:"gasPrice"`
+	Value    string `json:"value"`
+	Data     string `json:"input"`
 }
 
 func SignTxn(from string, _to string, data []byte, nonce uint64, value int64,
 	gas *big.Int, gasPrice *big.Int, privkey *ecdsa.PrivateKey) (*GethTxn, error) {
 
-  var parsed_tx = new(GethTxn)
-  var amount = big.NewInt(value)
-  var bytesto [20]byte
-  _bytesto, _ := hex.DecodeString(_to[2:])
-  copy(bytesto[:], _bytesto)
-  to := common.Address([20]byte(bytesto))
+	var parsed_tx = new(GethTxn)
+	var amount = big.NewInt(value)
+	var bytesto [20]byte
+	_bytesto, _ := hex.DecodeString(_to[2:])
+	copy(bytesto[:], _bytesto)
+	to := common.Address([20]byte(bytesto))
 
-  signer := types.NewEIP155Signer(nil)
-  tx := types.NewTransaction(nonce, to, amount, gas, gasPrice, data)
-  signature, _ := crypto.Sign(tx.SigHash(signer).Bytes(), privkey)
-  signed_tx, _ := tx.WithSignature(signer, signature)
+	signer := types.NewEIP155Signer(nil)
+	tx := types.NewTransaction(nonce, to, amount, gas, gasPrice, data)
+	signature, _ := crypto.Sign(tx.SigHash(signer).Bytes(), privkey)
+	signed_tx, _ := tx.WithSignature(signer, signature)
 
-  json_tx, _ := signed_tx.MarshalJSON()
-  _ = json.Unmarshal(json_tx, parsed_tx)
-  parsed_tx.From = from
-  fmt.Println("data", parsed_tx.Data)
-  my_string_var := signed_tx.String()
-  fmt.Println("raw tx: %s", my_string_var)
-  return parsed_tx, nil
+	json_tx, _ := signed_tx.MarshalJSON()
+	_ = json.Unmarshal(json_tx, parsed_tx)
+	parsed_tx.From = from
+	fmt.Println("data", parsed_tx.Data)
+	my_string_var := signed_tx.String()
+	fmt.Println("raw tx: %s", my_string_var)
+	return parsed_tx, nil
 }
 
 func rawTransaction(client *ethclient.Client) {

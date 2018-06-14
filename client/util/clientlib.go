@@ -1,14 +1,12 @@
 package util
 
 import (
-
 	"crypto/sha256"
 	"github.com/blockcypher/gobcy"
 )
 
-
 var (
-	//logger = flogging.MustGetLogger("clientlib", zerolog.InfoLevel)
+//logger = flogging.MustGetLogger("clientlib", zerolog.InfoLevel)
 )
 
 func Hash256(b []byte) []byte {
@@ -48,7 +46,7 @@ func ReverseByteOrder(inputBytes []byte) (outputBytes []byte) {
 //	"final_n_tx": 8
 //}%
 
-func FindFirstSuitableUTXO(bcy gobcy.API, target string, amount int) (*string, int, error)  {
+func FindFirstSuitableUTXO(bcy gobcy.API, target string, amount int) (*string, int, error) {
 	var params = map[string]string{"unspentOnly": "true"}
 	addr, err := bcy.GetAddr(target, params)
 	if err != nil {
