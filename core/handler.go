@@ -128,7 +128,7 @@ func (s *IcebergHandler) Execute(ctx context.Context, req *pb.IceboxMessage) (*p
 
 	case pb.IceboxMessage_HELLO:
 		// 1. unmarshal message
-		x := &pb.HiRequest{}
+		x := &pb.HelloRequest{}
 		unmarshalErr := proto.Unmarshal(payload, x)
 		if unmarshalErr != nil {
 			logger.Fatal().Err(unmarshalErr).Msgf("Failed to unmarshall . Sending %s", pb.IceboxMessage_ERROR)

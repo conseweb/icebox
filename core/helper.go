@@ -38,7 +38,7 @@ import (
 //go:generate mockgen -source=helper.go -destination=../mocks/mock_Iceberg.go -package=mocks github.com/conseweb/icebox/core Iceberg
 
 type Iceberg interface {
-	Hello(ctx context.Context, req *pb.HiRequest) (*pb.HiReply, error)
+	Hello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloReply, error)
 	NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) (*pb.NegotiateReply, error)
 	//Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.IceboxMessage, error)
 	CheckDevice(ctx context.Context, req *pb.CheckRequest) (*pb.CheckReply, error)
@@ -68,7 +68,7 @@ func newHelper() *iceHelper {
 	return d
 }
 
-func (s *iceHelper) Hello(ctx context.Context, req *pb.HiRequest) (*pb.HiReply, error) {
+func (s *iceHelper) Hello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloReply, error) {
 	if common.App_magic == req.GetMagicA() {
 		reply := pb.NewHiReply(common.Device_magic)
 		return reply, nil

@@ -61,23 +61,24 @@ message IceboxMessage {
     }
 
     required Header header = 1;
-    required bytes payload = 2;
-    required bytes signature = 3;
+    // FIXME: 最大值未经验证
+    required bytes payload = 2 [(nanopb).max_size = 512];
+    required bytes signature = 3 [(nanopb).max_size = 256];
 }
 
 // NOTE: password - 真实设备是没有这个字段的
 
 // rpc只是用于演示相关接口，不用作实现
-//service Icebox {
+service Icebox {
 
-//    rpc Hello (HiRequest) returns (HiReply) {}
+    //    rpc Hello (HiRequest) returns (HiReply) {}
     // 协商会话密钥过程。会话过程采用AES进行加密，密钥使用协商出来的共享密钥的前32字节
-//    rpc NegotiateKey (NegotiateRequest) returns (NegotiateReply) {}
+    //    rpc NegotiateKey (NegotiateRequest) returns (NegotiateReply) {}
     // 会话需要加密
     //    rpc StartSession (StartRequest) returns (StartReply) {}
 
     // 会话需要加密
-//    rpc Execute (IceboxMessage) returns (IceboxMessage) {}
+    rpc Execute (IceboxMessage) returns (IceboxMessage) {}
 
     // 结束当前会话后，立刻锁定设备；
     //    rpc EndSession (EndRequest) returns (EndReply) {}
@@ -121,23 +122,23 @@ message IceboxMessage {
     //
     //    rpc DeleteAddress (DeleteAddressRequest) returns (DeleteAddressReply) {}
 
-//}
+}
 
 message Error {
     required int32 code = 1;
     optional string message = 2[(nanopb).max_size = 256];
 }
 
-message HiRequest {
-//    required Header header = 1;
+message HelloRequest {
+    //    required Header header = 1;
     required int64 magicA = 2;
 }
 
-message HiReply {
-//    required ReplyHeader header = 1;
+message HelloReply {
+    //    required ReplyHeader header = 1;
     required int64 magicB = 2;
-//    required string model = 4;      // 设备型号
-//    required string searial = 5;    // 设备序列号
+    //    required string model = 4;      // 设备型号
+    //    required string searial = 5;    // 设备序列号
 }
 
 message NegotiateRequest {
@@ -152,56 +153,32 @@ message NegotiateReply {
 
 message StartRequest {
     // session id
-//    required uint32 sessionID = 2;
+    //    required uint32 sessionID = 2;
     // 会话有效时长，单位：秒
-//    required uint32 duration = 3;
+    //    required uint32 duration = 3;
 }
 
 message StartReply {
 
 }
 
-message ConversationRequest {
-//    required Header header = 1;
-    // session id
-    required uint32 session_id = 2;
-    // message id
-    required uint32 message_id = 3;
-    // encrypted message
-    required bytes content = 4;
-    // signatures
-    required bytes signature = 5;
-}
-
-message ConversationReply {
-//    required ReplyHeader header = 1;
-    // session id
-    required uint32 session_id = 2;
-    // message id
-    required uint32 message_id = 3;
-    // encrypted message
-    required bytes content = 4;
-    // signatures
-    required bytes signature = 5;
-}
-
 message EndRequest {
-//    required Header header = 1;
+    //    required Header header = 1;
 }
 
 message EndReply {
-//    required ReplyHeader header = 1;
+    //    required ReplyHeader header = 1;
 }
 
 ///////////////// Bussiness protocol ///////////////////////
 
 message CheckRequest {
-//    required Header header = 1;
+    //    required Header header = 1;
     //    required string app_id = 2;
 }
 
 message CheckReply {
-//    required ReplyHeader header = 1;
+    //    required ReplyHeader header = 1;
     required int32 state = 2;  // 0: uninited, 1: inited
     // if paired then return dev_id=sha256(id+app_id)
     optional string dev_id = 3;
@@ -209,13 +186,13 @@ message CheckReply {
 }
 
 message InitRequest {
-//    required Header header = 1;
+    //    required Header header = 1;
     // 真实设备是没有这个字段的
     required string password = 2[(nanopb).max_size = 128];
     // TODO: 需要强制要求最低密码强度，如果密码强度太弱，设备侧返回错误
 }
 message InitReply {
-//    required ReplyHeader header = 1;
+    //    required ReplyHeader header = 1;
     required bytes dev_id = 2[(nanopb).max_size = 32];
 }
 
@@ -223,10 +200,7 @@ message InitReply {
 message PingRequest {}
 
 // The response message containing the greetings
-message PingReply {
-//    required ReplyHeader header = 1;
-    required int64 timestamp = 2;
-}
+message PingReply {}
 
 // if coin_type have exists in cointable, then failed
 message AddCoinRequest {
@@ -237,12 +211,12 @@ message AddCoinRequest {
 }
 
 message AddCoinReply {
-//    required ReplyHeader header = 1;
-//    required string path = 2;
+    //    required ReplyHeader header = 1;
+    //    required string path = 2;
 }
 
 message CreateAddressRequest {
-//    required string password = 1[(nanopb).max_size = 64];
+    //    required string password = 1[(nanopb).max_size = 64];
     required uint32 type = 2;
     optional uint32 idx = 3;
 }
@@ -254,11 +228,11 @@ message CreateAddressReply {
 }
 
 message CreateSecretRequest {
-//    required string password = 1[(nanopb).max_size = 64];
+    //    required string password = 1[(nanopb).max_size = 64];
     required uint32 type = 2;       // T1
     required uint32 site = 3;       // T2
     required uint32 account = 4;    // T3
-//    required uint32 index = 4;    // T4
+    //    required uint32 index = 4;    // T4
 }
 
 message CreateSecretReply {
@@ -271,7 +245,7 @@ message CreateSecretReply {
 
 // 保存用户自己的秘密
 message AddSecretRequest {
-//    required string password = 1[(nanopb).max_size = 64];
+    //    required string password = 1[(nanopb).max_size = 64];
     required uint32 type = 2;       // T1
     required uint32 site = 3;       // T2
     required uint32 account = 4;    // T3
@@ -287,7 +261,7 @@ message AddSecretReply {
 }
 
 message SignTxRequest {
-//    required string password = 1;
+    //    required string password = 1;
     required uint32 type = 2;
     required uint32 idx = 3;
     required uint64 amount = 4;
@@ -304,13 +278,15 @@ message SignTxReply {
 }
 
 message SignMsgRequest {
-//    required string password = 1;
+    //    required string password = 1;
     required uint32 type = 2;
     required uint32 idx = 3;
-    required bytes message = 4;
+    // FIXME: 最大值未经验证
+    required bytes message = 4 [(nanopb).max_size = 512];
 }
 
 message SignMsgReply {
+    // FIXME: 最大值未经验证
     required bytes signed = 1[(nanopb).max_size = 70];
 }
 
@@ -320,13 +296,13 @@ message ListCoinRequest {
 
 message ListCoinReply {
     required uint32 max = 2;
-    repeated uint32 type = 3[(nanopb).max_count = 8];
+    repeated uint32 type = 3;
 }
 
 
 // 查询单条记录
 message GetAddressRequest {
-//    required string password = 1;
+    //    required string password = 1;
     required uint32 type = 2;
     required uint32 idx = 3;
 }
@@ -336,7 +312,7 @@ message GetAddressReply {
 }
 
 message ListAddressRequest {
-//    required string password = 1;
+    //    required string password = 1;
     required uint32 type = 2;
     required uint32 offset = 3;
     required uint32 limit = 4; // 隐含的条件
@@ -363,11 +339,11 @@ message ListAddressReply {
     required uint32 total_pages = 2;    // 总共有多少页
     required uint32 limit = 3;          // 每页几条数据
     required uint32 offset = 4;         // 起始偏移量
-    repeated Address addr = 5[(nanopb).max_count = 25];
+    repeated Address addr = 5[(nanopb).max_count = 5];
 }
 
 message ListSecretRequest {
-//    required string password = 1;
+    //    required string password = 1;
     required uint32 type = 2;
     optional uint32 site = 3;
     optional uint32 account = 4;
@@ -389,11 +365,11 @@ message ListSecretReply {
     required uint32 total_pages = 2;    // 总共有多少页
     required uint32 limit = 3;          // 每页几条数据
     required uint32 offset = 4;         // 起始偏移量
-    repeated Secret secret = 5[(nanopb).max_count = 25];
+    repeated Secret secret = 5[(nanopb).max_count = 5];
 }
 
 message RemoveCoinRequest {
-//    required string password = 1;
+    //    required string password = 1;
     required uint32 type = 2;
 }
 
@@ -401,7 +377,7 @@ message RemoveCoinReply {
 }
 
 message DeleteSecretRequest {
-//    required string password = 1;
+    //    required string password = 1;
     required uint32 type = 2;
     required uint32 idx = 3;
 }
@@ -410,7 +386,7 @@ message DeleteSecretReply {
 }
 
 message DeleteAddressRequest {
-//    required string password = 1;
+    //    required string password = 1;
     required uint32 type = 2;
     required uint32 idx = 3;
 }
@@ -419,15 +395,16 @@ message DeleteAddressReply {
 }
 
 message ResetRequest {
-//    required string password = 1;
+    //    required string password = 1;
 }
 message ResetReply {
 }
 
 message DispMsgRequest {
-    required bytes title = 1;
-    required bytes content = 2;
-    required bytes icon = 3;
+    // FIXME: 最大值未经验证
+    required bytes title = 1 [(nanopb).max_size = 16];
+    required bytes content = 2 [(nanopb).max_size = 64];
+    required bytes icon = 3 [(nanopb).max_size = 128];
 }
 
 message DispMsgReply {

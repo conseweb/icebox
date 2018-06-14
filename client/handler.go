@@ -182,7 +182,7 @@ func (d *Handler) generateSessionKey(r string) *bip32.ExtendedKey {
 	return masterKey
 }
 
-func (d *Handler) Hello() (*pb.HiReply, error) {
+func (d *Handler) Hello() (*pb.HelloReply, error) {
 	var err error
 	//req := pb.NewHiRequest(common.App_magic)
 
@@ -205,7 +205,7 @@ func (d *Handler) Hello() (*pb.HiReply, error) {
 		return nil, fmt.Errorf("Device error: %s", res.GetPayload())
 	}
 
-	var result = &pb.HiReply{}
+	var result = &pb.HelloReply{}
 	err = proto.Unmarshal(res.GetPayload(), result)
 	if err != nil {
 		return nil, err

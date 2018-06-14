@@ -174,8 +174,8 @@ func NewError(code int32, msg string) *Error {
 	return xe
 }
 
-func NewHiRequest(magic int64) *HiRequest {
-	req := new(HiRequest)
+func NewHiRequest(magic int64) *HelloRequest {
+	req := new(HelloRequest)
 	//req.Header = NewHeader()
 	req.MagicA = &magic
 	return req
@@ -450,8 +450,8 @@ func EncodeResetRequest() ([]byte, error) {
 	return payload, nil
 }
 
-func NewHiReply(magic int64) *HiReply {
-	reply := new(HiReply)
+func NewHiReply(magic int64) *HelloReply {
+	reply := new(HelloReply)
 	//reply.Header = CloneHeader(req.Header)
 	reply.MagicB = &magic
 	return reply
@@ -523,8 +523,8 @@ func EncodeInitReply(devid []byte) ([]byte, error) {
 func NewPingReply() *PingReply {
 	reply := new(PingReply)
 	//reply.Header = CloneHeader(req.Header)
-	ts := makeTimestamp()
-	reply.Timestamp = &ts
+	//ts := makeTimestamp()
+	//reply.Timestamp = &ts
 	return reply
 }
 

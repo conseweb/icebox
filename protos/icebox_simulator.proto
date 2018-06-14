@@ -61,8 +61,9 @@ message IceboxMessage {
     }
 
     required Header header = 1;
-    required bytes payload = 2;
-    required bytes signature = 3;
+    // FIXME: 最大值未经验证
+    required bytes payload = 2 [(nanopb).max_size = 512];
+    required bytes signature = 3 [(nanopb).max_size = 256];
 }
 
 // NOTE: password - 真实设备是没有这个字段的
@@ -128,13 +129,13 @@ message Error {
     optional string message = 2[(nanopb).max_size = 256];
 }
 
-message HiRequest {
-//    required Header header = 1;
+message HelloRequest {
+    //    required Header header = 1;
     required int64 magicA = 2;
 }
 
-message HiReply {
-//    required ReplyHeader header = 1;
+message HelloReply {
+    //    required ReplyHeader header = 1;
     required int64 magicB = 2;
 //    required string model = 4;      // 设备型号
 //    required string searial = 5;    // 设备序列号
@@ -159,30 +160,6 @@ message StartRequest {
 
 message StartReply {
 
-}
-
-message ConversationRequest {
-//    required Header header = 1;
-    // session id
-    required uint32 session_id = 2;
-    // message id
-    required uint32 message_id = 3;
-    // encrypted message
-    required bytes content = 4;
-    // signatures
-    required bytes signature = 5;
-}
-
-message ConversationReply {
-//    required ReplyHeader header = 1;
-    // session id
-    required uint32 session_id = 2;
-    // message id
-    required uint32 message_id = 3;
-    // encrypted message
-    required bytes content = 4;
-    // signatures
-    required bytes signature = 5;
 }
 
 message EndRequest {
@@ -223,10 +200,7 @@ message InitReply {
 message PingRequest {}
 
 // The response message containing the greetings
-message PingReply {
-//    required ReplyHeader header = 1;
-    required int64 timestamp = 2;
-}
+message PingReply {}
 
 // if coin_type have exists in cointable, then failed
 message AddCoinRequest {
@@ -307,10 +281,12 @@ message SignMsgRequest {
     required string password = 1;
     required uint32 type = 2;
     required uint32 idx = 3;
-    required bytes message = 4;
+    // FIXME: 最大值未经验证
+    required bytes message = 4 [(nanopb).max_size = 512];
 }
 
 message SignMsgReply {
+    // FIXME: 最大值未经验证
     required bytes signed = 1[(nanopb).max_size = 70];
 }
 
@@ -320,7 +296,7 @@ message ListCoinRequest {
 
 message ListCoinReply {
     required uint32 max = 2;
-    repeated uint32 type = 3[(nanopb).max_count = 8];
+    repeated uint32 type = 3;
 }
 
 
@@ -363,7 +339,7 @@ message ListAddressReply {
     required uint32 total_pages = 2;    // 总共有多少页
     required uint32 limit = 3;          // 每页几条数据
     required uint32 offset = 4;         // 起始偏移量
-    repeated Address addr = 5[(nanopb).max_count = 25];
+    repeated Address addr = 5[(nanopb).max_count = 5];
 }
 
 message ListSecretRequest {
@@ -389,7 +365,7 @@ message ListSecretReply {
     required uint32 total_pages = 2;    // 总共有多少页
     required uint32 limit = 3;          // 每页几条数据
     required uint32 offset = 4;         // 起始偏移量
-    repeated Secret secret = 5[(nanopb).max_count = 25];
+    repeated Secret secret = 5[(nanopb).max_count = 5];
 }
 
 message RemoveCoinRequest {
@@ -425,9 +401,10 @@ message ResetReply {
 }
 
 message DispMsgRequest {
-    required bytes title = 1;
-    required bytes content = 2;
-    required bytes icon = 3;
+    // FIXME: 最大值未经验证
+    required bytes title = 1 [(nanopb).max_size = 16];
+    required bytes content = 2 [(nanopb).max_size = 64];
+    required bytes icon = 3 [(nanopb).max_size = 128];
 }
 
 message DispMsgReply {

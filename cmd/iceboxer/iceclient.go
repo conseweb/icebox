@@ -12,7 +12,7 @@ import (
 	"github.com/blockcypher/gobcy"
 	"github.com/conseweb/icebox/client"
 	"github.com/conseweb/icebox/client/util"
-	cli "github.com/conseweb/icebox/cmd/iceboxer/subcmd"
+	//cli "github.com/conseweb/icebox/cmd/iceboxer/subcmd"
 	"github.com/conseweb/icebox/common"
 	"github.com/conseweb/icebox/common/flogging"
 	"github.com/conseweb/icebox/core/paginator"
@@ -62,24 +62,24 @@ var (
 
 func main() {
 
-	switch kingpin.MustParse(app.Parse(os.Args[1:])) {
-
-	//keys -- Generate public/private key pairs
-	case cmdKeys.FullCommand():
-		cli.OutputKeys(*cmdKeysCount, *cmdKeysConcise)
-
-		//address -- Create a multisig P2SH address
-	case cmdAddress.FullCommand():
-		cli.OutputAddress(*cmdAddressM, *cmdAddressN, *cmdAddressPublicKeys)
-
-		//address -- Fund a P2SH address
-	case cmdFund.FullCommand():
-		cli.OutputFund(*cmdFundPrivateKey, *cmdFundInputTx, *cmdFundAmount, *cmdFundDestination)
-
-		//address -- Spend a multisig P2SH address
-	case cmdSpend.FullCommand():
-		cli.OutputSpend(*cmdSpendPrivateKeys, *cmdSpendDestination, *cmdSpendRedeemScript, *cmdSpendInputTx, *cmdSpendAmount)
-	}
+	//switch kingpin.MustParse(app.Parse(os.Args[1:])) {
+	//
+	////keys -- Generate public/private key pairs
+	//case cmdKeys.FullCommand():
+	//	cli.OutputKeys(*cmdKeysCount, *cmdKeysConcise)
+	//
+	//	//address -- Create a multisig P2SH address
+	//case cmdAddress.FullCommand():
+	//	cli.OutputAddress(*cmdAddressM, *cmdAddressN, *cmdAddressPublicKeys)
+	//
+	//	//address -- Fund a P2SH address
+	//case cmdFund.FullCommand():
+	//	cli.OutputFund(*cmdFundPrivateKey, *cmdFundInputTx, *cmdFundAmount, *cmdFundDestination)
+	//
+	//	//address -- Spend a multisig P2SH address
+	//case cmdSpend.FullCommand():
+	//	cli.OutputSpend(*cmdSpendPrivateKeys, *cmdSpendDestination, *cmdSpendRedeemScript, *cmdSpendInputTx, *cmdSpendAmount)
+	//}
 
 	flag.Parse()
 	var opts []grpc.DialOption
