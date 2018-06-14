@@ -19,6 +19,8 @@ import (
 	"github.com/conseweb/icebox/protos"
 	"github.com/rs/zerolog"
 	"gopkg.in/alecthomas/kingpin.v2"
+	"time"
+	"math/rand"
 )
 
 const (
@@ -155,29 +157,29 @@ func main() {
 		logger.Fatal().Msgf("Something wrong!!")
 	}
 
-	//rand.Seed(time.Now().UnixNano())
-	//var idx = rand.Uint32()
-	//rex, _ := handler.CreateAddress(1, common.Test_password)
-	//logger.Debug().Msgf("Created address: %s", rex.GetAddressByIdx())
-	//
-	//{
-	//	reply, _ := handler.ListAddress(1, 0, 8, common.Test_password)
-	//	offset := reply.GetOffset()
-	//	limit := reply.GetLimit()
-	//	total := reply.GetTotalRecords()
-	//	logger.Debug().Msgf("%d, %d, %d", total, limit, offset)
-	//	for {
-	//		if paginator.HaveNext(total, limit, offset) {
-	//			reply, _ = handler.ListAddress(1, offset, limit, common.Test_password)
-	//			offset = reply.GetOffset()
-	//			limit = reply.GetLimit()
-	//			total = reply.GetTotalRecords()
-	//			logger.Debug().Msgf("%d, %d, %d", total, limit, offset)
-	//		} else {
-	//			break
-	//		}
-	//	}
-	//}
+	rand.Seed(time.Now().UnixNano())
+	var idx = rand.Uint32()
+	rex, _ := handler.CreateAddress(1, common.Test_password)
+	logger.Debug().Msgf("Created address: %s", rex.GetAddress())
+
+	{
+		reply, _ := handler.ListAddress(1, 0, 8, common.Test_password)
+		offset := reply.GetOffset()
+		limit := reply.GetLimit()
+		total := reply.GetTotalRecords()
+		logger.Debug().Msgf("%d, %d, %d", total, limit, offset)
+		for {
+			if paginator.HaveNext(total, limit, offset) {
+				reply, _ = handler.ListAddress(1, offset, limit, common.Test_password)
+				offset = reply.GetOffset()
+				limit = reply.GetLimit()
+				total = reply.GetTotalRecords()
+				logger.Debug().Msgf("%d, %d, %d\n", total, limit, offset)
+			} else {
+				break
+			}
+		}
+	}
 
 	handler.CreateSecret(32, 1, common.Test_password)
 
@@ -201,7 +203,7 @@ func main() {
 	}
 
 	tp := 1 // testnet
-	idx := 1671493468
+	idx = 1671493468
 	gap, err := handler.GetAddressByIdx(uint32(tp), uint32(idx), common.Test_password)
 	if err != nil {
 		logger.Fatal().Err(err).Msgf("GetAddressByIdx error encountered.")

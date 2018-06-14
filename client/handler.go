@@ -75,9 +75,11 @@ func NewHandler(to string, opts []grpc.DialOption) *Handler {
 	d.FSM = fsm.NewFSM(
 		"created",
 		fsm.Events{
-			{Name: "CREATE", Src: []string{"created"}, Dst: "unplugged"},
-			{Name: "IN", Src: []string{"unplugged"}, Dst: "plugged"},
-			{Name: "OUT", Src: []string{"plugged", "confirmed", "negotiated", "est_unchecked", "est_inited", "est_uninited"}, Dst: "unplugged"},
+			{Name: "CREATE", Src: []string{"created"}, Dst: "disconnected"},
+			{Name: "CONNECT", Src: []string{"disconnected"}, Dst: "pending"},
+			{Name: "CONNECTED", Src: []string{"pending"}, Dst: "connected"},
+			{Name: "DISCONNECT", Src: []string{"connected", "confirmed", "negotiated", "est_unchecked", "est_inited", "est_uninited"}, Dst: "pending"},
+			{Name: "DISCONNECTED", Src: []string{"pending"}, Dst: "disconnected"},
 			{Name: "HELLO", Src: []string{"plugged"}, Dst: "confirmed"},
 			{Name: "NEGOTIATE", Src: []string{"confirmed"}, Dst: "negotiated"},
 			{Name: "START", Src: []string{"negotiated"}, Dst: "est_unchecked"},
@@ -184,10 +186,12 @@ func (d *Handler) generateSessionKey(r string) *bip32.ExtendedKey {
 
 func (d *Handler) Hello() (*pb.HelloReply, error) {
 	var err error
-	//req := pb.NewHiRequest(common.App_magic)
 
-	payload, _ := pb.EncodeHiRequest(common.App_magic)
+	payload, _ := pb.EncodeHelloRequest(common.App_magic)
+
 	ct := pb.NewIceboxMessage(pb.IceboxMessage_HELLO, payload)
+
+	d.beforeExecute(pb.IceboxMessage_HELLO, ct)
 
 	res, err := d.Client.Execute(context.Background(), ct)
 	if err != nil {
@@ -201,6 +205,8 @@ func (d *Handler) Hello() (*pb.HelloReply, error) {
 		logger.Debug().Msgf("Device error: %s", res.GetPayload())
 		return nil, fmt.Errorf("Device error: %s", res.GetPayload())
 	}
+
+	d.afterExecute(pb.IceboxMessage_HELLO, res)
 
 	var result = &pb.HelloReply{}
 	err = proto.Unmarshal(res.GetPayload(), result)
@@ -228,12 +234,11 @@ func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
 	hb := util.Hash256(b)
 	//req := pb.NewNegotiateRequest(bs, base58.Encode(hb))
 	payload, _ := pb.EncodeNegotiateRequest(bs, base58.Encode(hb))
-	x := pb.NewIceboxMessage(pb.IceboxMessage_NEGOTIATE, payload)
+	ct := pb.NewIceboxMessage(pb.IceboxMessage_NEGOTIATE, payload)
 
-	//ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	//defer cancel()
+	d.beforeExecute(pb.IceboxMessage_NEGOTIATE, ct)
 
-	res, err := d.Client.Execute(context.Background(), x)
+	res, err := d.Client.Execute(context.Background(), ct)
 	if err != nil {
 		grpclog.Fatalf("Negotiate(_) = _, %v: ", err)
 		return nil, err
@@ -250,6 +255,9 @@ func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
 		logger.Fatal().Err(err).Msg("")
 		return nil, err
 	}
+
+	d.afterExecute(pb.IceboxMessage_NEGOTIATE, res)
+
 	logger.Debug().Msgf("NegotiateReply: %s", result)
 	kb := result.GetKeyB()
 	pkb := base58.Decode(kb)
@@ -296,6 +304,7 @@ func (d *Handler) Start() (*pb.StartReply, error) {
 		}
 
 		msg = pb.NewIceboxMessageWithSID(pb.IceboxMessage_START, sid, ed)
+
 		// calc signature
 		err = pb.AddSignatureToMsg(msg, d.session.key)
 		if err != nil {
@@ -304,6 +313,8 @@ func (d *Handler) Start() (*pb.StartReply, error) {
 	} else {
 		msg = pb.NewIceboxMessageWithSID(pb.IceboxMessage_START, sid, payload)
 	}
+
+	d.beforeExecute(pb.IceboxMessage_START, msg)
 
 	res, err := d.Client.Execute(context.Background(), msg)
 	if err != nil {
@@ -343,6 +354,8 @@ func (d *Handler) Start() (*pb.StartReply, error) {
 		}
 	}
 
+	d.afterExecute(pb.IceboxMessage_START, res)
+
 	return reply, nil
 }
 
@@ -359,6 +372,7 @@ func (d *Handler) CheckDevice() (*pb.CheckReply, error) {
 			return nil, err
 		}
 		msg = pb.NewIceboxMessageWithSID(pb.IceboxMessage_CHECK, sid, ed)
+
 		// calc signature
 		err = pb.AddSignatureToMsg(msg, d.session.key)
 		if err != nil {
@@ -367,6 +381,8 @@ func (d *Handler) CheckDevice() (*pb.CheckReply, error) {
 	} else {
 		msg = pb.NewIceboxMessageWithSID(pb.IceboxMessage_CHECK, sid, payload)
 	}
+
+	d.beforeExecute(pb.IceboxMessage_CHECK, msg)
 
 	//ctx, cancel := context.WithTimeout(context.Background(), timeout)
 	//defer cancel()
@@ -408,6 +424,8 @@ func (d *Handler) CheckDevice() (*pb.CheckReply, error) {
 		}
 	}
 
+	d.afterExecute(pb.IceboxMessage_CHECK, res)
+
 	grpclog.Infoln("CheckReply: ", reply)
 	return reply, nil
 }
@@ -417,9 +435,11 @@ func (d *Handler) InitDevice(pas string) (*pb.InitReply, error) {
 	ireq := pb.NewInitRequest(pas)
 	payload, _ := proto.Marshal(ireq)
 	sid := d.session.id
-	ct := pb.NewIceboxMessageWithSID(pb.IceboxMessage_INIT, sid, payload)
+	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_INIT, sid, payload)
 
-	res, xe := d.Client.Execute(context.Background(), ct)
+	d.beforeExecute(pb.IceboxMessage_INIT, msg)
+
+	res, xe := d.Client.Execute(context.Background(), msg)
 	if xe != nil {
 		grpclog.Fatalln(xe)
 		return nil, xe
@@ -436,6 +456,8 @@ func (d *Handler) InitDevice(pas string) (*pb.InitReply, error) {
 		return nil, err
 	}
 
+	d.afterExecute(pb.IceboxMessage_INIT, res)
+
 	grpclog.Infoln("InitReply: ", intRep)
 	return intRep, nil
 }
@@ -444,9 +466,11 @@ func (d *Handler) PingDevice() error {
 	req := pb.NewPingRequest()
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
-	ct := pb.NewIceboxMessageWithSID(pb.IceboxMessage_PING, sid, payload)
+	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_PING, sid, payload)
 
-	res, err := d.Client.Execute(context.Background(), ct)
+	d.beforeExecute(pb.IceboxMessage_PING, msg)
+
+	res, err := d.Client.Execute(context.Background(), msg)
 	if err != nil {
 		grpclog.Fatalln(err)
 	}
@@ -462,6 +486,8 @@ func (d *Handler) PingDevice() error {
 		grpclog.Fatalln(err)
 	}
 
+	d.afterExecute(pb.IceboxMessage_PING, res)
+
 	grpclog.Infoln("PingReply: ", pr)
 	return nil
 }
@@ -472,6 +498,8 @@ func (d *Handler) ResetDevice() error {
 	payload, _ := proto.Marshal(resetReq)
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_RESET, sid, payload)
+
+	d.beforeExecute(pb.IceboxMessage_RESET, msg)
 
 	res, err := d.Client.Execute(context.Background(), msg)
 	if err != nil {
@@ -488,6 +516,9 @@ func (d *Handler) ResetDevice() error {
 	if err != nil {
 		grpclog.Fatalln(err)
 	}
+
+	d.afterExecute(pb.IceboxMessage_RESET, res)
+
 	grpclog.Infoln("ResetReply: ", reply)
 	return nil
 }
@@ -499,8 +530,7 @@ func (d *Handler) CreateAddress(tp uint32, pwd string) (*pb.CreateAddressReply, 
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_CREATE_ADDRESS, sid, payload)
 
-	//ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	//defer cancel()
+	d.beforeExecute(pb.IceboxMessage_CREATE_ADDRESS, msg)
 
 	chatRep, xe := d.Client.Execute(context.Background(), msg)
 	if xe != nil {
@@ -520,6 +550,8 @@ func (d *Handler) CreateAddress(tp uint32, pwd string) (*pb.CreateAddressReply, 
 		return nil, err
 	}
 
+	d.afterExecute(pb.IceboxMessage_CREATE_ADDRESS, chatRep)
+
 	grpclog.Infoln("CreateAddressReply: ", reply)
 	return reply, nil
 
@@ -531,6 +563,8 @@ func (d *Handler) GetAddressByIdx(tp, idx uint32, pwd string) (*pb.GetAddressRep
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_GET_ADDRESS, sid, payload)
+
+	d.beforeExecute(pb.IceboxMessage_GET_ADDRESS, msg)
 
 	chatRep, xe := d.Client.Execute(context.Background(), msg)
 	if xe != nil {
@@ -554,6 +588,13 @@ func (d *Handler) GetAddressByIdx(tp, idx uint32, pwd string) (*pb.GetAddressRep
 	ary := reply.GetAddr()
 	logger.Debug().Msgf("Address: %d, %d, %s", ary.GetType(), ary.GetIdx(), ary.GetSAddr())
 
+	if RTEnv.isPrintMsg {
+		resp, _ := proto.Marshal(chatRep)
+		logger.Debug().Msgf("Encoded IceboxMessage for reply: %s", base58.Encode(resp));
+	}
+
+	d.beforeExecute(pb.IceboxMessage_GET_ADDRESS, chatRep)
+
 	return reply, nil
 }
 
@@ -563,6 +604,8 @@ func (d *Handler) ListAddress(tp, offset, limit uint32, pwd string) (*pb.ListAdd
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_LIST_ADDRESS, sid, payload)
+
+	d.beforeExecute(pb.IceboxMessage_LIST_ADDRESS, msg)
 
 	chatRep, xe := d.Client.Execute(context.Background(), msg)
 	if xe != nil {
@@ -591,6 +634,8 @@ func (d *Handler) ListAddress(tp, offset, limit uint32, pwd string) (*pb.ListAdd
 		logger.Debug().Msgf("%d, %d, %s", ary[i].GetType(), ary[i].GetIdx(), ary[i].GetSAddr())
 	}
 
+	d.beforeExecute(pb.IceboxMessage_LIST_ADDRESS, chatRep)
+
 	return reply, nil
 }
 
@@ -600,6 +645,8 @@ func (d *Handler) DeleteAddress(tp, idx uint32, pwd string) (*pb.DeleteAddressRe
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_DELETE_ADDRESS, sid, payload)
+
+	d.beforeExecute(pb.IceboxMessage_DELETE_ADDRESS, msg)
 
 	irep, xe := d.Client.Execute(context.Background(), msg)
 	if xe != nil {
@@ -619,6 +666,8 @@ func (d *Handler) DeleteAddress(tp, idx uint32, pwd string) (*pb.DeleteAddressRe
 		return nil, err
 	}
 
+	d.afterExecute(pb.IceboxMessage_DELETE_ADDRESS, irep)
+
 	grpclog.Infoln("DeleteAddressReply: ", reply)
 	return reply, nil
 
@@ -630,6 +679,8 @@ func (d *Handler) CreateSecret(site, account uint32, pwd string) (*pb.CreateSecr
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_CREATE_SECRET, sid, payload)
+
+	d.beforeExecute(pb.IceboxMessage_CREATE_SECRET, msg)
 
 	irep, xe := d.Client.Execute(context.Background(), msg)
 	if xe != nil {
@@ -649,6 +700,8 @@ func (d *Handler) CreateSecret(site, account uint32, pwd string) (*pb.CreateSecr
 		return nil, err
 	}
 
+	d.afterExecute(pb.IceboxMessage_CREATE_SECRET, irep)
+
 	grpclog.Infoln("CreateSecretReply: ", reply)
 	return reply, nil
 
@@ -660,6 +713,8 @@ func (d *Handler) ListSecret(tp, site, offset, limit uint32, pwd string) (*pb.Li
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_LIST_SECRET, sid, payload)
+
+	d.beforeExecute(pb.IceboxMessage_LIST_SECRET, msg)
 
 	chatRep, xe := d.Client.Execute(context.Background(), msg)
 	if xe != nil {
@@ -688,6 +743,8 @@ func (d *Handler) ListSecret(tp, site, offset, limit uint32, pwd string) (*pb.Li
 		logger.Debug().Msgf("%d, %d, %s", ary[i].GetType(), ary[i].GetIdx(), ary[i].GetSSecret())
 	}
 
+	d.afterExecute(pb.IceboxMessage_LIST_SECRET, chatRep)
+
 	return reply, nil
 }
 
@@ -703,6 +760,8 @@ func (d *Handler) SignTx(tp, idx uint32, amount uint64, dest, txhash string, txi
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
 	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_SIGN_TX, sid, payload)
+
+	d.beforeExecute(pb.IceboxMessage_SIGN_TX, msg)
 
 	chatRep, xe := d.Client.Execute(context.Background(), msg)
 	if xe != nil {
@@ -722,6 +781,8 @@ func (d *Handler) SignTx(tp, idx uint32, amount uint64, dest, txhash string, txi
 		return nil, err
 	}
 
+	d.afterExecute(pb.IceboxMessage_SIGN_TX, chatRep)
+
 	//grpclog.Infoln("SignTxReply: ", caRep)
 	return caRep, nil
 
@@ -733,6 +794,8 @@ func (d *Handler) SignMsg(tp, idx uint32, msg []byte, pwd string) (*pb.SignMsgRe
 	payload, _ := proto.Marshal(req)
 	sid := d.session.id
 	chatMsg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_SIGN_MSG, sid, payload)
+
+	d.beforeExecute(pb.IceboxMessage_SIGN_MSG, chatMsg)
 
 	chatRep, xe := d.Client.Execute(context.Background(), chatMsg)
 	if xe != nil {
@@ -752,11 +815,91 @@ func (d *Handler) SignMsg(tp, idx uint32, msg []byte, pwd string) (*pb.SignMsgRe
 		return nil, err
 	}
 
+	d.afterExecute(pb.IceboxMessage_SIGN_MSG, chatRep)
+
 	return caRep, nil
 }
 
 func (d *Handler) DispMsg(title, content string, icon []byte) (*pb.DispMsgReply, error) {
+
+	//d.beforeExecute(pb.IceboxMessage_SIGN_MSG, msg)
+
+	//d.afterExecute(pb.IceboxMessage_SIGN_MSG, chatRep)
+
 	return nil, nil
+}
+
+func (d *Handler) beforeExecute(command pb.IceboxMessage_Command, msg *pb.IceboxMessage) {
+	if RTEnv.isPrintMsg {
+		ctp, _ := proto.Marshal(msg)
+		logger.Debug().Msgf("-- beforeExecute - Encoded msg for req %s: %s", command, base58.Encode(ctp))
+	}
+
+	//switch command {
+	//case pb.IceboxMessage_HELLO:
+	//case pb.IceboxMessage_NEGOTIATE:
+	//case pb.IceboxMessage_START:
+	//case pb.IceboxMessage_CHECK:
+	//case pb.IceboxMessage_INIT:
+	//case pb.IceboxMessage_PING:
+	//case pb.IceboxMessage_RESET:
+	//case pb.IceboxMessage_CREATE_ADDRESS:
+	//case pb.IceboxMessage_CREATE_SECRET:
+	//case pb.IceboxMessage_LIST_COIN:
+	//case pb.IceboxMessage_LIST_ADDRESS:
+	//case pb.IceboxMessage_LIST_SECRET:
+	//case pb.IceboxMessage_SIGN_TX:
+	//case pb.IceboxMessage_SIGN_MSG:
+	//case pb.IceboxMessage_REMOVE_COIN:
+	//case pb.IceboxMessage_DELETE_ADDRESS:
+	//case pb.IceboxMessage_DELETE_SECRET:
+	//case pb.IceboxMessage_GET_SECRET:
+	//case pb.IceboxMessage_DISP_MSG:
+	//	if RTEnv.isPrintMsg {
+	//		ctp, _ := proto.Marshal(msg)
+	//		logger.Debug().Msgf("beforeExecute -- Encoded msg for req: %s", base58.Encode(ctp))
+	//	}
+	//	break
+	//default:
+	//	break
+	//}
+	return
+}
+
+func (d *Handler) afterExecute(command pb.IceboxMessage_Command, msg *pb.IceboxMessage) {
+	if RTEnv.isPrintMsg {
+		resp, _ := proto.Marshal(msg)
+		logger.Debug().Msgf("-- afterExecute - Encoded msg for reply %s: %s", command, base58.Encode(resp));
+	}
+
+	//switch command {
+	//case pb.IceboxMessage_HELLO:
+	//case pb.IceboxMessage_NEGOTIATE:
+	//case pb.IceboxMessage_START:
+	//case pb.IceboxMessage_CHECK:
+	//case pb.IceboxMessage_INIT:
+	//case pb.IceboxMessage_PING:
+	//case pb.IceboxMessage_RESET:
+	//case pb.IceboxMessage_CREATE_ADDRESS:
+	//case pb.IceboxMessage_CREATE_SECRET:
+	//case pb.IceboxMessage_LIST_COIN:
+	//case pb.IceboxMessage_LIST_ADDRESS:
+	//case pb.IceboxMessage_LIST_SECRET:
+	//case pb.IceboxMessage_SIGN_TX:
+	//case pb.IceboxMessage_SIGN_MSG:
+	//case pb.IceboxMessage_REMOVE_COIN:
+	//case pb.IceboxMessage_DELETE_ADDRESS:
+	//case pb.IceboxMessage_DELETE_SECRET:
+	//case pb.IceboxMessage_GET_SECRET:
+	//case pb.IceboxMessage_DISP_MSG:
+	//	if RTEnv.isPrintMsg {
+	//		resp, _ := proto.Marshal(msg)
+	//		logger.Debug().Msgf("afterExecute -- Encoded msg for reply %s: %s", command, base58.Encode(resp));
+	//	}
+	//	return
+	//
+	//}
+	return
 }
 
 func checkError(e error) error {

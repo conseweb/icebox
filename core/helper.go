@@ -348,6 +348,8 @@ func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest)
 		x := new(pb.Address)
 		x.Type = pb.NewUInt32(addrs[i].T2)
 		x.Idx = pb.NewUInt32(addrs[i].T5)
+		algo := pb.Address_ADDRESS
+		x.Algo = &algo
 		var err error
 		x.SAddr, err = s.generateAddress(addrs[i].T2, addrs[i].T5, pass)
 		if err != nil {
@@ -370,6 +372,7 @@ func (s *iceHelper) GetAddress(ctx context.Context, req *pb.GetAddressRequest) (
 	pass := req.GetPassword()
 	idx := req.GetIdx()
 	db := s.openDb()
+	algo := pb.Address_ADDRESS
 
 	var totalRecords int
 	if s.dbAddrExists(tp, -1) {
@@ -384,7 +387,7 @@ func (s *iceHelper) GetAddress(ctx context.Context, req *pb.GetAddressRequest) (
 		return nil, err
 	}
 
-	pbAddr := pb.Address{Type: &tp, Idx: &idx, SAddr: saddr}
+	pbAddr := pb.Address{Type: &tp, Idx: &idx, Algo:&algo, SAddr: saddr}
 	reply := pb.NewGetAddressReply(pbAddr)
 	return reply, nil
 }

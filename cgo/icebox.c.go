@@ -94,7 +94,7 @@ func CEncodeIceboxMessageWithSID(cmd int32, sid uint32, p []byte) []byte {
 
 //export CEncodeHiRequest
 func CEncodeHiRequest(magic int64) []byte {
-	req := pb.NewHiRequest(magic)
+	req := pb.NewHelloRequest(magic)
 	payload, err := proto.Marshal(req)
 	if err != nil {
 		ErrInfo = err.Error()
@@ -474,7 +474,7 @@ func Hello() []byte {
 
 	fmt.Printf("Go says: Enter Hello..\n")
 
-	payload, _ := pb.EncodeHiRequest(common.App_magic)
+	payload, _ := pb.EncodeHelloRequest(common.App_magic)
 	ct := pb.NewIceboxMessage(pb.IceboxMessage_HELLO, payload)
 
 	if handler == nil {

@@ -174,15 +174,15 @@ func NewError(code int32, msg string) *Error {
 	return xe
 }
 
-func NewHiRequest(magic int64) *HelloRequest {
+func NewHelloRequest(magic int64) *HelloRequest {
 	req := new(HelloRequest)
 	//req.Header = NewHeader()
 	req.MagicA = &magic
 	return req
 }
 
-func EncodeHiRequest(magic int64) ([]byte, error) {
-	req := NewHiRequest(magic)
+func EncodeHelloRequest(magic int64) ([]byte, error) {
+	req := NewHelloRequest(magic)
 	payload, err := proto.Marshal(req)
 	if err != nil {
 		return nil, err

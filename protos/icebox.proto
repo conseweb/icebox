@@ -325,6 +325,7 @@ message Address {
         RAW = 0;
         SHA256 = 1;
         DSHA256 = 2;
+        ADDRESS = 3;
     }
 
     required uint32 type = 1;
