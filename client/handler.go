@@ -790,8 +790,8 @@ func (d *Handler) SignTx(tp, idx uint32, amount uint64, dest, txhash string, txi
 
 func (d *Handler) SignMsg(tp, idx uint32, msg []byte, pwd string) (*pb.SignMsgReply, error) {
 	var err error
-	req := pb.NewSignMsgRequest(tp, idx, msg, pwd)
-	payload, _ := proto.Marshal(req)
+	//req := pb.NewSignMsgRequest(tp, idx, msg, pwd)
+	payload, _ := pb.EncodeSignMsgRequest(tp, idx, msg, pwd)
 	sid := d.session.id
 	chatMsg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_SIGN_MSG, sid, payload)
 
@@ -832,7 +832,7 @@ func (d *Handler) DispMsg(title, content string, icon []byte) (*pb.DispMsgReply,
 func (d *Handler) beforeExecute(command pb.IceboxMessage_Command, msg *pb.IceboxMessage) {
 	if RTEnv.isPrintMsg {
 		ctp, _ := proto.Marshal(msg)
-		logger.Debug().Msgf("-- beforeExecute - Encoded msg for req %s: %s", command, base58.Encode(ctp))
+		logger.Debug().Msgf("-- beforeExecute - Base58 msg for req %s: %s", command, base58.Encode(ctp))
 	}
 
 	//switch command {
@@ -857,7 +857,7 @@ func (d *Handler) beforeExecute(command pb.IceboxMessage_Command, msg *pb.Icebox
 	//case pb.IceboxMessage_DISP_MSG:
 	//	if RTEnv.isPrintMsg {
 	//		ctp, _ := proto.Marshal(msg)
-	//		logger.Debug().Msgf("beforeExecute -- Encoded msg for req: %s", base58.Encode(ctp))
+	//		logger.Debug().Msgf("beforeExecute -- Base58 msg for req: %s", base58.Encode(ctp))
 	//	}
 	//	break
 	//default:
@@ -873,9 +873,7 @@ func (d *Handler) afterExecute(command pb.IceboxMessage_Command, msg *pb.IceboxM
 	}
 
 	//switch command {
-	//case pb.IceboxMessage_HELLO:
-	//case pb.IceboxMessage_NEGOTIATE:
-	//case pb.IceboxMessage_START:
+	//case pb.IceboxMessage_HELLO, pb.IceboxMessage_NEGOTIATE, pb.IceboxMessage_START:
 	//case pb.IceboxMessage_CHECK:
 	//case pb.IceboxMessage_INIT:
 	//case pb.IceboxMessage_PING:

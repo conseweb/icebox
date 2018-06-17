@@ -137,7 +137,7 @@ func (s *iceHelper) StartSession(ctx context.Context, req *pb.StartRequest) (*pb
 }
 
 func handleError(err error) *pb.IceboxMessage {
-	xe := pb.NewError(500, err.Error())
+	xe := pb.NewPbError(500, err.Error())
 	payload, _ := proto.Marshal(xe)
 	//logger.Fatal().Err(err).Msgf("Failed to unmarshall . Sending %s", pb.IceboxMessage_ERROR)
 	msg := pb.NewIceboxMessage(pb.IceboxMessage_ERROR, payload)

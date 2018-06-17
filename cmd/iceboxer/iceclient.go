@@ -279,7 +279,7 @@ func main() {
 		if err != nil {
 			logger.Fatal().Err(err).Msgf("")
 		} else {
-			signed := reply.GetSigned()
+			signed := reply.GetSignedMsg()
 			//msgReversed := util.ReverseByteOrder(signed)
 			logger.Debug().Msgf("Msg hash: %s", hex.EncodeToString(signed))
 		}

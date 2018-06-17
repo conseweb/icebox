@@ -167,8 +167,8 @@ func AddSignatureToMsg(msg *IceboxMessage, privKey *btcec.PrivateKey) error {
 //	return header
 //}
 
-func NewError(code int32, msg string) *Error {
-	xe := new(Error)
+func NewPbError(code int32, msg string) *PbError {
+	xe := new(PbError)
 	xe.Code = &code
 	xe.Message = &msg
 	return xe
@@ -703,7 +703,7 @@ func EncodeSignTxReply(tx []byte) ([]byte, error) {
 
 func NewSignMsgReply(msg []byte) *SignMsgReply {
 	reply := new(SignMsgReply)
-	reply.Signed = msg
+	reply.SignedMsg = msg
 	return reply
 }
 

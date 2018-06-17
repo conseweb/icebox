@@ -62,8 +62,8 @@ message IceboxMessage {
 
     required Header header = 1;
     // FIXME: 最大值未经验证
-    required bytes payload = 2 [(nanopb).max_size = 512];
-    required bytes signature = 3 [(nanopb).max_size = 256];
+  required bytes payload = 2 [ (nanopb).max_size = 512 ];
+  required bytes signature = 3 [ (nanopb).max_size = 64 ];
 }
 
 // NOTE: password - 真实设备是没有这个字段的
@@ -124,18 +124,18 @@ service Icebox {
 
 }
 
-message Error {
-    required int32 code = 1;
-    optional string message = 2[(nanopb).max_size = 256];
+message PbError {
+  required int32 code = 1;
+  optional string message = 2 [ (nanopb).max_size = 256 ];
 }
 
 message HelloRequest {
-    //    required Header header = 1;
+//    required Header header = 1;
     required int64 magicA = 2;
 }
 
 message HelloReply {
-    //    required ReplyHeader header = 1;
+//    required ReplyHeader header = 1;
     required int64 magicB = 2;
 //    required string model = 4;      // 设备型号
 //    required string searial = 5;    // 设备序列号
@@ -158,9 +158,7 @@ message StartRequest {
 //    required uint32 duration = 3;
 }
 
-message StartReply {
-
-}
+message StartReply {}
 
 message EndRequest {
 //    required Header header = 1;
@@ -281,18 +279,17 @@ message SignMsgRequest {
     required string password = 1;
     required uint32 type = 2;
     required uint32 idx = 3;
-    // FIXME: 最大值未经验证
+  // FIXME: 最大值未经验证
     required bytes message = 4 [(nanopb).max_size = 512];
 }
 
 message SignMsgReply {
-    // FIXME: 最大值未经验证
-    required bytes signed = 1[(nanopb).max_size = 70];
+  // FIXME: 最大值未经验证
+  required bytes signedMsg = 1 [ (nanopb).max_size = 70 ];
 }
 
 // list all of wallets
-message ListCoinRequest {
-}
+message ListCoinRequest {}
 
 message ListCoinReply {
     required uint32 max = 2;
@@ -307,9 +304,7 @@ message GetAddressRequest {
     required uint32 idx = 3;
 }
 
-message GetAddressReply {
-    required Address addr = 1;
-}
+message GetAddressReply { required Address addr = 1; }
 
 message ListAddressRequest {
     required string password = 1;
@@ -374,8 +369,7 @@ message RemoveCoinRequest {
     required uint32 type = 2;
 }
 
-message RemoveCoinReply {
-}
+message RemoveCoinReply {}
 
 message DeleteSecretRequest {
     required string password = 1;
@@ -383,8 +377,7 @@ message DeleteSecretRequest {
     required uint32 idx = 3;
 }
 
-message DeleteSecretReply {
-}
+message DeleteSecretReply {}
 
 message DeleteAddressRequest {
     required string password = 1;
@@ -392,20 +385,18 @@ message DeleteAddressRequest {
     required uint32 idx = 3;
 }
 
-message DeleteAddressReply {
-}
+message DeleteAddressReply {}
 
 message ResetRequest {
     required string password = 1;
 }
-message ResetReply {
-}
+message ResetReply {}
 
 message DispMsgRequest {
-    // FIXME: 最大值未经验证
-    required bytes title = 1 [(nanopb).max_size = 16];
-    required bytes content = 2 [(nanopb).max_size = 64];
-    required bytes icon = 3 [(nanopb).max_size = 128];
+  // FIXME: 最大值未经验证
+  required bytes title = 1 [ (nanopb).max_size = 16 ];
+  required bytes content = 2 [ (nanopb).max_size = 64 ];
+  required bytes icon = 3 [ (nanopb).max_size = 128 ];
 }
 
 message DispMsgReply {

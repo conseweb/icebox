@@ -51,7 +51,7 @@ func TestHelloWithErrorMagicNumber(t *testing.T) {
 		So(err, ShouldEqual, nil)
 		So(res.GetHeader().GetCmd(), ShouldEqual, pb.IceboxMessage_ERROR)
 
-		var result = &pb.Error{}
+		var result = &pb.PbError{}
 		err = proto.Unmarshal(res.GetPayload(), result)
 		So(result.GetCode(), ShouldEqual, 500)
 		So(result.GetMessage(), ShouldEqual, "Unknown app!")
