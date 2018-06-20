@@ -27,3 +27,9 @@
         - 连接蓝牙设备
     3. 会话阶段
         - 与蓝牙设备建立会话
+        
+## Coin Type
+- bitcoin: secp256k1
+- ethereum: secp256k1
+- cryptonote: ed25519
+- ripple: ed25519

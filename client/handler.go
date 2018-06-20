@@ -832,7 +832,7 @@ func (d *Handler) DispMsg(title, content string, icon []byte) (*pb.DispMsgReply,
 func (d *Handler) beforeExecute(command pb.IceboxMessage_Command, msg *pb.IceboxMessage) {
 	if RTEnv.isPrintMsg {
 		ctp, _ := proto.Marshal(msg)
-		logger.Debug().Msgf("-- beforeExecute - Base58 msg for req %s: %s", command, base58.Encode(ctp))
+		logger.Debug().Msgf("-- beforeExecute - Hex msg for req %s: (len: %d)%s", command, len(ctp), hex.EncodeToString(ctp))
 	}
 
 	//switch command {
@@ -869,7 +869,7 @@ func (d *Handler) beforeExecute(command pb.IceboxMessage_Command, msg *pb.Icebox
 func (d *Handler) afterExecute(command pb.IceboxMessage_Command, msg *pb.IceboxMessage) {
 	if RTEnv.isPrintMsg {
 		resp, _ := proto.Marshal(msg)
-		logger.Debug().Msgf("-- afterExecute - Encoded msg for reply %s: %s", command, base58.Encode(resp));
+		logger.Debug().Msgf("-- afterExecute - Hex msg for reply %s: (len: %d)%s", command, len(resp), hex.EncodeToString(resp));
 	}
 
 	//switch command {
