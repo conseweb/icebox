@@ -5,6 +5,7 @@ import "github.com/conseweb/btcd/chaincfg"
 type Env struct {
 	isDebug   bool
 	isEncrypt bool
+	isPrintMsg bool
 	isTestNet bool
 	net       *chaincfg.Params
 }
@@ -25,6 +26,10 @@ func (e *Env) IsTestNet() bool {
 	return e.isTestNet
 }
 
+func (e *Env) IsPrintMsg() bool {
+	return e.isPrintMsg
+}
+
 func (e *Env) GetNet() *chaincfg.Params {
 	var net *chaincfg.Params
 	if e.IsTestNet() {
@@ -42,5 +47,6 @@ func (e *Env) SetNet(enable bool) {
 func init() {
 	RTEnv.isDebug = true
 	RTEnv.isEncrypt = true
+	RTEnv.isPrintMsg = true
 	RTEnv.isTestNet = true
 }
