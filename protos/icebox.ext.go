@@ -12,6 +12,7 @@ import (
 	"github.com/conseweb/btcd/btcec"
 	"github.com/golang/protobuf/proto"
 	"math/big"
+	//"github.com/golang/protobuf/jsonpb"
 )
 
 const (
@@ -709,6 +710,10 @@ func NewSignMsgReply(msg []byte) *SignMsgReply {
 
 func EncodeSignMsgReply(msg []byte) ([]byte, error) {
 	reply := NewSignMsgReply(msg)
+
+	//ma := jsonpb.Marshaler{}
+	//sMsg, _ := ma.MarshalToString(reply)
+
 	payload, err := proto.Marshal(reply)
 	if err != nil {
 		return nil, err
@@ -730,3 +735,15 @@ func EncodeResetReply() ([]byte, error) {
 	}
 	return payload, nil
 }
+
+//
+//func beforeEncodeMessage(command IceboxMessage_Command) {
+//	if RTEnv.isPrintMsg {
+//		ctp, _ := proto.Marshal(msg)
+//		ma := jsonpb.Marshaler{}
+//		sMsg, _ := ma.MarshalToString(msg)
+//		logger.Debug().Msgf("-- beforeExecute - Msg for req %s: (len: %d), hex(%s), json(%s)", command, len(ctp), hex.EncodeToString(ctp), sMsg)
+//	}
+//
+//	return
+//}

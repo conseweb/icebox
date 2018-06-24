@@ -142,13 +142,13 @@ message HelloReply {
 }
 
 message NegotiateRequest {
-    required string keyA = 2;
-    required string hash = 3;
+    required string keyA = 2[(nanopb).max_size = 32];
+    required string hash = 3[(nanopb).max_size = 32];
 }
 
 message NegotiateReply {
-    required string keyB = 2;
-    required string hash = 3;
+    required string keyB = 2[(nanopb).max_size = 32];
+    required string hash = 3[(nanopb).max_size = 32];
 }
 
 message StartRequest {
@@ -179,7 +179,7 @@ message CheckReply {
 //    required ReplyHeader header = 1;
     required int32 state = 2;  // 0: uninited, 1: inited
     // if paired then return dev_id=sha256(id+app_id)
-    optional string dev_id = 3;
+    optional string dev_id = 3[(nanopb).max_size = 32];
     //    optional string sn = 4; // device serial number
 }
 
@@ -204,8 +204,8 @@ message PingReply {}
 message AddCoinRequest {
     required uint32 type = 2; // bip44: coin_type
     required uint32 idx = 3;  // bip44: address_index
-    required string symbol = 4;
-    required string name = 5;
+    required string symbol = 4[(nanopb).max_size = 16];
+    required string name = 5[(nanopb).max_size = 16];
 }
 
 message AddCoinReply {
@@ -304,7 +304,9 @@ message GetAddressRequest {
     required uint32 idx = 3;
 }
 
-message GetAddressReply { required Address addr = 1; }
+message GetAddressReply {
+    required Address addr = 1;
+}
 
 message ListAddressRequest {
     required string password = 1;
@@ -325,7 +327,6 @@ message Address {
 
     required uint32 type = 1;
     required uint32 idx = 2;
-    optional string name = 3;
     required HashAlgo algo = 4[default = RAW];
     required string s_addr = 5[(nanopb).max_size = 34]; // bitcoin's base58_check address = 34
 }

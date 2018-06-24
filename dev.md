@@ -33,3 +33,8 @@
 - ethereum: secp256k1
 - cryptonote: ed25519
 - ripple: ed25519
+
+## 创建比特币交易
+- createRawTransaction
+- signRawTransaction
+

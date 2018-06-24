@@ -63,7 +63,7 @@ message IceboxMessage {
     required Header header = 1;
     // FIXME: 最大值未经验证
     required bytes payload = 2 [(nanopb).max_size = 512];
-    required bytes signature = 3 [(nanopb).max_size = 256];
+  required bytes signature = 3 [ (nanopb).max_size = 64 ];
 }
 
 // NOTE: password - 真实设备是没有这个字段的
@@ -124,9 +124,9 @@ service Icebox {
 
 }
 
-message Error {
-    required int32 code = 1;
-    optional string message = 2[(nanopb).max_size = 256];
+message PbError {
+  required int32 code = 1;
+  optional string message = 2 [ (nanopb).max_size = 256 ];
 }
 
 message HelloRequest {
@@ -142,13 +142,13 @@ message HelloReply {
 }
 
 message NegotiateRequest {
-    required string keyA = 2;
-    required string hash = 3;
+    required string keyA = 2[(nanopb).max_size = 32];
+    required string hash = 3[(nanopb).max_size = 32];
 }
 
 message NegotiateReply {
-    required string keyB = 2;
-    required string hash = 3;
+    required string keyB = 2[(nanopb).max_size = 32];
+    required string hash = 3[(nanopb).max_size = 32];
 }
 
 message StartRequest {
@@ -158,9 +158,7 @@ message StartRequest {
     //    required uint32 duration = 3;
 }
 
-message StartReply {
-
-}
+message StartReply {}
 
 message EndRequest {
     //    required Header header = 1;
@@ -181,7 +179,7 @@ message CheckReply {
     //    required ReplyHeader header = 1;
     required int32 state = 2;  // 0: uninited, 1: inited
     // if paired then return dev_id=sha256(id+app_id)
-    optional string dev_id = 3;
+    optional string dev_id = 3[(nanopb).max_size = 32];
     //    optional string sn = 4; // device serial number
 }
 
@@ -206,8 +204,8 @@ message PingReply {}
 message AddCoinRequest {
     required uint32 type = 2; // bip44: coin_type
     required uint32 idx = 3;  // bip44: address_index
-    required string symbol = 4;
-    required string name = 5;
+    required string symbol = 4[(nanopb).max_size = 16];
+    required string name = 5[(nanopb).max_size = 16];
 }
 
 message AddCoinReply {
@@ -287,12 +285,11 @@ message SignMsgRequest {
 
 message SignMsgReply {
     // FIXME: 最大值未经验证
-    required bytes signed = 1[(nanopb).max_size = 70];
+  required bytes signedMsg = 1 [ (nanopb).max_size = 70 ];
 }
 
 // list all of wallets
-message ListCoinRequest {
-}
+message ListCoinRequest {}
 
 message ListCoinReply {
     required uint32 max = 2;
@@ -330,7 +327,6 @@ message Address {
 
     required uint32 type = 1;
     required uint32 idx = 2;
-    optional string name = 3;
     required HashAlgo algo = 4[default = RAW];
     required string s_addr = 5[(nanopb).max_size = 34]; // bitcoin's base58_check address = 34
 }
@@ -374,8 +370,7 @@ message RemoveCoinRequest {
     required uint32 type = 2;
 }
 
-message RemoveCoinReply {
-}
+message RemoveCoinReply {}
 
 message DeleteSecretRequest {
     //    required string password = 1;
@@ -383,8 +378,7 @@ message DeleteSecretRequest {
     required uint32 idx = 3;
 }
 
-message DeleteSecretReply {
-}
+message DeleteSecretReply {}
 
 message DeleteAddressRequest {
     //    required string password = 1;
@@ -392,14 +386,12 @@ message DeleteAddressRequest {
     required uint32 idx = 3;
 }
 
-message DeleteAddressReply {
-}
+message DeleteAddressReply {}
 
 message ResetRequest {
     //    required string password = 1;
 }
-message ResetReply {
-}
+message ResetReply {}
 
 message DispMsgRequest {
     // FIXME: 最大值未经验证

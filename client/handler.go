@@ -18,6 +18,7 @@ import (
 	"github.com/conseweb/icebox/core/common"
 	pb "github.com/conseweb/icebox/protos"
 	"github.com/gogo/protobuf/proto"
+	"github.com/golang/protobuf/jsonpb"
 	"github.com/rs/zerolog"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/grpclog"
@@ -829,74 +830,27 @@ func (d *Handler) DispMsg(title, content string, icon []byte) (*pb.DispMsgReply,
 	return nil, nil
 }
 
+
+
 func (d *Handler) beforeExecute(command pb.IceboxMessage_Command, msg *pb.IceboxMessage) {
 	if RTEnv.isPrintMsg {
 		ctp, _ := proto.Marshal(msg)
-		logger.Debug().Msgf("-- beforeExecute - Hex msg for req %s: (len: %d)%s", command, len(ctp), hex.EncodeToString(ctp))
+		ma := jsonpb.Marshaler{}
+		sMsg, _ := ma.MarshalToString(msg)
+		logger.Debug().Msgf("-- beforeExecute - Msg for req %s: (len: %d), hex(%s), json(%s)", command, len(ctp), hex.EncodeToString(ctp), sMsg)
 	}
 
-	//switch command {
-	//case pb.IceboxMessage_HELLO:
-	//case pb.IceboxMessage_NEGOTIATE:
-	//case pb.IceboxMessage_START:
-	//case pb.IceboxMessage_CHECK:
-	//case pb.IceboxMessage_INIT:
-	//case pb.IceboxMessage_PING:
-	//case pb.IceboxMessage_RESET:
-	//case pb.IceboxMessage_CREATE_ADDRESS:
-	//case pb.IceboxMessage_CREATE_SECRET:
-	//case pb.IceboxMessage_LIST_COIN:
-	//case pb.IceboxMessage_LIST_ADDRESS:
-	//case pb.IceboxMessage_LIST_SECRET:
-	//case pb.IceboxMessage_SIGN_TX:
-	//case pb.IceboxMessage_SIGN_MSG:
-	//case pb.IceboxMessage_REMOVE_COIN:
-	//case pb.IceboxMessage_DELETE_ADDRESS:
-	//case pb.IceboxMessage_DELETE_SECRET:
-	//case pb.IceboxMessage_GET_SECRET:
-	//case pb.IceboxMessage_DISP_MSG:
-	//	if RTEnv.isPrintMsg {
-	//		ctp, _ := proto.Marshal(msg)
-	//		logger.Debug().Msgf("beforeExecute -- Base58 msg for req: %s", base58.Encode(ctp))
-	//	}
-	//	break
-	//default:
-	//	break
-	//}
 	return
 }
 
 func (d *Handler) afterExecute(command pb.IceboxMessage_Command, msg *pb.IceboxMessage) {
 	if RTEnv.isPrintMsg {
 		resp, _ := proto.Marshal(msg)
-		logger.Debug().Msgf("-- afterExecute - Hex msg for reply %s: (len: %d)%s", command, len(resp), hex.EncodeToString(resp));
+		ma := jsonpb.Marshaler{}
+		sMsg, _ := ma.MarshalToString(msg)
+		logger.Debug().Msgf("-- afterExecute - Msg for reply %s: (len: %d), hex(%s), json(%s)", command, len(resp), hex.EncodeToString(resp), sMsg);
 	}
 
-	//switch command {
-	//case pb.IceboxMessage_HELLO, pb.IceboxMessage_NEGOTIATE, pb.IceboxMessage_START:
-	//case pb.IceboxMessage_CHECK:
-	//case pb.IceboxMessage_INIT:
-	//case pb.IceboxMessage_PING:
-	//case pb.IceboxMessage_RESET:
-	//case pb.IceboxMessage_CREATE_ADDRESS:
-	//case pb.IceboxMessage_CREATE_SECRET:
-	//case pb.IceboxMessage_LIST_COIN:
-	//case pb.IceboxMessage_LIST_ADDRESS:
-	//case pb.IceboxMessage_LIST_SECRET:
-	//case pb.IceboxMessage_SIGN_TX:
-	//case pb.IceboxMessage_SIGN_MSG:
-	//case pb.IceboxMessage_REMOVE_COIN:
-	//case pb.IceboxMessage_DELETE_ADDRESS:
-	//case pb.IceboxMessage_DELETE_SECRET:
-	//case pb.IceboxMessage_GET_SECRET:
-	//case pb.IceboxMessage_DISP_MSG:
-	//	if RTEnv.isPrintMsg {
-	//		resp, _ := proto.Marshal(msg)
-	//		logger.Debug().Msgf("afterExecute -- Encoded msg for reply %s: %s", command, base58.Encode(resp));
-	//	}
-	//	return
-	//
-	//}
 	return
 }
 
