@@ -82,7 +82,7 @@ func (s *iceHelper) NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) 
 	// should be base58 compressed
 	keyA := req.GetKeyA()
 	hashA := req.GetHash()
-	logger.Debug().Msgf("Received keyA: %s, hash is: %s", keyA, hashA)
+	logger.Debug().Msgf("Received keyA: %s, hash is: %s", hex.EncodeToString(keyA), hex.EncodeToString(hashA))
 
 	r := fmt.Sprintf("%d", makeTimestamp())
 	ek := s.generateSessionKey(r)
