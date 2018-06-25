@@ -93,7 +93,8 @@ func (s *iceHelper) NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) 
 
 	var pkA = new(address.PublicKey)
 	pkA.Curve = kelliptic.S256()
-	cp := base58.Decode(keyA)
+	//cp := base58.Decode(keyA)
+	cp := keyA
 
 	pk, err := btcec.ParsePubKey(cp, btcec.S256())
 	if err != nil {
@@ -103,8 +104,9 @@ func (s *iceHelper) NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) 
 	s.session.peerKey = pk
 
 	spk := pk.SerializeCompressed()
-	bpk := base58.Encode(spk)
-	if bpk == keyA {
+	//bpk := base58.Encode(spk)
+	bpk := spk
+	if bytes.Equal(bpk, keyA) {
 		logger.Debug().Msgf("Encode ok!")
 	}
 
@@ -120,12 +122,12 @@ func (s *iceHelper) NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) 
 	s.session.shortKey = base58.Encode(ssk)[:common.SharedKey_Len]
 
 	logger.Debug().Msgf("Got shared key: %s", s.session.shortKey)
-	pkB := sk.PubKey()
-	bpkB := base58.Encode(pkB.SerializeCompressed())
+	pkB := sk.PubKey().SerializeCompressed()
+	bpkB := base58.Encode(pkB)
 	logger.Debug().Msgf("Iceberg's public session key: %s", bpkB)
 	h := sha256.New()
-	h.Write(pkB.SerializeCompressed())
-	reply := pb.NewNegotiateReply(bpkB, base58.Encode(h.Sum(nil)))
+	h.Write(pkB)
+	reply := pb.NewNegotiateReply(pkB, h.Sum(nil))
 
 	return reply, nil
 }
@@ -163,7 +165,8 @@ func (s *iceHelper) CheckDevice(ctx context.Context, req *pb.CheckRequest) (*pb.
 	// 初步判断依据初始化了，需要获取深度数据以进行检测
 	devid, _ := s.loadDeviceID(common.Devid_path)
 	//one := int32(1)
-	reply := pb.NewCheckReply(1, &devid)
+	devid_byte := base58.Decode(devid)
+	reply := pb.NewCheckReply(1, devid_byte)
 	return reply, nil
 }
 

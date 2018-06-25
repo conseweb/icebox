@@ -234,7 +234,7 @@ func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
 	logger.Debug().Msgf("Base58 raw public string: '%s'", bs)
 	hb := util.Hash256(b)
 	//req := pb.NewNegotiateRequest(bs, base58.Encode(hb))
-	payload, _ := pb.EncodeNegotiateRequest(bs, base58.Encode(hb))
+	payload, _ := pb.EncodeNegotiateRequest(b, hb)
 	ct := pb.NewIceboxMessage(pb.IceboxMessage_NEGOTIATE, payload)
 
 	d.beforeExecute(pb.IceboxMessage_NEGOTIATE, ct)
@@ -261,8 +261,8 @@ func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
 
 	logger.Debug().Msgf("NegotiateReply: %s", result)
 	kb := result.GetKeyB()
-	pkb := base58.Decode(kb)
-	pkB, err := btcec.ParsePubKey(pkb, btcec.S256())
+	//pkb := base58.Decode(kb)
+	pkB, err := btcec.ParsePubKey(kb, btcec.S256())
 	if err != nil {
 		logger.Fatal().Err(err).Msg("")
 		return nil, err
