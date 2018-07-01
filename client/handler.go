@@ -290,7 +290,7 @@ func (d *Handler) Negotiate() (*pb.NegotiateReply, error) {
 	return result, nil
 }
 
-func (d *Handler) Start() (*pb.StartReply, error) {
+func (d *Handler) StartSession() (*pb.StartReply, error) {
 	var err error
 	req := pb.NewStartRequest()
 	payload, _ := proto.Marshal(req)
@@ -304,7 +304,7 @@ func (d *Handler) Start() (*pb.StartReply, error) {
 			return nil, err
 		}
 
-		msg = pb.NewIceboxMessageWithSID(pb.IceboxMessage_START, sid, ed)
+		msg = pb.NewIceboxMessageWithSID(pb.IceboxMessage_START_SESSION, sid, ed)
 
 		// calc signature
 		err = pb.AddSignatureToMsg(msg, d.session.key)
@@ -312,10 +312,10 @@ func (d *Handler) Start() (*pb.StartReply, error) {
 			grpclog.Fatalf("%v: ", err)
 		}
 	} else {
-		msg = pb.NewIceboxMessageWithSID(pb.IceboxMessage_START, sid, payload)
+		msg = pb.NewIceboxMessageWithSID(pb.IceboxMessage_START_SESSION, sid, payload)
 	}
 
-	d.beforeExecute(pb.IceboxMessage_START, msg)
+	d.beforeExecute(pb.IceboxMessage_START_SESSION, msg)
 
 	res, err := d.Client.Execute(context.Background(), msg)
 	if err != nil {
@@ -355,113 +355,113 @@ func (d *Handler) Start() (*pb.StartReply, error) {
 		}
 	}
 
-	d.afterExecute(pb.IceboxMessage_START, res)
+	d.afterExecute(pb.IceboxMessage_START_SESSION, res)
 
 	return reply, nil
 }
 
-func (d *Handler) CheckDevice() (*pb.CheckReply, error) {
-	var err error
-	req := pb.NewCheckRequest()
-	payload, _ := proto.Marshal(req)
-	sid := d.session.id
-	var msg *pb.IceboxMessage = nil
-	if RTEnv.IsEncrypt() {
-		// encrypt payload
-		ed, err := crypto.EncryptAsByte([]byte(d.session.shortKey), payload)
-		if err != nil {
-			return nil, err
-		}
-		msg = pb.NewIceboxMessageWithSID(pb.IceboxMessage_CHECK, sid, ed)
+//func (d *Handler) CheckDevice() (*pb.CheckReply, error) {
+//	var err error
+//	req := pb.NewCheckRequest()
+//	payload, _ := proto.Marshal(req)
+//	sid := d.session.id
+//	var msg *pb.IceboxMessage = nil
+//	if RTEnv.IsEncrypt() {
+//		// encrypt payload
+//		ed, err := crypto.EncryptAsByte([]byte(d.session.shortKey), payload)
+//		if err != nil {
+//			return nil, err
+//		}
+//		msg = pb.NewIceboxMessageWithSID(pb.IceboxMessage_CHECK, sid, ed)
+//
+//		// calc signature
+//		err = pb.AddSignatureToMsg(msg, d.session.key)
+//		if err != nil {
+//			grpclog.Fatalf("%v: ", err)
+//		}
+//	} else {
+//		msg = pb.NewIceboxMessageWithSID(pb.IceboxMessage_CHECK, sid, payload)
+//	}
+//
+//	d.beforeExecute(pb.IceboxMessage_CHECK, msg)
+//
+//	//ctx, cancel := context.WithTimeout(context.Background(), timeout)
+//	//defer cancel()
+//
+//	res, err := d.Client.Execute(context.Background(), msg)
+//	if err != nil {
+//		grpclog.Fatalf("%v: ", err)
+//	}
+//
+//	if res.GetHeader().GetCmd() == pb.IceboxMessage_ERROR {
+//		logger.Debug().Msgf("Device error: %s", res.GetPayload())
+//		return nil, fmt.Errorf("Device error: %s", res.GetPayload())
+//	}
+//
+//	var reply = &pb.CheckReply{}
+//
+//	if RTEnv.IsEncrypt() {
+//		// verify sig
+//		ok := pb.VerifySig(res, d.session.peerKey)
+//		if !ok {
+//			return nil, errors.New("Invalid signature.")
+//		}
+//
+//		// decrypt payload first
+//		decrypted, err := crypto.DecryptAsByte([]byte(d.session.shortKey), res.GetPayload())
+//		if err != nil {
+//			return nil, err
+//		}
+//		// then unmarshal
+//		err = proto.Unmarshal(decrypted, reply)
+//		if err != nil {
+//			return nil, err
+//		}
+//	} else {
+//		// then unmarshal
+//		err = proto.Unmarshal(res.GetPayload(), reply)
+//		if err != nil {
+//			return nil, err
+//		}
+//	}
+//
+//	d.afterExecute(pb.IceboxMessage_CHECK, res)
+//
+//	grpclog.Infoln("CheckReply: ", reply)
+//	return reply, nil
+//}
 
-		// calc signature
-		err = pb.AddSignatureToMsg(msg, d.session.key)
-		if err != nil {
-			grpclog.Fatalf("%v: ", err)
-		}
-	} else {
-		msg = pb.NewIceboxMessageWithSID(pb.IceboxMessage_CHECK, sid, payload)
-	}
-
-	d.beforeExecute(pb.IceboxMessage_CHECK, msg)
-
-	//ctx, cancel := context.WithTimeout(context.Background(), timeout)
-	//defer cancel()
-
-	res, err := d.Client.Execute(context.Background(), msg)
-	if err != nil {
-		grpclog.Fatalf("%v: ", err)
-	}
-
-	if res.GetHeader().GetCmd() == pb.IceboxMessage_ERROR {
-		logger.Debug().Msgf("Device error: %s", res.GetPayload())
-		return nil, fmt.Errorf("Device error: %s", res.GetPayload())
-	}
-
-	var reply = &pb.CheckReply{}
-
-	if RTEnv.IsEncrypt() {
-		// verify sig
-		ok := pb.VerifySig(res, d.session.peerKey)
-		if !ok {
-			return nil, errors.New("Invalid signature.")
-		}
-
-		// decrypt payload first
-		decrypted, err := crypto.DecryptAsByte([]byte(d.session.shortKey), res.GetPayload())
-		if err != nil {
-			return nil, err
-		}
-		// then unmarshal
-		err = proto.Unmarshal(decrypted, reply)
-		if err != nil {
-			return nil, err
-		}
-	} else {
-		// then unmarshal
-		err = proto.Unmarshal(res.GetPayload(), reply)
-		if err != nil {
-			return nil, err
-		}
-	}
-
-	d.afterExecute(pb.IceboxMessage_CHECK, res)
-
-	grpclog.Infoln("CheckReply: ", reply)
-	return reply, nil
-}
-
-func (d *Handler) InitDevice(pas string) (*pb.InitReply, error) {
-	// send initrequest
-	ireq := pb.NewInitRequest(pas)
-	payload, _ := proto.Marshal(ireq)
-	sid := d.session.id
-	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_INIT, sid, payload)
-
-	d.beforeExecute(pb.IceboxMessage_INIT, msg)
-
-	res, xe := d.Client.Execute(context.Background(), msg)
-	if xe != nil {
-		grpclog.Fatalln(xe)
-		return nil, xe
-	}
-
-	if res.GetHeader().GetCmd() == pb.IceboxMessage_ERROR {
-		logger.Debug().Msgf("Device error: %s", res.GetPayload())
-		return nil, fmt.Errorf("Device error: %s", res.GetPayload())
-	}
-
-	var intRep = &pb.InitReply{}
-	err := proto.Unmarshal(res.GetPayload(), intRep)
-	if err != nil {
-		return nil, err
-	}
-
-	d.afterExecute(pb.IceboxMessage_INIT, res)
-
-	grpclog.Infoln("InitReply: ", intRep)
-	return intRep, nil
-}
+//func (d *Handler) InitDevice(pas string) (*pb.InitReply, error) {
+//	// send initrequest
+//	ireq := pb.NewInitRequest(pas)
+//	payload, _ := proto.Marshal(ireq)
+//	sid := d.session.id
+//	msg := pb.NewIceboxMessageWithSID(pb.IceboxMessage_INIT, sid, payload)
+//
+//	d.beforeExecute(pb.IceboxMessage_INIT, msg)
+//
+//	res, xe := d.Client.Execute(context.Background(), msg)
+//	if xe != nil {
+//		grpclog.Fatalln(xe)
+//		return nil, xe
+//	}
+//
+//	if res.GetHeader().GetCmd() == pb.IceboxMessage_ERROR {
+//		logger.Debug().Msgf("Device error: %s", res.GetPayload())
+//		return nil, fmt.Errorf("Device error: %s", res.GetPayload())
+//	}
+//
+//	var intRep = &pb.InitReply{}
+//	err := proto.Unmarshal(res.GetPayload(), intRep)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	d.afterExecute(pb.IceboxMessage_INIT, res)
+//
+//	grpclog.Infoln("InitReply: ", intRep)
+//	return intRep, nil
+//}
 
 func (d *Handler) PingDevice() error {
 	req := pb.NewPingRequest()

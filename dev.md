@@ -38,3 +38,19 @@
 - createRawTransaction
 - signRawTransaction
 
+## List address
+- select * from addresses where t2 = tp limit 4 offset = x
+
+
+Develop log
+------------
+7.1
+  1. 为增加安全性，为所有的消息的末尾增加了 salt 字段，类型为uint32, 编号统一为16, 
+     设备端返回的消息需要将该值加一，并返回给app侧。
+  2. start 和 end 消息修改为start_session, end_session。
+  3. 给各个消息增加了说明，描述消息的用途。
+
+6.14
+  1. 所有的bytes, string字段都必须加上max_size的限制
+  2. HiRequest, HiReply已经修改为HelloRequest, HelloReply
+  3. 移除ConversationRequest和ConversationReply, 其功能已经被IceboxMessage实现

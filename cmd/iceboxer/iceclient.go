@@ -130,32 +130,32 @@ func main() {
 	}
 	handler.FSM.Event("NEGOTIATE")
 
-	_, err = handler.Start()
+	_, err = handler.StartSession()
 	if err != nil {
-		logger.Fatal().Err(err).Msgf("Start command failed !!!")
+		logger.Fatal().Err(err).Msgf("StartSession command failed !!!")
 	}
 
 	handler.FSM.Event("START")
 	//handler.session.id
 
-	rep, err := handler.CheckDevice()
-	if err != nil {
-		logger.Fatal().Err(err).Msgf("")
-	}
-	switch rep.GetState() {
-	case 1:
-		handler.FSM.Event("CK_INITED")
-	case 0:
-		handler.FSM.Event("CK_UNINITED")
-		irep, err := handler.InitDevice("Secret")
-		if err != nil {
-			logger.Fatal().Err(err).Msgf("")
-		}
-		logger.Info().Msgf("Inited, DevID: %s", hex.EncodeToString(irep.DevId))
-		handler.FSM.Event("INIT")
-	default:
-		logger.Fatal().Msgf("Something wrong!!")
-	}
+	//rep, err := handler.CheckDevice()
+	//if err != nil {
+	//	logger.Fatal().Err(err).Msgf("")
+	//}
+	//switch rep.GetState() {
+	//case 1:
+	//	handler.FSM.Event("CK_INITED")
+	//case 0:
+	//	handler.FSM.Event("CK_UNINITED")
+	//	irep, err := handler.InitDevice("Secret")
+	//	if err != nil {
+	//		logger.Fatal().Err(err).Msgf("")
+	//	}
+	//	logger.Info().Msgf("Inited, DevID: %s", hex.EncodeToString(irep.DevId))
+	//	handler.FSM.Event("INIT")
+	//default:
+	//	logger.Fatal().Msgf("Something wrong!!")
+	//}
 
 	rand.Seed(time.Now().UnixNano())
 	var idx = rand.Uint32()

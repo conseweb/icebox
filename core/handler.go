@@ -59,7 +59,6 @@ func makeTimestamp() int64 {
 
 func NewIcebergHandler() *IcebergHandler {
 	d := &IcebergHandler{
-
 		helper: newHelper(),
 	}
 
@@ -165,7 +164,7 @@ func (s *IcebergHandler) Execute(ctx context.Context, req *pb.IceboxMessage) (*p
 		ret := pb.NewIceboxMessage(pb.IceboxMessage_NEGOTIATE, payload)
 		return ret, nil
 
-	case pb.IceboxMessage_START:
+	case pb.IceboxMessage_START_SESSION:
 		// after negotiate
 		logger.Debug().Msgf("Request: version:%d type:%s session_id:%d payload:(%s,len:%d) signature:(%s,len:%d)",
 			v, t, sid,
@@ -204,69 +203,69 @@ func (s *IcebergHandler) Execute(ctx context.Context, req *pb.IceboxMessage) (*p
 			return msg, nil
 		}
 		// set as new session id
-		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_START, sid, ed)
+		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_START_SESSION, sid, ed)
 		pb.AddSignatureToMsg(ret, s.helper.session.key)
 		return ret, nil
 
-	case pb.IceboxMessage_CHECK:
-		logger.Debug().Msgf("Request: version:%d type:%s session_id:%d payload:(%s,len:%d) signature:(%s,len:%d)",
-			v, t, sid,
-			base58.Encode(payload), len(payload), base58.Encode(sig), len(sig))
+	//case pb.IceboxMessage_CHECK:
+	//	logger.Debug().Msgf("Request: version:%d type:%s session_id:%d payload:(%s,len:%d) signature:(%s,len:%d)",
+	//		v, t, sid,
+	//		base58.Encode(payload), len(payload), base58.Encode(sig), len(sig))
+	//
+	//	ok := pb.VerifySig(req, s.helper.session.peerKey)
+	//	if !ok {
+	//		msg := handleError(errors.New("CHECK: Invalid signature."))
+	//		return msg, nil
+	//	}
+	//	// 0.5 decrypt payload
+	//	dt, err := crypto.DecryptAsByte([]byte(s.helper.session.shortKey), payload)
+	//	if err != nil {
+	//		msg := handleError(err)
+	//		return msg, nil
+	//	}
+	//	// 1. unmarshal request
+	//	x := &pb.CheckRequest{}
+	//	unmarshalErr := proto.Unmarshal(dt, x)
+	//	if unmarshalErr != nil {
+	//		msg := handleError(unmarshalErr)
+	//		return msg, nil
+	//	}
+	//	// 2. execute command
+	//	reply, err := s.helper.CheckDevice(ctx, x)
+	//	if err != nil {
+	//		msg := handleError(err)
+	//		return msg, nil
+	//	}
+	//	// 3. marshal
+	//	payload, _ := proto.Marshal(reply)
+	//	// 4. encrypt payload
+	//	ed, err := crypto.EncryptAsByte([]byte(s.helper.session.shortKey), payload)
+	//	if err != nil {
+	//		msg := handleError(err)
+	//		return msg, nil
+	//	}
+	//	// set as new session id
+	//	ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_CHECK, sid, ed)
+	//	pb.AddSignatureToMsg(ret, s.helper.session.key)
+	//	return ret, nil
 
-		ok := pb.VerifySig(req, s.helper.session.peerKey)
-		if !ok {
-			msg := handleError(errors.New("CHECK: Invalid signature."))
-			return msg, nil
-		}
-		// 0.5 decrypt payload
-		dt, err := crypto.DecryptAsByte([]byte(s.helper.session.shortKey), payload)
-		if err != nil {
-			msg := handleError(err)
-			return msg, nil
-		}
-		// 1. unmarshal request
-		x := &pb.CheckRequest{}
-		unmarshalErr := proto.Unmarshal(dt, x)
-		if unmarshalErr != nil {
-			msg := handleError(unmarshalErr)
-			return msg, nil
-		}
-		// 2. execute command
-		reply, err := s.helper.CheckDevice(ctx, x)
-		if err != nil {
-			msg := handleError(err)
-			return msg, nil
-		}
-		// 3. marshal
-		payload, _ := proto.Marshal(reply)
-		// 4. encrypt payload
-		ed, err := crypto.EncryptAsByte([]byte(s.helper.session.shortKey), payload)
-		if err != nil {
-			msg := handleError(err)
-			return msg, nil
-		}
-		// set as new session id
-		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_CHECK, sid, ed)
-		pb.AddSignatureToMsg(ret, s.helper.session.key)
-		return ret, nil
-
-	case pb.IceboxMessage_INIT:
-		x := &pb.InitRequest{}
-		unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
-		if unmarshalErr != nil {
-			//logger.Fatal().Err(unmarshalErr).Msgf("Failed to unmarshall . Sending %s", pb.IceboxMessage_ERROR)
-			msg := handleError(unmarshalErr)
-			return msg, nil
-		}
-		reply, err := s.helper.InitDevice(ctx, x)
-		if err != nil {
-			msg := handleError(err)
-			return msg, nil
-		}
-		payload, _ := proto.Marshal(reply)
-		// set as new session id
-		ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_INIT, sid, payload)
-		return ret, nil
+	//case pb.IceboxMessage_INIT:
+	//	x := &pb.InitRequest{}
+	//	unmarshalErr := proto.Unmarshal(req.GetPayload(), x)
+	//	if unmarshalErr != nil {
+	//		//logger.Fatal().Err(unmarshalErr).Msgf("Failed to unmarshall . Sending %s", pb.IceboxMessage_ERROR)
+	//		msg := handleError(unmarshalErr)
+	//		return msg, nil
+	//	}
+	//	reply, err := s.helper.InitDevice(ctx, x)
+	//	if err != nil {
+	//		msg := handleError(err)
+	//		return msg, nil
+	//	}
+	//	payload, _ := proto.Marshal(reply)
+	//	// set as new session id
+	//	ret := pb.NewIceboxMessageWithSID(pb.IceboxMessage_INIT, sid, payload)
+	//	return ret, nil
 
 	case pb.IceboxMessage_CREATE_ADDRESS:
 		x := &pb.CreateAddressRequest{}

@@ -41,8 +41,8 @@ type Iceberg interface {
 	Hello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloReply, error)
 	NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) (*pb.NegotiateReply, error)
 	//Chat(ctx context.Context, req *pb.IceboxMessage) (*pb.IceboxMessage, error)
-	CheckDevice(ctx context.Context, req *pb.CheckRequest) (*pb.CheckReply, error)
-	InitDevice(ctx context.Context, req *pb.InitRequest) (*pb.InitReply, error)
+	//CheckDevice(ctx context.Context, req *pb.CheckRequest) (*pb.CheckReply, error)
+	//InitDevice(ctx context.Context, req *pb.InitRequest) (*pb.InitReply, error)
 }
 
 type iceHelper struct {
@@ -70,7 +70,8 @@ func newHelper() *iceHelper {
 
 func (s *iceHelper) Hello(ctx context.Context, req *pb.HelloRequest) (*pb.HelloReply, error) {
 	if common.App_magic == req.GetMagicA() {
-		reply := pb.NewHiReply(common.Device_magic)
+		salt := req.GetSalt()
+		reply := pb.NewHiReply(common.Device_magic, salt)
 		return reply, nil
 	}
 
@@ -82,6 +83,7 @@ func (s *iceHelper) NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) 
 	// should be base58 compressed
 	keyA := req.GetKeyA()
 	hashA := req.GetHash()
+	salt := req.GetSalt()
 	logger.Debug().Msgf("Received keyA: %s, hash is: %s", hex.EncodeToString(keyA), hex.EncodeToString(hashA))
 
 	r := fmt.Sprintf("%d", makeTimestamp())
@@ -127,14 +129,14 @@ func (s *iceHelper) NegotiateKey(ctx context.Context, req *pb.NegotiateRequest) 
 	logger.Debug().Msgf("Iceberg's public session key: %s", bpkB)
 	h := sha256.New()
 	h.Write(pkB)
-	reply := pb.NewNegotiateReply(pkB, h.Sum(nil))
+	reply := pb.NewNegotiateReply(pkB, h.Sum(nil), salt)
 
 	return reply, nil
 }
 
 func (s *iceHelper) StartSession(ctx context.Context, req *pb.StartRequest) (*pb.StartReply, error) {
 
-	reply := pb.NewStartReply()
+	reply := pb.NewStartReply(req.GetSalt())
 	return reply, nil
 }
 
@@ -146,57 +148,57 @@ func handleError(err error) *pb.IceboxMessage {
 	return msg
 }
 
-func (s *iceHelper) EndSession(ctx context.Context, req *pb.EndRequest) (*pb.EndReply, error) {
-	return nil, errors.New("Not implemented!")
-}
+//func (s *iceHelper) EndSession(ctx context.Context, req *pb.EndRequest) (*pb.EndReply, error) {
+//	return nil, errors.New("Not implemented!")
+//}
 
 ////////////////////////////////// Bussiness Logic ////////////////////////////////////////
 
-func (s *iceHelper) CheckDevice(ctx context.Context, req *pb.CheckRequest) (*pb.CheckReply, error) {
-	// check device is initialized
+//func (s *iceHelper) CheckDevice(ctx context.Context, req *pb.CheckRequest) (*pb.CheckReply, error) {
+//	// check device is initialized
+//
+//	if !s.isInitialized() {
+//		// return uninit
+//		// zero := int32(0)
+//		reply := pb.NewCheckReply(0, nil)
+//		return reply, nil
+//	}
+//
+//	// 初步判断依据初始化了，需要获取深度数据以进行检测
+//	devid, _ := s.loadDeviceID(common.Devid_path)
+//	//one := int32(1)
+//	devid_byte := base58.Decode(devid)
+//	reply := pb.NewCheckReply(1, devid_byte)
+//	return reply, nil
+//}
 
-	if !s.isInitialized() {
-		// return uninit
-		// zero := int32(0)
-		reply := pb.NewCheckReply(0, nil)
-		return reply, nil
-	}
-
-	// 初步判断依据初始化了，需要获取深度数据以进行检测
-	devid, _ := s.loadDeviceID(common.Devid_path)
-	//one := int32(1)
-	devid_byte := base58.Decode(devid)
-	reply := pb.NewCheckReply(1, devid_byte)
-	return reply, nil
-}
-
-func (s *iceHelper) InitDevice(ctx context.Context, req *pb.InitRequest) (*pb.InitReply, error) {
-	// remove all files
-	s.resetDevice()
-
-	//fmt.Println("==> start init device")
-	// new devid and privkey
-	devid, err := s.newDeviceID(common.Devid_path)
-	if err != nil {
-		return nil, err
-	}
-	_, err = s.newPrivKey(common.Secret_path, *(req.Password))
-	if err != nil {
-		return nil, err
-	}
-	_, err = s.initDB(common.Db_path)
-	if err != nil {
-		return nil, err
-	}
-
-	reply := pb.NewInitReply(devid)
-	fmt.Println("==> done init device")
-
-	return reply, nil
-}
+//func (s *iceHelper) InitDevice(ctx context.Context, req *pb.InitRequest) (*pb.InitReply, error) {
+//	// remove all files
+//	s.resetDevice()
+//
+//	//fmt.Println("==> start init device")
+//	// new devid and privkey
+//	devid, err := s.newDeviceID(common.Devid_path)
+//	if err != nil {
+//		return nil, err
+//	}
+//	_, err = s.newPrivKey(common.Secret_path, *(req.Password))
+//	if err != nil {
+//		return nil, err
+//	}
+//	_, err = s.initDB(common.Db_path)
+//	if err != nil {
+//		return nil, err
+//	}
+//
+//	reply := pb.NewInitReply(devid)
+//	fmt.Println("==> done init device")
+//
+//	return reply, nil
+//}
 
 func (s *iceHelper) Ping(ctx context.Context, req *pb.PingRequest) (*pb.PingReply, error) {
-	reply := pb.NewPingReply()
+	reply := pb.NewPingReply(common.TEST_MODEL, common.TEST_SERIAL, req.GetSalt())
 	return reply, nil
 }
 
@@ -206,7 +208,7 @@ func (s *iceHelper) AddCoin(ctx context.Context, req *pb.AddCoinRequest) (*pb.Ad
 	symbol := req.GetSymbol()
 	name := req.GetName()
 	s.openDb().Create(&models.Coin{T2: tp, T3: idx, Symbol: symbol, Name: name})
-	reply := pb.NewAddCoinReply()
+	reply := pb.NewAddCoinReply(req.GetSalt())
 	return reply, nil
 }
 
@@ -233,7 +235,7 @@ func (s *iceHelper) CreateAddress(ctx context.Context, req *pb.CreateAddressRequ
 			if err != nil {
 				return nil, err
 			}
-			reply := pb.NewCreateAddressReply(tp, uint32(idx), *addr)
+			reply := pb.NewCreateAddressReply(tp, uint32(idx), req.GetSalt(), *addr)
 			return reply, nil
 		}
 	}
@@ -258,7 +260,7 @@ func (s *iceHelper) CreateSecret(ctx context.Context, req *pb.CreateSecretReques
 				return nil, err
 			}
 
-			reply := pb.NewCreateSecretReply(0, site, account, uint32(idx), []byte(*secret))
+			reply := pb.NewCreateSecretReply(0, site, account, uint32(idx), req.GetSalt(), []byte(*secret))
 			return reply, nil
 		}
 	}
@@ -314,10 +316,10 @@ func (s *iceHelper) ListSecret(ctx context.Context, req *pb.ListSecretRequest) (
 	}
 
 	if uint32(totalRecords) <= limit {
-		reply := pb.NewListSecretReply(uint32(totalRecords), uint32(totalPages), uint32(totalRecords), limit, addrs2)
+		reply := pb.NewListSecretReply(uint32(totalRecords), uint32(totalPages), uint32(totalRecords), limit, req.GetSalt(), addrs2)
 		return reply, nil
 	} else {
-		reply := pb.NewListSecretReply(uint32(totalRecords), uint32(totalPages), offset+limit, limit, addrs2)
+		reply := pb.NewListSecretReply(uint32(totalRecords), uint32(totalPages), offset+limit, limit, req.GetSalt(), addrs2)
 		return reply, nil
 	}
 }
@@ -362,10 +364,10 @@ func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest)
 	}
 
 	if uint32(totalRecords) <= limit {
-		reply := pb.NewListAddressReply(uint32(totalRecords), uint32(totalPages), uint32(totalRecords), limit, addrs2)
+		reply := pb.NewListAddressReply(uint32(totalRecords), uint32(totalPages), uint32(totalRecords), limit, req.GetSalt(), addrs2)
 		return reply, nil
 	} else {
-		reply := pb.NewListAddressReply(uint32(totalRecords), uint32(totalPages), offset+limit, limit, addrs2)
+		reply := pb.NewListAddressReply(uint32(totalRecords), uint32(totalPages), offset+limit, limit, req.GetSalt(), addrs2)
 		return reply, nil
 	}
 }
@@ -391,7 +393,7 @@ func (s *iceHelper) GetAddress(ctx context.Context, req *pb.GetAddressRequest) (
 	}
 
 	pbAddr := pb.Address{Type: &tp, Idx: &idx, Algo:&algo, SAddr: saddr}
-	reply := pb.NewGetAddressReply(pbAddr)
+	reply := pb.NewGetAddressReply(pbAddr, req.GetSalt())
 	return reply, nil
 }
 
@@ -417,7 +419,7 @@ func (s *iceHelper) SignMsg(ctx context.Context, req *pb.SignMsgRequest) (*pb.Si
 	if err != nil {
 		return nil, err
 	}
-	reply := pb.NewSignMsgReply(signed)
+	reply := pb.NewSignMsgReply(signed, req.GetSalt())
 	return reply, nil
 }
 
@@ -456,7 +458,7 @@ func (s *iceHelper) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb.Sign
 		return nil, err
 	}
 	stx, _ := hex.DecodeString(tx.SignedTx)
-	reply := pb.NewSignTxReply(stx)
+	reply := pb.NewSignTxReply(stx, req.GetSalt())
 	return reply, nil
 }
 
@@ -479,7 +481,7 @@ func (s *iceHelper) ResetDevice(ctx context.Context, req *pb.ResetRequest) (*pb.
 		return nil, err
 	}
 
-	reply := pb.NewResetReply()
+	reply := pb.NewResetReply(req.GetSalt())
 	return reply, nil
 }
 
