@@ -330,6 +330,7 @@ func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest)
 	pass := req.GetPassword()
 	offset := req.GetOffset()
 	limit := req.GetLimit()
+	salt := req.GetSalt()
 	db := s.openDb()
 
 	var totalRecords int
@@ -342,7 +343,15 @@ func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest)
 
 	totalPages := paginator.GetTotalPages(uint32(totalRecords), limit)
 
-	addrs2 := make([]*pb.Address, limit)
+	var addrs2 []*pb.Address
+	var num uint32
+	if (offset+limit) > uint32(totalRecords) {
+		num =  uint32(totalRecords) - offset
+		addrs2 = make([]*pb.Address, num)
+	} else {
+		addrs2 = make([]*pb.Address, limit)
+	}
+
 
 	addrs := []models.Address{}
 	//order_by := []string{"ID asc"}
@@ -364,10 +373,10 @@ func (s *iceHelper) ListAddress(ctx context.Context, req *pb.ListAddressRequest)
 	}
 
 	if uint32(totalRecords) <= limit {
-		reply := pb.NewListAddressReply(uint32(totalRecords), uint32(totalPages), uint32(totalRecords), limit, req.GetSalt(), addrs2)
+		reply := pb.NewListAddressReply(uint32(totalRecords), uint32(totalPages), uint32(totalRecords), limit, salt, addrs2)
 		return reply, nil
 	} else {
-		reply := pb.NewListAddressReply(uint32(totalRecords), uint32(totalPages), offset+limit, limit, req.GetSalt(), addrs2)
+		reply := pb.NewListAddressReply(uint32(totalRecords), uint32(totalPages), offset, limit, salt, addrs2)
 		return reply, nil
 	}
 }
@@ -376,6 +385,7 @@ func (s *iceHelper) GetAddress(ctx context.Context, req *pb.GetAddressRequest) (
 	tp := req.GetType()
 	pass := req.GetPassword()
 	idx := req.GetIdx()
+	salt := req.GetSalt()
 	db := s.openDb()
 	algo := pb.Address_ADDRESS
 
@@ -393,7 +403,7 @@ func (s *iceHelper) GetAddress(ctx context.Context, req *pb.GetAddressRequest) (
 	}
 
 	pbAddr := pb.Address{Type: &tp, Idx: &idx, Algo:&algo, SAddr: saddr}
-	reply := pb.NewGetAddressReply(pbAddr, req.GetSalt())
+	reply := pb.NewGetAddressReply(pbAddr, salt)
 	return reply, nil
 }
 
@@ -402,6 +412,7 @@ func (s *iceHelper) SignMsg(ctx context.Context, req *pb.SignMsgRequest) (*pb.Si
 	tp := req.GetType()
 	idx := req.GetIdx()
 	pass := req.GetPassword()
+	salt := req.GetSalt()
 	db := s.openDb()
 
 	var cnt int
@@ -419,7 +430,7 @@ func (s *iceHelper) SignMsg(ctx context.Context, req *pb.SignMsgRequest) (*pb.Si
 	if err != nil {
 		return nil, err
 	}
-	reply := pb.NewSignMsgReply(signed, req.GetSalt())
+	reply := pb.NewSignMsgReply(signed, salt)
 	return reply, nil
 }
 
@@ -431,6 +442,7 @@ func (s *iceHelper) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb.Sign
 	txhash := req.GetTxHash()
 	txidx := req.GetTxIdx()
 	pass := req.GetPassword()
+	salt := req.GetSalt()
 	db := s.openDb()
 
 	var cnt int
@@ -458,7 +470,7 @@ func (s *iceHelper) SignTx(ctx context.Context, req *pb.SignTxRequest) (*pb.Sign
 		return nil, err
 	}
 	stx, _ := hex.DecodeString(tx.SignedTx)
-	reply := pb.NewSignTxReply(stx, req.GetSalt())
+	reply := pb.NewSignTxReply(stx, salt)
 	return reply, nil
 }
 

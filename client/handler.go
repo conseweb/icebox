@@ -635,7 +635,7 @@ func (d *Handler) ListAddress(tp, offset, limit uint32, pwd string) (*pb.ListAdd
 		logger.Debug().Msgf("%d, %d, %s", ary[i].GetType(), ary[i].GetIdx(), ary[i].GetSAddr())
 	}
 
-	d.beforeExecute(pb.IceboxMessage_LIST_ADDRESS, chatRep)
+	d.afterExecute(pb.IceboxMessage_LIST_ADDRESS, chatRep)
 
 	return reply, nil
 }
@@ -837,7 +837,53 @@ func (d *Handler) beforeExecute(command pb.IceboxMessage_Command, msg *pb.Icebox
 		ctp, _ := proto.Marshal(msg)
 		ma := jsonpb.Marshaler{}
 		sMsg, _ := ma.MarshalToString(msg)
-		logger.Debug().Msgf("-- beforeExecute - Msg for req %s: (len: %d), hex(%s), json(%s)", command, len(ctp), hex.EncodeToString(ctp), sMsg)
+
+
+		payload := msg.GetPayload()
+		cmd := msg.Header.GetCmd()
+		switch cmd {
+		case pb.IceboxMessage_LIST_ADDRESS:
+			result := &pb.ListAddressRequest{}
+			proto.Unmarshal(payload, result)
+			ps, _ := ma.MarshalToString(result)
+			logger.Debug().Msgf("-- beforeExecute - Msg for req %s: (len: %d), hex(%s), json(%s), payload(%s)", command, len(ctp), hex.EncodeToString(ctp), sMsg, ps)
+			break
+		case pb.IceboxMessage_CREATE_ADDRESS:
+			result := &pb.CreateAddressRequest{}
+			proto.Unmarshal(payload, result)
+			ps, _ := ma.MarshalToString(result)
+			logger.Debug().Msgf("-- beforeExecute - Msg for req %s: (len: %d), hex(%s), json(%s), payload(%s)", command, len(ctp), hex.EncodeToString(ctp), sMsg, ps)
+			break
+		case pb.IceboxMessage_SIGN_MSG:
+			result := &pb.SignMsgReply{}
+			proto.Unmarshal(payload, result)
+			ps, _ := ma.MarshalToString(result)
+			logger.Debug().Msgf("-- beforeExecute - Msg for req %s: (len: %d), hex(%s), json(%s), payload(%s)", command, len(ctp), hex.EncodeToString(ctp), sMsg, ps)
+			break
+		case pb.IceboxMessage_NEGOTIATE:
+			result := &pb.NegotiateReply{}
+			proto.Unmarshal(payload, result)
+			ps, _ := ma.MarshalToString(result)
+			logger.Debug().Msgf("-- beforeExecute - Msg for req %s: (len: %d), hex(%s), json(%s), payload(%s)", command, len(ctp), hex.EncodeToString(ctp), sMsg, ps)
+			break
+		case pb.IceboxMessage_LIST_SECRET:
+			result := &pb.ListSecretReply{}
+			proto.Unmarshal(payload, result)
+			ps, _ := ma.MarshalToString(result)
+			logger.Debug().Msgf("-- beforeExecute - Msg for req %s: (len: %d), hex(%s), json(%s), payload(%s)", command, len(ctp), hex.EncodeToString(ctp), sMsg, ps)
+			break
+		case pb.IceboxMessage_CREATE_SECRET:
+			result := &pb.CreateSecretReply{}
+			proto.Unmarshal(payload, result)
+			ps, _ := ma.MarshalToString(result)
+			logger.Debug().Msgf("-- beforeExecute - Msg for req %s: (len: %d), hex(%s), json(%s), payload(%s)", command, len(ctp), hex.EncodeToString(ctp), sMsg, ps)
+			break
+		default:
+			logger.Debug().Msgf("-- beforeExecute - Msg for req %s: (len: %d), hex(%s), json(%s)", command, len(ctp), hex.EncodeToString(ctp), sMsg)
+			return
+
+		}
+
 	}
 
 	return
@@ -848,11 +894,57 @@ func (d *Handler) afterExecute(command pb.IceboxMessage_Command, msg *pb.IceboxM
 		resp, _ := proto.Marshal(msg)
 		ma := jsonpb.Marshaler{}
 		sMsg, _ := ma.MarshalToString(msg)
-		logger.Debug().Msgf("-- afterExecute - Msg for reply %s: (len: %d), hex(%s), json(%s)", command, len(resp), hex.EncodeToString(resp), sMsg);
+
+		payload := msg.GetPayload()
+		cmd := msg.Header.GetCmd()
+		switch cmd {
+		case pb.IceboxMessage_LIST_ADDRESS:
+			result := &pb.ListAddressReply{}
+			proto.Unmarshal(payload, result)
+			ps, _ := ma.MarshalToString(result)
+			logger.Debug().Msgf("-- afterExecute - Msg for reply %s: (len: %d), hex(%s), json(%s), payload(%s)", command, len(resp), hex.EncodeToString(resp), sMsg, ps)
+			break
+		case pb.IceboxMessage_CREATE_ADDRESS:
+			result := &pb.CreateAddressReply{}
+			proto.Unmarshal(payload, result)
+			ps, _ := ma.MarshalToString(result)
+			logger.Debug().Msgf("-- afterExecute - Msg for reply %s: (len: %d), hex(%s), json(%s), payload(%s)", command, len(resp), hex.EncodeToString(resp), sMsg, ps)
+			break
+		case pb.IceboxMessage_SIGN_MSG:
+			result := &pb.SignMsgReply{}
+			proto.Unmarshal(payload, result)
+			ps, _ := ma.MarshalToString(result)
+			logger.Debug().Msgf("-- afterExecute - Msg for reply %s: (len: %d), hex(%s), json(%s), payload(%s)", command, len(resp), hex.EncodeToString(resp), sMsg, ps)
+			break
+		case pb.IceboxMessage_NEGOTIATE:
+			result := &pb.NegotiateReply{}
+			proto.Unmarshal(payload, result)
+			ps, _ := ma.MarshalToString(result)
+			logger.Debug().Msgf("-- afterExecute - Msg for reply %s: (len: %d), hex(%s), json(%s), payload(%s)", command, len(resp), hex.EncodeToString(resp), sMsg, ps)
+			break
+		case pb.IceboxMessage_LIST_SECRET:
+			result := &pb.ListSecretReply{}
+			proto.Unmarshal(payload, result)
+			ps, _ := ma.MarshalToString(result)
+			logger.Debug().Msgf("-- afterExecute - Msg for reply %s: (len: %d), hex(%s), json(%s), payload(%s)", command, len(resp), hex.EncodeToString(resp), sMsg, ps)
+			break
+		case pb.IceboxMessage_CREATE_SECRET:
+			result := &pb.CreateSecretReply{}
+			proto.Unmarshal(payload, result)
+			ps, _ := ma.MarshalToString(result)
+			logger.Debug().Msgf("-- afterExecute - Msg for reply %s: (len: %d), hex(%s), json(%s), payload(%s)", command, len(resp), hex.EncodeToString(resp), sMsg, ps)
+			break
+		default:
+			logger.Debug().Msgf("-- afterExecute - Msg for reply %s: (len: %d), hex(%s), json(%s)", command, len(resp), hex.EncodeToString(resp), sMsg)
+			return
+
+		}
 	}
 
 	return
 }
+
+
 
 func checkError(e error) error {
 	if e != nil {

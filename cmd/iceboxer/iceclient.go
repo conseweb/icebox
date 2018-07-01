@@ -163,12 +163,13 @@ func main() {
 	logger.Debug().Msgf("Created address: %s", rex.GetAddress())
 
 	{
-		reply, _ := handler.ListAddress(1, 0, 8, common.Test_password)
+		reply, _ := handler.ListAddress(1, 0, 9, common.Test_password)
 		offset := reply.GetOffset()
 		limit := reply.GetLimit()
 		total := reply.GetTotalRecords()
 		logger.Debug().Msgf("%d, %d, %d", total, limit, offset)
 		for {
+			offset += limit
 			if paginator.HaveNext(total, limit, offset) {
 				reply, _ = handler.ListAddress(1, offset, limit, common.Test_password)
 				offset = reply.GetOffset()
@@ -248,23 +249,23 @@ func main() {
 	// priv: hex: 68855a72a1e728d332025f5813ef35e8a6c1a8f5fb43e610c149b782ee290538
 	// pub key: hex: 0259c2bd7f9d7d0a8c0b00a1a1124d513f214898638782dfe064b18bd8d7f0bb8c
 	// dest: "1, 807294064, msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb"
-	var signTxReply *protos.SignTxReply
-	if client.RTEnv.IsTestNet() {
-		signTxReply, err = handler.SignTx(uint32(tp), uint32(idx), uint64(amount), "msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb", *goodTxId, uint32(outn), common.Test_password)
-	} else {
-		// TODO: address should change to mainnet address
-		signTxReply, err = handler.SignTx(0, uint32(idx), uint64(amount), "msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb", *goodTxId, uint32(outn), common.Test_password)
-	}
-	if err != nil {
-		logger.Fatal().Err(err).Msgf("")
-	} else {
-		hexTxSig := hex.EncodeToString(signTxReply.GetSignedTx())
-		logger.Debug().Msgf("SignTx reply: %s", hexTxSig)
-
-		txHash := util.DoubleHash256(signTxReply.GetSignedTx())
-		txHashReversed := util.ReverseByteOrder(txHash)
-		logger.Debug().Msgf("Tx hash: %s", hex.EncodeToString(txHashReversed))
-	}
+	//var signTxReply *protos.SignTxReply
+	//if client.RTEnv.IsTestNet() {
+	//	signTxReply, err = handler.SignTx(uint32(tp), uint32(idx), uint64(amount), "msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb", *goodTxId, uint32(outn), common.Test_password)
+	//} else {
+	//	// TODO: address should change to mainnet address
+	//	signTxReply, err = handler.SignTx(0, uint32(idx), uint64(amount), "msT8A86DgsgTNkcyiYwb22DDUBopBJGAKb", *goodTxId, uint32(outn), common.Test_password)
+	//}
+	//if err != nil {
+	//	logger.Fatal().Err(err).Msgf("")
+	//} else {
+	//	hexTxSig := hex.EncodeToString(signTxReply.GetSignedTx())
+	//	logger.Debug().Msgf("SignTx reply: %s", hexTxSig)
+	//
+	//	txHash := util.DoubleHash256(signTxReply.GetSignedTx())
+	//	txHashReversed := util.ReverseByteOrder(txHash)
+	//	logger.Debug().Msgf("Tx hash: %s", hex.EncodeToString(txHashReversed))
+	//}
 
 	{
 		var reply *protos.SignMsgReply
